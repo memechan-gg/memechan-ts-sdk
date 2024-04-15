@@ -30,7 +30,8 @@
     "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
-    "@mysten/sui.js": "^0.51.2"
+    "@mysten/sui.js": "^0.51.2",
+    "bignumber.js": "^9.1.2"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
