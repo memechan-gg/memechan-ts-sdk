@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "sourceMap": false,
+    "removeComments": true,
+    "declaration": true,
+    "declarationDir": "dist",
+    "rootDir": "./src"
+  },
+  "compileOnSave": true,
+  "include": ["src", ".eslintrc.js"],
+  "exclude": ["src/examples"],
+  "extends": "./tsconfig"
+}

@@ -1,2 +1,3 @@
-# memechan-sdk
+# memechan-ts-sdk
+
 Typescript SDK for Memechan.gg
