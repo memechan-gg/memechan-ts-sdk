@@ -20,6 +20,14 @@
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.24"
 
+"@avernikoz/memechan-ts-interface@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.0.tgz#532c364cf03b3dc913b59796d0946178cdd6c4ca"
+  integrity sha512-AJS9ILfghKakRmUWXRPUGPuw80RiCSiRFRDBCTRb6Oo9CmEcIdusRXDpzHLTqQWFtnnkeb0R+3yJb7/fmXSwYA==
+  dependencies:
+    "@mysten/bcs" "0.11.1"
+    "@mysten/sui.js" "0.51.2"
+
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.12.13", "@babel/code-frame@^7.23.5", "@babel/code-frame@^7.24.1", "@babel/code-frame@^7.24.2":
   version "7.24.2"
   resolved "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.24.2.tgz#718b4b19841809a58b29b68cde80bc5e1aa6d9ae"
@@ -768,7 +776,7 @@
   dependencies:
     bs58 "^5.0.0"
 
-"@mysten/sui.js@^0.51.2":
+"@mysten/sui.js@0.51.2", "@mysten/sui.js@^0.51.2":
   version "0.51.2"
   resolved "https://registry.npmjs.org/@mysten/sui.js/-/sui.js-0.51.2.tgz#40c54bf1df57fdeaf27ad11efddeaa20ff5e6a7b"
   integrity sha512-RRG/VHhVvkQlWqodFZagRxVDo3SbXh4e3xTBplhPNNyybugbWj/V+wGrNv5/KtxfVxHBw6jTCoB798ijqPBq7g==

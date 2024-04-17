@@ -30,6 +30,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
+    "@avernikoz/memechan-ts-interface": "1.0.0",
     "@mysten/sui.js": "^0.51.2",
     "bignumber.js": "^9.1.2"
   },
