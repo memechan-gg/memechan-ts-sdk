@@ -6,12 +6,13 @@
     "sourceMap": true,
     "removeComments": false,
     "strict": true,
-    "target": "ES2020",
+    "target": "ES2021",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
+    "allowJs": true
   },
   "compileOnSave": true,
-  "include": ["src", ".eslintrc.js", "examples", "tests", "jest.config.js"],
+  "include": ["src", ".eslintrc.js", "examples", "tests", "jest.config.js"]
 }
