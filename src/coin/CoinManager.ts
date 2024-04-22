@@ -2,8 +2,27 @@ import { CoinMetadata, SuiClient } from "@mysten/sui.js/client";
 import { CommonCoinData, CreateCoinTransactionParams, ICoinManager } from "./types";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { getBytecode } from "./utils/template";
-import { normalizeSuiAddress } from "@mysten/sui.js/utils";
+import { isValidSuiAddress, normalizeSuiAddress } from "@mysten/sui.js/utils";
 import initMoveByteCodeTemplate from "./utils/move-bytecode-template";
+import {
+  InvalidCoinNameError,
+  InvalidCoinSymbolError,
+  InvalidCoinDecimalsError,
+  InvalidCoinTotalSupplyError,
+  InvalidCoinDescriptionError,
+  InvalidCoinImageError,
+  InvalidSignerAddressError,
+  NameEqualsToDescriptionError,
+  SymbolEqualsToDescriptionError,
+} from "./utils/validation/invalid-param-errors";
+import {
+  validateCoinName,
+  validateCoinSymbol,
+  validateCoinDecimals,
+  validateTotalSupply,
+  validateCoinDescription,
+  validateCoinImage,
+} from "./utils/validation/validation";
 
 /**
  * @class CoinManagerSingleton
@@ -153,6 +172,62 @@ export class CoinManagerSingleton implements ICoinManager {
     } catch (error) {
       console.error("[CoinManager.getCreateCoinTransaction] error: ", error);
       throw error;
+    }
+  }
+
+  /**
+   * Validates parameters for creating the coin.
+   *
+   * @param {CreateCoinTransactionParams} params - Parameters for creating the coin.
+   * @throws {Error} If the validation fails.
+   */
+  public static validateCreateCoinParams({
+    name,
+    symbol,
+    decimals,
+    mintAmount,
+    url,
+    description,
+    signerAddress,
+  }: CreateCoinTransactionParams): void {
+    if (!validateCoinName(name)) {
+      throw new InvalidCoinNameError(`[validateCreateCoinParams] Coin name ${name} is invalid`);
+    }
+
+    if (!validateCoinSymbol(symbol)) {
+      throw new InvalidCoinSymbolError(`[validateCreateCoinParams] Coin symbol ${symbol} is invalid`);
+    }
+
+    if (!validateCoinDecimals(decimals)) {
+      throw new InvalidCoinDecimalsError(`[validateCreateCoinParams] Coin decimals ${decimals} are invalid`);
+    }
+
+    if (!validateTotalSupply(mintAmount, decimals)) {
+      throw new InvalidCoinTotalSupplyError(`[validateCreateCoinParams] Total supply ${mintAmount} is invalid`);
+    }
+
+    if (!validateCoinDescription(description)) {
+      throw new InvalidCoinDescriptionError(`[validateCreateCoinParams] Coin description ${description} is invalid`);
+    }
+
+    if (!validateCoinImage(url)) {
+      throw new InvalidCoinImageError(`[validateCreateCoinParams] Coin image ${url} is invalid`);
+    }
+
+    if (!isValidSuiAddress(signerAddress)) {
+      throw new InvalidSignerAddressError(`[validateCreateCoinParams] Signer address ${signerAddress} is invalid`);
+    }
+
+    if (name.trim() === description.trim()) {
+      throw new NameEqualsToDescriptionError(
+        `[validateCreateCoinParams] Coin name ${name} and coin description ${description} are equal`,
+      );
+    }
+
+    if (symbol.trim() === description.trim()) {
+      throw new SymbolEqualsToDescriptionError(
+        `[validateCreateCoinParams] Coin symbol ${symbol} and coin description ${description} are equal`,
+      );
     }
   }
 }
