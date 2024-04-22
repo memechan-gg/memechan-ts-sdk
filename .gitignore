@@ -427,6 +427,5 @@ yarn-error.log*
 
 # env-variables
 .env
-.npmrc
 cNFTs.json
 json/
