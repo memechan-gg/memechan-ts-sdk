@@ -1,3 +1,5 @@
 dist/
 dts.config.js
 rollup.config.js
+src/coin/utils/move-bytecode-template.js
+src/coin/utils/template.ts

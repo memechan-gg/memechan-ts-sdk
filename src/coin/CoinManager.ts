@@ -1,8 +1,28 @@
 import { CoinMetadata, SuiClient } from "@mysten/sui.js/client";
-import { CommonCoinData, CreateCoinExternalApiResType, CreateCoinTransactionParams, ICoinManager } from "./types";
+import { CommonCoinData, CreateCoinTransactionParams, ICoinManager } from "./types";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { isValidResForCreateCoin } from "./utils";
-import BigNumber from "bignumber.js";
+import { getBytecode } from "./utils/template";
+import { isValidSuiAddress, normalizeSuiAddress } from "@mysten/sui.js/utils";
+import initMoveByteCodeTemplate from "./utils/move-bytecode-template";
+import {
+  InvalidCoinNameError,
+  InvalidCoinSymbolError,
+  InvalidCoinDecimalsError,
+  InvalidCoinTotalSupplyError,
+  InvalidCoinDescriptionError,
+  InvalidCoinImageError,
+  InvalidSignerAddressError,
+  NameEqualsToDescriptionError,
+  SymbolEqualsToDescriptionError,
+} from "./utils/validation/invalid-param-errors";
+import {
+  validateCoinName,
+  validateCoinSymbol,
+  validateCoinDecimals,
+  validateTotalSupply,
+  validateCoinDescription,
+  validateCoinImage,
+} from "./utils/validation/validation";
 
 /**
  * @class CoinManagerSingleton
@@ -13,13 +33,7 @@ export class CoinManagerSingleton implements ICoinManager {
   private static _instance: CoinManagerSingleton;
   private allCoinsCache: Map<string, CommonCoinData> = new Map();
   private provider: SuiClient;
-  private static COIN_CREATION_API_URL = "https://www.api.interestprotocol.com/api/v1/token/makeToken";
-  private static COIN_CREATION_HEADERS = {
-    "Content-Type": "application/json",
-    Host: "www.api.interestprotocol.com",
-    Origin: "https://www.suicoins.com",
-    Referer: "https://www.suicoins.com/",
-  };
+  private static COIN_CREATION_BYTECODE_TEMPLATE_URL = "https://www.suicoins.com/move_bytecode_template_bg.wasm";
 
   /**
    * Constructs a new instance of the SuiProvider class with the provided SUI provider URL.
@@ -130,47 +144,90 @@ export class CoinManagerSingleton implements ICoinManager {
     transaction,
   }: CreateCoinTransactionParams): Promise<TransactionBlock> {
     const tx = transaction ?? new TransactionBlock();
-    let txData: CreateCoinExternalApiResType;
-
-    // convert mint amount to string respecting provided decimals
-    const mintAmountRespectingDecimals = new BigNumber(mintAmount)
-      .multipliedBy(new BigNumber(10).pow(decimals))
-      .toString();
 
     try {
-      const result = await fetch(this.COIN_CREATION_API_URL, {
-        method: "POST",
-        headers: this.COIN_CREATION_HEADERS,
-        body: JSON.stringify({
-          name,
-          symbol,
-          decimals,
-          fixedSupply,
-          mintAmount: mintAmountRespectingDecimals,
-          url,
-          description,
-        }),
+      await initMoveByteCodeTemplate(CoinManagerSingleton.COIN_CREATION_BYTECODE_TEMPLATE_URL);
+
+      const [upgradeCap] = tx.publish({
+        modules: [
+          [
+            ...getBytecode({
+              name,
+              symbol,
+              totalSupply: mintAmount,
+              description,
+              fixedSupply,
+              decimals: +decimals,
+              imageUrl: url,
+              recipient: signerAddress,
+            }),
+          ],
+        ],
+        dependencies: [normalizeSuiAddress("0x1"), normalizeSuiAddress("0x2")],
       });
 
-      if (!result.ok) {
-        throw new Error(`[CoinManager.getCreateCoinTransaction] API request failed with status: ${result.status}`);
-      }
+      tx.transferObjects([upgradeCap], tx.pure(signerAddress));
 
-      const data: CreateCoinExternalApiResType = await result.json();
-
-      if (isValidResForCreateCoin(data)) {
-        txData = data;
-      } else {
-        throw new Error("[CoinManager.getCreateCoinTransaction] Invalid API response structure");
-      }
+      return tx;
     } catch (error) {
       console.error("[CoinManager.getCreateCoinTransaction] error: ", error);
       throw error;
     }
+  }
 
-    const [upgradeCap] = tx.publish({ modules: txData.modules, dependencies: txData.dependencies });
-    tx.transferObjects([upgradeCap], tx.pure(signerAddress));
+  /**
+   * Validates parameters for creating the coin.
+   *
+   * @param {CreateCoinTransactionParams} params - Parameters for creating the coin.
+   * @throws {Error} If the validation fails.
+   */
+  public static validateCreateCoinParams({
+    name,
+    symbol,
+    decimals,
+    mintAmount,
+    url,
+    description,
+    signerAddress,
+  }: CreateCoinTransactionParams): void {
+    if (!validateCoinName(name)) {
+      throw new InvalidCoinNameError(`[validateCreateCoinParams] Coin name ${name} is invalid`);
+    }
 
-    return tx;
+    if (!validateCoinSymbol(symbol)) {
+      throw new InvalidCoinSymbolError(`[validateCreateCoinParams] Coin symbol ${symbol} is invalid`);
+    }
+
+    if (!validateCoinDecimals(decimals)) {
+      throw new InvalidCoinDecimalsError(`[validateCreateCoinParams] Coin decimals ${decimals} are invalid`);
+    }
+
+    if (!validateTotalSupply(mintAmount, decimals)) {
+      throw new InvalidCoinTotalSupplyError(`[validateCreateCoinParams] Total supply ${mintAmount} is invalid`);
+    }
+
+    if (!validateCoinDescription(description)) {
+      throw new InvalidCoinDescriptionError(`[validateCreateCoinParams] Coin description ${description} is invalid`);
+    }
+
+    if (!validateCoinImage(url)) {
+      throw new InvalidCoinImageError(`[validateCreateCoinParams] Coin image ${url} is invalid`);
+    }
+
+    if (!isValidSuiAddress(signerAddress)) {
+      throw new InvalidSignerAddressError(`[validateCreateCoinParams] Signer address ${signerAddress} is invalid`);
+    }
+
+    if (name.trim() === description.trim()) {
+      throw new NameEqualsToDescriptionError(
+        `[validateCreateCoinParams] Coin name ${name} and coin description ${description} are equal`,
+      );
+    }
+
+    if (symbol.trim() === description.trim()) {
+      throw new SymbolEqualsToDescriptionError(
+        `[validateCreateCoinParams] Coin symbol ${symbol} and coin description ${description} are equal`,
+      );
+    }
   }
 }
