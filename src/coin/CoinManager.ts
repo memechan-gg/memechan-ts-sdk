@@ -1,8 +1,9 @@
 import { CoinMetadata, SuiClient } from "@mysten/sui.js/client";
-import { CommonCoinData, CreateCoinExternalApiResType, CreateCoinTransactionParams, ICoinManager } from "./types";
+import { CommonCoinData, CreateCoinTransactionParams, ICoinManager } from "./types";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { isValidResForCreateCoin } from "./utils";
-import BigNumber from "bignumber.js";
+import { getBytecode } from "./utils/template";
+import { normalizeSuiAddress } from "@mysten/sui.js/utils";
+import initMoveByteCodeTemplate from "./utils/move-bytecode-template";
 
 /**
  * @class CoinManagerSingleton
@@ -13,13 +14,7 @@ export class CoinManagerSingleton implements ICoinManager {
   private static _instance: CoinManagerSingleton;
   private allCoinsCache: Map<string, CommonCoinData> = new Map();
   private provider: SuiClient;
-  private static COIN_CREATION_API_URL = "https://www.api.interestprotocol.com/api/v1/token/makeToken";
-  private static COIN_CREATION_HEADERS = {
-    "Content-Type": "application/json",
-    Host: "www.api.interestprotocol.com",
-    Origin: "https://www.suicoins.com",
-    Referer: "https://www.suicoins.com/",
-  };
+  private static COIN_CREATION_BYTECODE_TEMPLATE_URL = "https://www.suicoins.com/move_bytecode_template_bg.wasm";
 
   /**
    * Constructs a new instance of the SuiProvider class with the provided SUI provider URL.
@@ -130,47 +125,34 @@ export class CoinManagerSingleton implements ICoinManager {
     transaction,
   }: CreateCoinTransactionParams): Promise<TransactionBlock> {
     const tx = transaction ?? new TransactionBlock();
-    let txData: CreateCoinExternalApiResType;
-
-    // convert mint amount to string respecting provided decimals
-    const mintAmountRespectingDecimals = new BigNumber(mintAmount)
-      .multipliedBy(new BigNumber(10).pow(decimals))
-      .toString();
 
     try {
-      const result = await fetch(this.COIN_CREATION_API_URL, {
-        method: "POST",
-        headers: this.COIN_CREATION_HEADERS,
-        body: JSON.stringify({
-          name,
-          symbol,
-          decimals,
-          fixedSupply,
-          mintAmount: mintAmountRespectingDecimals,
-          url,
-          description,
-        }),
+      await initMoveByteCodeTemplate(CoinManagerSingleton.COIN_CREATION_BYTECODE_TEMPLATE_URL);
+
+      const [upgradeCap] = tx.publish({
+        modules: [
+          [
+            ...getBytecode({
+              name,
+              symbol,
+              totalSupply: mintAmount,
+              description,
+              fixedSupply,
+              decimals: +decimals,
+              imageUrl: url,
+              recipient: signerAddress,
+            }),
+          ],
+        ],
+        dependencies: [normalizeSuiAddress("0x1"), normalizeSuiAddress("0x2")],
       });
 
-      if (!result.ok) {
-        throw new Error(`[CoinManager.getCreateCoinTransaction] API request failed with status: ${result.status}`);
-      }
+      tx.transferObjects([upgradeCap], tx.pure(signerAddress));
 
-      const data: CreateCoinExternalApiResType = await result.json();
-
-      if (isValidResForCreateCoin(data)) {
-        txData = data;
-      } else {
-        throw new Error("[CoinManager.getCreateCoinTransaction] Invalid API response structure");
-      }
+      return tx;
     } catch (error) {
       console.error("[CoinManager.getCreateCoinTransaction] error: ", error);
       throw error;
     }
-
-    const [upgradeCap] = tx.publish({ modules: txData.modules, dependencies: txData.dependencies });
-    tx.transferObjects([upgradeCap], tx.pure(signerAddress));
-
-    return tx;
   }
 }

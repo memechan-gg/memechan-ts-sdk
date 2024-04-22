@@ -13,12 +13,6 @@ export type CreateCoinTransactionParams = {
   transaction?: TransactionBlock;
 };
 
-export type CreateCoinExternalApiResType = {
-  modules: string[] | number[][];
-  dependencies: string[];
-  digest: number[];
-};
-
 export type CommonCoinData = {
   symbol?: string;
   type: string;
