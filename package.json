@@ -1,6 +1,6 @@
 {
   "name": "@avernikoz/memechan-ts-sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Typescript SDK for Memechan.gg",
   "main": "dist/index.js",
   "files": [
@@ -30,7 +30,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
-    "@avernikoz/memechan-ts-interface": "1.0.1",
+    "@avernikoz/memechan-ts-interface": "^1.0.1",
     "@mysten/sui.js": "^0.51.2",
     "bignumber.js": "^9.1.2"
   },

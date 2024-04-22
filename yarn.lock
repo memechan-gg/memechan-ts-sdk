@@ -20,7 +20,7 @@
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.24"
 
-"@avernikoz/memechan-ts-interface@1.0.1":
+"@avernikoz/memechan-ts-interface@^1.0.1":
   version "1.0.1"
   resolved "https://registry.npmjs.org/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.1.tgz#eec6b1229ba687af3dd22daa879be29824412335"
   integrity sha512-GEsmXnURSIdxbxSHB5LH4Lnxr34C83MfLE2d06QtG9IFQN9g7laKeZOIDysHiqdJWApnnd2UuOWTkmEVZwtjwQ==
