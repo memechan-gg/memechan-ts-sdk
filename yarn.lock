@@ -20,10 +20,10 @@
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.24"
 
-"@avernikoz/memechan-ts-interface@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.0.tgz#532c364cf03b3dc913b59796d0946178cdd6c4ca"
-  integrity sha512-AJS9ILfghKakRmUWXRPUGPuw80RiCSiRFRDBCTRb6Oo9CmEcIdusRXDpzHLTqQWFtnnkeb0R+3yJb7/fmXSwYA==
+"@avernikoz/memechan-ts-interface@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.1.tgz#eec6b1229ba687af3dd22daa879be29824412335"
+  integrity sha512-GEsmXnURSIdxbxSHB5LH4Lnxr34C83MfLE2d06QtG9IFQN9g7laKeZOIDysHiqdJWApnnd2UuOWTkmEVZwtjwQ==
   dependencies:
     "@mysten/bcs" "0.11.1"
     "@mysten/sui.js" "0.51.2"
