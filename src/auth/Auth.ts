@@ -35,6 +35,8 @@ export class Auth {
 
   /**
    * Refreshes or creates a new authentication session based on a signed message.
+   * The returned credentials has an expiration of 1h, you can use the signedMessage as a refresh token.
+   * Since it has an expiration of 1 year
    * @param {Object} sessionData - The wallet address and signed message.
    * @param {string} sessionData.walletAddress - The wallet address of the user.
    * @param {string} sessionData.signedMessage - The message signed by the user's private key.
