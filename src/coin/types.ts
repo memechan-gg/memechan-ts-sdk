@@ -21,4 +21,15 @@ export type CommonCoinData = {
 
 export interface ICoinManager {
   getCoinByType2(coinType: string): Promise<CommonCoinData | null>;
+  getCreateCoinTransaction({
+    name,
+    symbol,
+    decimals,
+    fixedSupply,
+    mintAmount,
+    url,
+    description,
+    signerAddress,
+    transaction,
+  }: CreateCoinTransactionParams): Promise<TransactionBlock>;
 }
