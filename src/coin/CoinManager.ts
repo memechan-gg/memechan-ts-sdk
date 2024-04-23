@@ -166,6 +166,7 @@ export class CoinManagerSingleton implements ICoinManager {
         dependencies: [normalizeSuiAddress("0x1"), normalizeSuiAddress("0x2")],
       });
 
+      // TODO: We might destroy the upgradeCap
       tx.transferObjects([upgradeCap], tx.pure(signerAddress));
 
       return tx;
