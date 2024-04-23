@@ -77,13 +77,6 @@ describe("CoinService", () => {
 
   test("check getCoin by coinType is retrieved successfully", async () => {
     const coinService = new CoinAPI();
-    const authService = new Auth();
-    const messageToSign = await authService.requestMessageToSign(keypair.getPublicKey().toSuiAddress());
-    const { signature } = await keypair.signPersonalMessage(Buffer.from(messageToSign));
-    await authService.refreshSession({
-      walletAddress: keypair.getPublicKey().toSuiAddress(),
-      signedMessage: signature,
-    });
     const result = await coinService.getCoin(coin.type);
     coinSchema.parse(result);
   });
