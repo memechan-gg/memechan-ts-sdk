@@ -429,3 +429,5 @@ yarn-error.log*
 .env
 cNFTs.json
 json/
+
+avernikoz-memechan-ts-sdk-v1.*

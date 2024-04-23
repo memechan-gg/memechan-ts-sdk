@@ -1,8 +1,8 @@
 import { Sha256 } from "@aws-crypto/sha256-browser/build/main/crossPlatformSha256";
-import { HttpRequest } from "@aws-sdk/protocol-http";
-import { SignatureV4 } from "@aws-sdk/signature-v4";
 import { IAMCredentials } from "../auth/types";
 import { BE_REGION } from "../constants";
+import { HttpRequest } from "@smithy/protocol-http";
+import { SignatureV4 } from "@smithy/signature-v4";
 
 export const jsonFetch = async (
   input: string | URL | globalThis.Request,
@@ -62,6 +62,23 @@ export const signedJsonFetch = async (
   });
 };
 
+export const unsignedMultipartRequest = async (input: string, file: File) => {
+  const formData = new FormData();
+
+  formData.append(file.name, file);
+
+  try {
+    const response = await fetch(input, {
+      method: "POST",
+      body: formData,
+    });
+    return response;
+  } catch (error) {
+    console.error("Upload failed:", error);
+    throw error;
+  }
+};
+
 /**
  * Sends a signed multipart/form-data request.
  * @param {string} input The URL to which the request is sent.
@@ -79,8 +96,8 @@ export const signedMultipartRequest = async (input: string, credentials: IAMCred
   const request = new HttpRequest({
     method: "POST",
     headers: {
-      "Content-Type": "multipart/form-data",
       Host: parsedUrl.hostname,
+      "X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
     },
     hostname: parsedUrl.hostname,
     path: parsedUrl.pathname,
@@ -94,11 +111,13 @@ export const signedMultipartRequest = async (input: string, credentials: IAMCred
     sha256: Sha256,
   });
 
-  const signedRequest = await signer.sign(request);
+  const signedRequest = await signer.sign(request, {
+    unsignableHeaders: new Set(["content-type"]),
+  });
 
   return fetch(`https://${signedRequest.hostname}${signedRequest.path}`, {
     method: signedRequest.method,
     headers: signedRequest.headers,
-    body: signedRequest.body,
+    body: request.body,
   });
 };
