@@ -65,7 +65,7 @@ export const signedJsonFetch = async (
 export const unsignedMultipartRequest = async (input: string, file: File) => {
   const formData = new FormData();
 
-  formData.append(file.name, file);
+  formData.append("file", file);
 
   try {
     const response = await fetch(input, {
