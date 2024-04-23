@@ -31,7 +31,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
-    "@avernikoz/memechan-ts-interface": "^1.0.1",
+    "@avernikoz/memechan-ts-interface": "^1.0.4",
     "@aws-crypto/sha256-browser": "^5.2.0",
     "@aws-sdk/protocol-http": "^3.374.0",
     "@aws-sdk/signature-v4": "^3.374.0",
