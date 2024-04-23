@@ -6,7 +6,7 @@ import { CreateCoinTransactionParams } from "../coin/types";
 import { CoinManagerSingleton } from "../coin/CoinManager";
 import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
 import { LONG_SUI_COIN_TYPE } from "../common/sui";
-import { CreateBondingCurvePoolParams } from "./types";
+import { CreateBondingCurvePoolParams, CreateCoinTransactionParamsWithoutCertainProps } from "./types";
 
 /**
  * @class BondingPoolSingleton
@@ -28,6 +28,10 @@ export class BondingPoolSingleton {
   public static TICKET_COIN_MODULE_PREFIX = "ac_b_";
   public static TICKET_COIN_NAME_PREFIX = "TicketFor";
   public static TICKET_COIN_DESCRIPTION_PREFIX = "Pre sale ticket of bonding curve pool for the following memecoin: ";
+
+  public static MEMECOIN_DECIMALS = "6";
+  public static MEMECOIN_MINT_AMOUNT = "0";
+  public static MEMECOIN_FIXED_SUPPLY = false;
 
   public provider: SuiClient;
 
@@ -94,13 +98,22 @@ export class BondingPoolSingleton {
     return createBondingCurvePoolTx;
   }
 
-  public static async createMemeAndTicketCoins(params: CreateCoinTransactionParams) {
+  public static async createMemeAndTicketCoins(params: CreateCoinTransactionParamsWithoutCertainProps) {
     const tx = params.transaction ?? new TransactionBlock();
 
+    const coinCreationParams: CreateCoinTransactionParams = {
+      ...params,
+      decimals: BondingPoolSingleton.MEMECOIN_DECIMALS,
+      fixedSupply: BondingPoolSingleton.MEMECOIN_FIXED_SUPPLY,
+      mintAmount: BondingPoolSingleton.MEMECOIN_MINT_AMOUNT,
+
+      transaction: tx,
+    };
+
     // Create Coin TransactionBlock
-    const coinTx = await CoinManagerSingleton.getCreateCoinTransaction({ ...params, transaction: tx });
+    const coinTx = await CoinManagerSingleton.getCreateCoinTransaction(coinCreationParams);
     // Transform data for Ticket Coin
-    const ticketFromParams = getTicketDataFromCoinParams(params);
+    const ticketFromParams = getTicketDataFromCoinParams(coinCreationParams);
     // Create Ticket Coin TransactionBlock
     const memeAndTicketCoinTx = await CoinManagerSingleton.getCreateCoinTransaction({
       ...ticketFromParams,
