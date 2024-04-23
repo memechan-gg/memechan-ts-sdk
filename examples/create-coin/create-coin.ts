@@ -9,7 +9,14 @@ export const createCoin = async (params: CreateCoinTransactionParams) => {
   const res = await provider.signAndExecuteTransactionBlock({
     transactionBlock: createCoinTx,
     signer: keypair,
-    requestType: "WaitForEffectsCert",
+    requestType: "WaitForLocalExecution",
+    options: {
+      showBalanceChanges: true,
+      showEffects: true,
+      showEvents: true,
+      showObjectChanges: true,
+      showInput: true,
+    },
   });
 
   console.debug("res: ", res);
@@ -17,11 +24,11 @@ export const createCoin = async (params: CreateCoinTransactionParams) => {
 
 createCoin({
   decimals: "10",
-  description: "test-token-321",
-  fixedSupply: true,
-  mintAmount: "9000000",
-  name: "testtoken321",
+  description: "testtoken3am description",
+  fixedSupply: false,
+  mintAmount: "900000000",
+  name: "testtoken3am",
   signerAddress: user,
-  symbol: "TEST_TOKEN_THR",
+  symbol: "TEST_TOKEN_3AM",
   url: "",
 });
