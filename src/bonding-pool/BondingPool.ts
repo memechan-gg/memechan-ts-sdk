@@ -2,6 +2,11 @@
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { newDefault, NewDefaultArgs } from "@avernikoz/memechan-ts-interface/dist/memechan/bound-curve-amm/functions";
+import { CreateCoinTransactionParams } from "../coin/types";
+import { CoinManagerSingleton } from "../coin/CoinManager";
+import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
+import { LONG_SUI_COIN_TYPE } from "../common/sui";
+import { CreateBondingCurvePoolParams, CreateCoinTransactionParamsWithoutCertainProps } from "./types";
 
 /**
  * @class BondingPoolSingleton
@@ -19,9 +24,14 @@ export class BondingPoolSingleton {
   public static UPGRADE_CAP_OBJECT_ID = "0xc8fefd616fa07e815340863b091f7ed9477c4010a4d521cf513860c370db57da";
   public static PACKAGE_OBJECT_ID = "0x8f9a0538e30a67e900fe0db14ed6845b72e1f89378f204c2f3ba5b25eadc7fd1";
 
+  // TODO: These prefixes would be changed once we'll re-depoy the contract & re-generate the types
   public static TICKET_COIN_MODULE_PREFIX = "ac_b_";
   public static TICKET_COIN_NAME_PREFIX = "TicketFor";
   public static TICKET_COIN_DESCRIPTION_PREFIX = "Pre sale ticket of bonding curve pool for the following memecoin: ";
+
+  public static MEMECOIN_DECIMALS = "6";
+  public static MEMECOIN_MINT_AMOUNT = "0";
+  public static MEMECOIN_FIXED_SUPPLY = false;
 
   public provider: SuiClient;
 
@@ -67,5 +77,49 @@ export class BondingPoolSingleton {
     const txResult = newDefault(tx, typeArgs, args);
 
     return { tx, txResult };
+  }
+
+  public static createBondingCurvePool(params: CreateBondingCurvePoolParams) {
+    const { memeCoin, ticketCoin, transaction } = params;
+    const tx = transaction ?? new TransactionBlock();
+
+    const createBondingCurvePoolTx = BondingPoolSingleton.createBondingCurvePoolWithDefaultParams(
+      {
+        registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
+        memeCoinCap: memeCoin.treasureCapId,
+        memeCoinMetadata: memeCoin.metadataObjectId,
+        ticketCoinCap: ticketCoin.treasureCapId,
+        ticketCoinMetadata: ticketCoin.metadataObjectId,
+      },
+      [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
+      tx,
+    );
+
+    return createBondingCurvePoolTx;
+  }
+
+  public static async createMemeAndTicketCoins(params: CreateCoinTransactionParamsWithoutCertainProps) {
+    const tx = params.transaction ?? new TransactionBlock();
+
+    const coinCreationParams: CreateCoinTransactionParams = {
+      ...params,
+      decimals: BondingPoolSingleton.MEMECOIN_DECIMALS,
+      fixedSupply: BondingPoolSingleton.MEMECOIN_FIXED_SUPPLY,
+      mintAmount: BondingPoolSingleton.MEMECOIN_MINT_AMOUNT,
+
+      transaction: tx,
+    };
+
+    // Create Coin TransactionBlock
+    const coinTx = await CoinManagerSingleton.getCreateCoinTransaction(coinCreationParams);
+    // Transform data for Ticket Coin
+    const ticketFromParams = getTicketDataFromCoinParams(coinCreationParams);
+    // Create Ticket Coin TransactionBlock
+    const memeAndTicketCoinTx = await CoinManagerSingleton.getCreateCoinTransaction({
+      ...ticketFromParams,
+      transaction: coinTx,
+    });
+
+    return memeAndTicketCoinTx;
   }
 }

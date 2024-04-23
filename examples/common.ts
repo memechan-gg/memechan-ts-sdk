@@ -5,11 +5,7 @@ import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { normalizeMnemonic } from "./utils/normalizeMnemonic";
 import { hexStringToUint8Array } from "./utils/hexStringToUint8Array";
-
-export const SHORT_SUI_COIN_TYPE = "0x2::sui::SUI";
-export const LONG_SUI_COIN_TYPE = "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI";
-
-export const DEFAULT_GAS_BUDGET = 50_000_000;
+import { DEFAULT_GAS_BUDGET } from "../src/common/sui";
 
 if (!process.env.SUI_WALLET_SEED_PHRASE?.length && !process.env.SUI_WALLET_PRIVATE_KEY_ARRAY?.length) {
   throw new Error("Empty mnemonic or private key");

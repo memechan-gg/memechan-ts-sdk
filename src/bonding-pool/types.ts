@@ -1,4 +1,7 @@
-export type ExtractedData = {
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { CreateCoinTransactionParams } from "../coin/types";
+
+export type ExtractedCoinDataFromTransaction = {
   memeCoin: {
     coinType: string;
     objectId: string;
@@ -16,3 +19,14 @@ export type ExtractedData = {
     metadataObjectId: string;
   };
 };
+
+export type CreateBondingCurvePoolParams = {
+  memeCoin: { treasureCapId: string; metadataObjectId: string; coinType: string };
+  ticketCoin: { treasureCapId: string; metadataObjectId: string; coinType: string };
+  transaction?: TransactionBlock;
+};
+
+export type CreateCoinTransactionParamsWithoutCertainProps = Omit<
+  CreateCoinTransactionParams,
+  "decimals" | "fixedSupply" | "mintAmount"
+>;
