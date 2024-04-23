@@ -7,7 +7,7 @@
     "rootDir": "./src"
   },
   "compileOnSave": true,
-  "include": ["src", ".eslintrc.js"],
-  "exclude": ["src/examples"],
+  "include": ["src", "eslint.config.js"],
+  "exclude": ["src/examples", "demo"],
   "extends": "./tsconfig"
 }

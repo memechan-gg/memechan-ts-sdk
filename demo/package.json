@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@avernikoz/memechan-ts-sdk": "../avernikoz-memechan-ts-sdk-v1.0.9.tgz",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

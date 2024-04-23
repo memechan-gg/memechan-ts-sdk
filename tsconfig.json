@@ -16,5 +16,6 @@
     "allowJs": true
   },
   "compileOnSave": true,
-  "include": ["src", ".eslintrc.mjss", "examples", "tests", "jest.config.js"]
+  "include": ["src", "examples", "tests", "jest.config.js"],
+  "exclude": ["demo"]
 }
