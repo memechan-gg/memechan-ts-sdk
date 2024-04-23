@@ -8,7 +8,7 @@ import { LONG_SUI_COIN_TYPE } from "../../src/common/sui";
 import { keypair, provider, user } from "../common";
 import { sleep } from "../utils/sleep";
 
-// yarn ts-node examples/bonding-curve/create-coins-for-bonding-curve.ts
+// yarn ts-node examples/bonding-curve/create-coins-and-create-bonding-curve-granural-version.ts
 export const createCoinsForBondingCurve = async (params: CreateCoinTransactionParams) => {
   // Create Coin
   const coinTx = await CoinManagerSingleton.getCreateCoinTransaction(params);
