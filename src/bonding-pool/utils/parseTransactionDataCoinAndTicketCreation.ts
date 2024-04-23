@@ -1,13 +1,13 @@
 import { SuiObjectChange } from "@mysten/sui.js/client";
 import { BondingPoolSingleton } from "../BondingPool";
-import { ExtractedData } from "../types";
-import { validateExtractedData } from "./validateExtractedData";
+import { ExtractedCoinDataFromTransaction } from "../types";
+import { validateExtractedCoinDataFromTransaction } from "./validateExtractedCoinDataFromTransaction";
 import { extractCoinType } from "./extractCoinType";
 
 export const parseTransactionDataCoinAndTicketCreation = (
   objectChanges: SuiObjectChange[] | null | undefined,
-): ExtractedData => {
-  const initialData: ExtractedData = {
+): ExtractedCoinDataFromTransaction => {
+  const initialData: ExtractedCoinDataFromTransaction = {
     memeCoin: {
       coinType: "",
       objectId: "",
@@ -73,7 +73,7 @@ export const parseTransactionDataCoinAndTicketCreation = (
     ticketCoin: { ...data.ticketCoin, coinType: ticketCoinType },
   };
 
-  validateExtractedData(dataWithCoinTypes);
+  validateExtractedCoinDataFromTransaction(dataWithCoinTypes);
 
   return dataWithCoinTypes;
 };

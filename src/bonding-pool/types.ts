@@ -1,4 +1,6 @@
-export type ExtractedData = {
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+
+export type ExtractedCoinDataFromTransaction = {
   memeCoin: {
     coinType: string;
     objectId: string;
@@ -15,4 +17,10 @@ export type ExtractedData = {
     packageId: string;
     metadataObjectId: string;
   };
+};
+
+export type CreateBondingCurvePoolParams = {
+  memeCoin: { treasureCapId: string; metadataObjectId: string; coinType: string };
+  ticketCoin: { treasureCapId: string; metadataObjectId: string; coinType: string };
+  transaction?: TransactionBlock;
 };

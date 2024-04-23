@@ -1,11 +1,11 @@
-import { ExtractedData } from "../types";
+import { ExtractedCoinDataFromTransaction } from "../types";
 
 /**
  * Validates the extracted data object to ensure none of the string values are empty.
- * @param {ExtractedData} data - The extracted data object to validate.
+ * @param {ExtractedCoinDataFromTransaction} data - The extracted data object to validate.
  * @throws {Error} Throws an error if any string value in the object is empty.
  */
-export const validateExtractedData = (data: ExtractedData): void => {
+export const validateExtractedCoinDataFromTransaction = (data: ExtractedCoinDataFromTransaction): void => {
   validateCoinData("memeCoin", data.memeCoin);
   validateCoinData("ticketCoin", data.ticketCoin);
 };
