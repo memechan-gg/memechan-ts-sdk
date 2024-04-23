@@ -6,6 +6,9 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { normalizeMnemonic } from "./utils/normalizeMnemonic";
 import { hexStringToUint8Array } from "./utils/hexStringToUint8Array";
 
+export const SHORT_SUI_COIN_TYPE = "0x2::sui::SUI";
+export const LONG_SUI_COIN_TYPE = "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI";
+
 export const DEFAULT_GAS_BUDGET = 50_000_000;
 
 if (!process.env.SUI_WALLET_SEED_PHRASE?.length && !process.env.SUI_WALLET_PRIVATE_KEY_ARRAY?.length) {
