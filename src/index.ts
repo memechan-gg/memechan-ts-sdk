@@ -6,3 +6,10 @@ export * from "./auth/types";
 export * from "./coin/CoinAPI";
 export * from "./coin/utils/validation/invalid-param-errors";
 export * from "./coin/utils/validation/validation";
+
+export * from "./bonding-pool/BondingPool";
+export * from "./bonding-pool/types";
+export * from "./bonding-pool/utils/extractCoinType";
+export * from "./bonding-pool/utils/getTicketDataFromCoinParams";
+export * from "./bonding-pool/utils/parseTransactionDataCoinAndTicketCreation";
+export * from "./bonding-pool/utils/validateExtractedCoinDataFromTransaction";
