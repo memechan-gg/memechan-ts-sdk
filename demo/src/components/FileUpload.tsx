@@ -14,6 +14,7 @@ export const FileUpload: React.FC = () => {
 
   useEffect(() => {
     authenticate();
+    getCoins();
   }, []);
 
   const authenticate = async () => {
@@ -27,6 +28,16 @@ export const FileUpload: React.FC = () => {
       signedMessage: signature,
     });
     console.log("Wallet authenticated");
+  };
+
+  const getCoins = async () => {
+    const { result: coins } = await api.queryCoins({
+      sortBy: "marketcap",
+      direction: "asc",
+    });
+    console.log("coins list", coins);
+    const coin = await api.getCoin(coins[0].type);
+    console.log("coin details", coin);
   };
 
   const handleUpload = async () => {
