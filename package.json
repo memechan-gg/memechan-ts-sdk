@@ -23,8 +23,8 @@
     "e2e": "vitest ./tests/e2e",
     "audit": "yarn audit --groups dependencies",
     "format": "prettier --write src/**/*.ts",
-    "lint": "eslint 'src/**/*.ts' --no-ignore",
-    "build": "tsup",
+    "lint": "eslint './src/**/*.ts'",
+    "build": "yarn lint && tsup",
     "build:watch": "tsc --watch",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "deploy": "yarn lint && yarn build && yarn publish --access restricted"
@@ -47,12 +47,10 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.0.2",
-    "@eslint/js": "^9.1.1",
     "@types/bn.js": "^5.1.1",
     "@types/jest": "^29.5.3",
     "@types/node": "^20.5.0",
-    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
     "dotenv": "^16.3.1",
     "eslint": "^8.0.1",
