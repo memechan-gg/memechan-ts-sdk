@@ -1,3 +1,4 @@
+import { ObjectArg } from "@avernikoz/memechan-ts-interface/dist/_framework/util";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { CreateCoinTransactionParams } from "../coin/types";
 
@@ -30,3 +31,14 @@ export type CreateCoinTransactionParamsWithoutCertainProps = Omit<
   CreateCoinTransactionParams,
   "decimals" | "fixedSupply" | "mintAmount"
 >;
+
+export type SwapSuiForTicketParams = {
+  memeCoin: { coinType: string };
+  ticketCoin: { coinType: string };
+  transaction?: TransactionBlock;
+
+  // swap params
+  bondingCurvePoolObjectId: ObjectArg;
+  inputSuiAmount: string;
+  minOutputTicketAmount: string;
+};

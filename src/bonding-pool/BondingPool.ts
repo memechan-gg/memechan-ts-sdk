@@ -1,12 +1,23 @@
 /* eslint-disable require-jsdoc */
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { newDefault, NewDefaultArgs } from "@avernikoz/memechan-ts-interface/dist/memechan/bound-curve-amm/functions";
+import {
+  newDefault,
+  NewDefaultArgs,
+  swapCoinY,
+} from "@avernikoz/memechan-ts-interface/dist/memechan/bound-curve-amm/functions";
 import { CreateCoinTransactionParams } from "../coin/types";
 import { CoinManagerSingleton } from "../coin/CoinManager";
 import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
 import { LONG_SUI_COIN_TYPE } from "../common/sui";
-import { CreateBondingCurvePoolParams, CreateCoinTransactionParamsWithoutCertainProps } from "./types";
+import {
+  CreateBondingCurvePoolParams,
+  CreateCoinTransactionParamsWithoutCertainProps,
+  SwapSuiForTicketParams,
+} from "./types";
+import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
+import BigNumber from "bignumber.js";
+import { removeDecimalPart } from "../utils/removeDecimalPart";
 
 /**
  * @class BondingPoolSingleton
@@ -121,5 +132,51 @@ export class BondingPoolSingleton {
     });
 
     return memeAndTicketCoinTx;
+  }
+
+  // TODO: Add slippage instead of `minOutputTicketAmount` param
+  // TODO: Add method for simulating the swap to get the data how much for given
+  //  `inputAmount` client can receive `output`.
+  public static async swapSuiForTicket(params: SwapSuiForTicketParams) {
+    const { memeCoin, ticketCoin, transaction, bondingCurvePoolObjectId, minOutputTicketAmount, inputSuiAmount } =
+      params;
+    const tx = transaction ?? new TransactionBlock();
+
+    // TODO: We might move these pre-processing to some separate method
+    // input
+    // Note: Be aware, we relay on the fact that `memecoin` pool is always in pair with SUI coin type, hence why
+    // we can specify the decimals right away
+    const inputCoinDecimals: number = SUI_DECIMALS;
+    const inputAmountWithDecimalsBigNumber = new BigNumber(inputSuiAmount).multipliedBy(10 ** inputCoinDecimals);
+    // We do removing the decimal part in case client send number with more decimal part
+    // than this particular token has decimal places allowed (`inputCoinDecimals`)
+    // That's prevent situation when casting
+    // BigNumber to BigInt fails with error ("Cannot convert 183763562.1 to a BigInt")
+    const inputAmountWithoutExceededDecimalPart = removeDecimalPart(inputAmountWithDecimalsBigNumber);
+    const inputAmountWithDecimals = BigInt(inputAmountWithoutExceededDecimalPart.toString());
+    const suiCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
+
+    // output
+    // Note: Be aware, we relay on the fact that `MEMECOIN_DECIMALS` would be always set same for all memecoins
+    // As well as the fact that memecoins and tickets decimals are always the same
+    const outputAmountWithDecimalsBigNumber = new BigNumber(minOutputTicketAmount).multipliedBy(
+      10 ** +BondingPoolSingleton.MEMECOIN_DECIMALS,
+    );
+    // We do removing the decimal part in case client send number with more decimal part
+    // than this particular token has decimal places allowed (`outputCoinDecimals`)
+    // That's prevent situation when casting
+    // BigNumber to BigInt fails with error ("Cannot convert 183763562.1 to a BigInt")
+    const outputAmountWithoutExceededDecimalPart = removeDecimalPart(outputAmountWithDecimalsBigNumber);
+    const outputAmountWithDecimals = outputAmountWithoutExceededDecimalPart.toString();
+    const bigintMinOutput = BigInt(outputAmountWithDecimals);
+
+    const txResult = swapCoinY(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+      pool: bondingCurvePoolObjectId,
+      coinXMinValue: bigintMinOutput,
+      coinY: suiCoinObject,
+      clock: SUI_CLOCK_OBJECT_ID,
+    });
+
+    return { tx, txResult };
   }
 }
