@@ -4,10 +4,12 @@ import { Coin, coinSchema } from "../../src/coin/schemas/coin-schemas";
 import { isSorted } from "./helpers";
 
 describe("CoinService", () => {
-  let keypair: Ed25519Keypair;
+  //let keypair: Ed25519Keypair;
   let coin: Coin;
 
   beforeAll(async () => {
+    /*
+    This piece brings the authentication, which currently is not implemented in the APIs, so just comment this out when some apis will require it
     keypair = new Ed25519Keypair();
     console.log("Testing with wallet", keypair.getPublicKey().toSuiAddress());
     const authService = new Auth();
@@ -17,7 +19,7 @@ describe("CoinService", () => {
       walletAddress: keypair.getPublicKey().toSuiAddress(),
       signedMessage: signature,
     });
-    console.log("Wallet authenticated");
+    console.log("Wallet authenticated");*/
   });
 
   test("check queryCoins retrieve successfully all coins, sorted by marketcap in asc", async () => {

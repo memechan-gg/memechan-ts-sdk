@@ -6,7 +6,7 @@ import { SignatureV4 } from "@smithy/signature-v4";
 
 export const jsonFetch = async (
   input: string | URL | globalThis.Request,
-  init?: Omit<RequestInit, "body"> & { body: unknown },
+  init?: Omit<RequestInit, "body"> & { body?: unknown },
 ) => {
   let body;
   if (init?.body) {

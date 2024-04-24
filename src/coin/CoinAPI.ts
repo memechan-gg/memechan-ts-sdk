@@ -1,6 +1,5 @@
-import { Auth } from "../auth/Auth";
 import { BE_URL } from "../constants";
-import { signedJsonFetch, unsignedMultipartRequest } from "../utils/fetch";
+import { jsonFetch, unsignedMultipartRequest } from "../utils/fetch";
 import { QueryCoinsRequestParams } from "./schemas/coin-schemas";
 
 /**
@@ -20,8 +19,7 @@ export class CoinAPI {
    * @return {Promise<any>} A promise that resolves with the coin data.
    */
   getCoin(coinType: string) {
-    if (!Auth.currentSession) throw new Error("You need to start a session first, use the Auth module");
-    return signedJsonFetch(`${this.url}/coin?coinType=${coinType}`, Auth.currentSession, {
+    return jsonFetch(`${this.url}/coin?coinType=${coinType}`, {
       method: "GET",
     });
   }
@@ -33,9 +31,8 @@ export class CoinAPI {
    * @return {Promise<any>} A promise that resolves with the queried coin data.
    */
   queryCoins(params: QueryCoinsRequestParams) {
-    if (!Auth.currentSession) throw new Error("You need to start a session first, use the Auth module");
     const queryParams = new URLSearchParams(params as Record<string, string>);
-    return signedJsonFetch(`${this.url}/coins?${queryParams.toString()}`, Auth.currentSession, {
+    return jsonFetch(`${this.url}/coins?${queryParams.toString()}`, {
       method: "GET",
     });
   }
@@ -46,7 +43,6 @@ export class CoinAPI {
    * @return {Promise<void>} A promise that resolves with the response of the fetch request.
    */
   uploadFile(file: File) {
-    if (!Auth.currentSession) throw new Error("You need to start a session first, use the Auth module");
     return unsignedMultipartRequest(`${this.url}/upload-image`, file);
   }
 }
