@@ -1,3 +1,4 @@
+import { Auth } from "../auth/Auth";
 import { BE_URL } from "../constants";
 import { jsonFetch, unsignedMultipartRequest } from "../utils/fetch";
 import { QueryCoinsRequestParams } from "./schemas/coin-schemas";
@@ -43,6 +44,7 @@ export class CoinAPI {
    * @return {Promise<void>} A promise that resolves with the response of the fetch request.
    */
   uploadFile(file: File) {
+    if (!Auth.currentSession) throw new Error("You need to start a session first, use the Auth module");
     return unsignedMultipartRequest(`${this.url}/upload-image`, file);
   }
 }

@@ -1,5 +1,4 @@
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { Auth, CoinAPI } from "../../src";
+import { CoinAPI } from "../../src";
 import { Coin, coinSchema } from "../../src/coin/schemas/coin-schemas";
 import { isSorted } from "./helpers";
 
@@ -13,7 +12,7 @@ describe("CoinService", () => {
     keypair = new Ed25519Keypair();
     console.log("Testing with wallet", keypair.getPublicKey().toSuiAddress());
     const authService = new Auth();
-    const messageToSign = await authService.requestMessageToSign(keypair.getPublicKey().toSuiAddress());
+    const messageToSgin = await authService.requestMessageToSign(keypair.getPublicKey().toSuiAddress());
     const { signature } = await keypair.signPersonalMessage(Buffer.from(messageToSign));
     await authService.refreshSession({
       walletAddress: keypair.getPublicKey().toSuiAddress(),
