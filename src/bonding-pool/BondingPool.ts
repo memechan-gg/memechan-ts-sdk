@@ -135,7 +135,8 @@ export class BondingPoolSingleton {
   }
 
   // TODO: Add slippage instead of `minOutputTicketAmount` param
-  // TODO: Add method for simulating the swap to get the data how much for given `inputAmount` client can receive `output`.
+  // TODO: Add method for simulating the swap to get the data how much for given
+  //  `inputAmount` client can receive `output`.
   public static async swapSuiForTicket(params: SwapSuiForTicketParams) {
     const { memeCoin, ticketCoin, transaction, bondingCurvePoolObjectId, minOutputTicketAmount, inputSuiAmount } =
       params;

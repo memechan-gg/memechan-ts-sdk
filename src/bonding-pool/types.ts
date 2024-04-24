@@ -1,7 +1,6 @@
+import { ObjectArg } from "@avernikoz/memechan-ts-interface/dist/_framework/util";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { CreateCoinTransactionParams } from "../coin/types";
-import { ObjectArg } from "@avernikoz/memechan-ts-interface/dist/_framework/util";
-import BigNumber from "bignumber.js";
 
 export type ExtractedCoinDataFromTransaction = {
   memeCoin: {
