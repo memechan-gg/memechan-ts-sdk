@@ -305,7 +305,8 @@ export class BondingPoolSingleton {
 
     if (tokenPolicyCapList.length > 1) {
       console.warn(
-        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${poolId}, ignoring the rest except first`,
+        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${poolId},
+        ignoring the rest except first`,
         tokenPolicyCapList,
       );
     }
