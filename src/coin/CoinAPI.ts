@@ -64,7 +64,6 @@ export class CoinAPI {
    * @return {Promise<void>} A promise that resolves with the response of the fetch request.
    */
   uploadFile(file: File) {
-    if (!Auth.currentSession) throw new Error("You need to start a session first, use the Auth module");
     return unsignedMultipartRequest(`${this.url}/upload-image`, file);
   }
 }
