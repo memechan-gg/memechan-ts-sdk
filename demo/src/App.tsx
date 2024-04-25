@@ -12,9 +12,11 @@ const api = new CoinAPI(BE_URL);
 
 function App() {
   useEffect(() => {
-    authenticate();
-    getCoins();
-    createCoin();
+    (async () => {
+      await authenticate();
+      await getCoins();
+      await createCoin();
+    })();
   }, []);
 
   const createCoin = async () => {
@@ -57,11 +59,12 @@ function App() {
 
   const getCoins = async () => {
     const { result: coins } = await api.queryCoins({
+      status: "PRESALE",
       sortBy: "marketcap",
       direction: "asc",
     });
     console.log("coins list", coins);
-    const coin = await api.getCoin(coins[0].type);
+    const coin = await api.getCoin("PRESALE", coins[0].type);
     console.log("coin details", coin);
   };
   return (
