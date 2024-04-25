@@ -1,7 +1,7 @@
 import { ObjectArg } from "@avernikoz/memechan-ts-interface/dist/_framework/util";
+import { DynamicFieldInfo, SuiObjectResponse } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { CreateCoinTransactionParams } from "../coin/types";
-import { DynamicFieldInfo, SuiObjectResponse, SuiParsedData } from "@mysten/sui.js/client";
 
 export type ExtractedCoinDataFromTransaction = {
   memeCoin: {
