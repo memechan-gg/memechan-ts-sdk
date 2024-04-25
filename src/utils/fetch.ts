@@ -43,7 +43,7 @@ export const signedJsonFetch = async (
     },
     hostname: parsedUrl.hostname,
     path: parsedUrl.pathname,
-    body: body ? JSON.stringify(body) : undefined,
+    body,
   });
 
   const signer = new SignatureV4({

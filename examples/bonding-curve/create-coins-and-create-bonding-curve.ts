@@ -40,6 +40,7 @@ export const createCoinsForBondingCurve = async (params: CreateCoinTransactionPa
   });
 
   console.debug("res2: ", res2);
+  return res;
 };
 
 createCoinsForBondingCurve({
