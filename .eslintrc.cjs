@@ -27,6 +27,7 @@ module.exports = {
     indent: "off",
     "max-len": ["error", { code: 120 }],
     "prettier/prettier": 2, // Means error
+    "@typescript-eslint/no-unused-vars": "warn",
   },
   overrides: [
     {
