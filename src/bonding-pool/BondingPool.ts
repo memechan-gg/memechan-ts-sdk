@@ -1,32 +1,32 @@
 /* eslint-disable require-jsdoc */
-import { SuiClient, SuiObjectResponse } from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
+  NewDefaultArgs,
   isReadyToLaunch,
   newDefault,
-  NewDefaultArgs,
   swapCoinY,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/bound-curve-amm/functions";
+import { SuiClient } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
 
-import { CreateCoinTransactionParams } from "../coin/types";
+import { bcs } from "@mysten/sui.js/bcs";
+import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
+import BigNumber from "bignumber.js";
 import { CoinManagerSingleton } from "../coin/CoinManager";
-import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
+import { CreateCoinTransactionParams } from "../coin/types";
 import { LONG_SUI_COIN_TYPE } from "../common/sui";
+import { removeDecimalPart } from "../utils/removeDecimalPart";
 import {
   CreateBondingCurvePoolParams,
   CreateCoinTransactionParamsWithoutCertainProps,
   SwapSuiForTicketParams,
 } from "./types";
-import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
-import BigNumber from "bignumber.js";
-import { removeDecimalPart } from "../utils/removeDecimalPart";
-import { bcs } from "@mysten/sui.js/bcs";
 import { getAllDynamicFields } from "./utils/getAllDynamicFields";
 import { getAllObjects } from "./utils/getAllObjects";
-import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
+import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
 import { isPoolObjectData } from "./utils/isPoolObjectData";
+import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
 
 /**
  * @class BondingPoolSingleton
