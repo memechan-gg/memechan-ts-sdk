@@ -5,7 +5,7 @@ import { parseTransactionDataCoinAndTicketCreation } from "../../src/bonding-poo
 import { keypair, provider, user } from "../common";
 import { sleep } from "../utils/sleep";
 
-// yarn ts-node examples/bonding-curve/create-coins-and-create-bonding-curve.ts
+// yarn tsx examples/bonding-curve/create-coins-and-create-bonding-curve.ts
 export const createCoinsForBondingCurve = async (params: CreateCoinTransactionParamsWithoutCertainProps) => {
   const memeAndTicketCoinTx = await BondingPoolSingleton.createMemeAndTicketCoins(params);
 
