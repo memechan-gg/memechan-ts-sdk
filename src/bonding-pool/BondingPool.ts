@@ -1,11 +1,15 @@
 /* eslint-disable require-jsdoc */
-import { SuiClient } from "@mysten/sui.js/client";
+import { SuiClient, SuiObjectResponse } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
+  isReadyToLaunch,
   newDefault,
   NewDefaultArgs,
   swapCoinY,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/bound-curve-amm/functions";
+
+import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
+
 import { CreateCoinTransactionParams } from "../coin/types";
 import { CoinManagerSingleton } from "../coin/CoinManager";
 import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
@@ -18,6 +22,11 @@ import {
 import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
 import BigNumber from "bignumber.js";
 import { removeDecimalPart } from "../utils/removeDecimalPart";
+import { bcs } from "@mysten/sui.js/bcs";
+import { getAllDynamicFields } from "./utils/getAllDynamicFields";
+import { getAllObjects } from "./utils/getAllObjects";
+import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
+import { isPoolObjectData } from "./utils/isPoolObjectData";
 
 /**
  * @class BondingPoolSingleton
@@ -44,7 +53,10 @@ export class BondingPoolSingleton {
   public static MEMECOIN_MINT_AMOUNT = "0";
   public static MEMECOIN_FIXED_SUPPLY = false;
 
+  public static SIMLATION_ACCOUNT_ADDRESS = "0xe480f679929180f9016e4c7545f1f398640017d05ecccd96b944b7d07c97664c";
+
   public provider: SuiClient;
+  public suiProviderUrl: string;
 
   /**
    * Constructs a new instance of the SuiProvider class with the provided SUI provider URL.
@@ -55,6 +67,7 @@ export class BondingPoolSingleton {
    */
   private constructor(suiProviderUrl: string) {
     this.provider = new SuiClient({ url: suiProviderUrl });
+    this.suiProviderUrl = suiProviderUrl;
   }
 
   /**
@@ -178,5 +191,106 @@ export class BondingPoolSingleton {
     });
 
     return { tx, txResult };
+  }
+
+  public async getRegistryTableAddress({ transaction }: { transaction?: TransactionBlock } = {}) {
+    const tx = transaction ?? new TransactionBlock();
+    const txResult = seedPools(tx, BondingPoolSingleton.REGISTRY_OBJECT_ID);
+    const res = await this.provider.devInspectTransactionBlock({
+      sender: BondingPoolSingleton.SIMLATION_ACCOUNT_ADDRESS,
+      transactionBlock: tx,
+    });
+    if (!res.results) {
+      throw new Error("No results found for all bonding curve pools");
+    }
+    const returnValues = res.results[0].returnValues;
+    if (!returnValues) {
+      throw new Error("Return values are undefined");
+    }
+
+    // console.log("returnValues: ", returnValues);
+    const registryTableAddress = returnValues[0][0];
+    const decodedTableAddress: string = bcs.de("address", new Uint8Array(registryTableAddress));
+
+    return decodedTableAddress;
+  }
+
+  public async getAllPools({ transaction }: { transaction?: TransactionBlock } = {}) {
+    const registryTableId = await this.getRegistryTableAddress();
+
+    const tableDynamicFields = await getAllDynamicFields({
+      tableId: registryTableId,
+      provider: this.provider,
+    });
+
+    if (!isRegistryTableTypenameDynamicFields(tableDynamicFields)) {
+      throw new Error("Wrong shape of typename dynamic fields of bonding curve registry table");
+    }
+
+    const typenameObjectIdsMap = tableDynamicFields.reduce(
+      (acc: { [objectId: string]: { objectId: string; registryKeyType: string } }, el) => {
+        acc[el.objectId] = { objectId: el.objectId, registryKeyType: el.name.value.name };
+
+        return acc;
+      },
+      {},
+    );
+
+    const tableTypenameObjectIds = Object.keys(typenameObjectIdsMap);
+    // console.debug("tableTypenameObjectIds: ", tableTypenameObjectIds);
+
+    const objectDataList = await getAllObjects({
+      objectIds: tableTypenameObjectIds,
+      provider: this.provider,
+      options: { showContent: true, showDisplay: true },
+    });
+
+    // console.debug("objectDataList: ");
+    // console.dir(objectDataList, { depth: null });
+
+    if (!isPoolObjectData(objectDataList)) {
+      throw new Error("Wrong shape of seed pools of bonding curve pools");
+    }
+
+    const poolIds = objectDataList.map((el) => el.data.content.fields.value);
+
+    // TODO: Add pools data (e.g. CoinX, CoinY, Meme) when:
+    // 1. Contract would be upgraded
+    // 2. More time for it
+    return { poolIds };
+  }
+
+  public async isMemeCoinReadyToLivePhase({
+    transaction,
+    memeCoin,
+    ticketCoin,
+    poolId,
+  }: {
+    memeCoin: { coinType: string };
+    ticketCoin: { coinType: string };
+    poolId: string;
+    transaction?: TransactionBlock;
+  }) {
+    const tx = transaction ?? new TransactionBlock();
+    const txResult = isReadyToLaunch(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], poolId);
+
+    const res = await this.provider.devInspectTransactionBlock({
+      sender: BondingPoolSingleton.SIMLATION_ACCOUNT_ADDRESS,
+      transactionBlock: tx,
+    });
+
+    if (!res.results) {
+      throw new Error("No results found for all bonding curve pools");
+    }
+    const returnValues = res.results[0].returnValues;
+    if (!returnValues) {
+      throw new Error("Return values are undefined");
+    }
+
+    // console.log("returnValues: ", returnValues);
+    const isReadyToLivePhaseRaw = returnValues[0][0];
+    const decodedIsReadyToLivePhase: string = bcs.de("bool", new Uint8Array(isReadyToLivePhaseRaw));
+
+    return decodedIsReadyToLivePhase;
   }
 }
