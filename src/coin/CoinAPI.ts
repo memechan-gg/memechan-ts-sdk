@@ -1,7 +1,7 @@
 import { Auth } from "../auth/Auth";
 import { BE_URL } from "../constants";
-import { jsonFetch, unsignedMultipartRequest } from "../utils/fetch";
-import { QueryCoinsRequestParams } from "./schemas/coin-schemas";
+import { jsonFetch, signedJsonFetch, unsignedMultipartRequest } from "../utils/fetch";
+import { CreateCoinRequestBody, createCoinRequestBodySchema, QueryCoinsRequestParams } from "./schemas/coin-schemas";
 
 /**
  * Service class for handling coin-related operations.
@@ -35,6 +35,20 @@ export class CoinAPI {
     const queryParams = new URLSearchParams(params as Record<string, string>);
     return jsonFetch(`${this.url}/coins?${queryParams.toString()}`, {
       method: "GET",
+    });
+  }
+
+  /**
+   * Create coin
+   * @param {CreateCoinRequestBody} params - The create coin request payload.
+   * @throws Will throw an error if authentication session is not active.
+   * @return {Promise<any>} A promise that resolves with the queried coin data.
+   */
+  createCoin(params: CreateCoinRequestBody) {
+    if (!Auth.currentSession) throw new Error("You don't have any active session, please run the Auth.refreshSession");
+    return signedJsonFetch(`${this.url}/coin`, Auth.currentSession, {
+      method: "POST",
+      body: createCoinRequestBodySchema.parse(params),
     });
   }
 
