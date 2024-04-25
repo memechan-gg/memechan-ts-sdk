@@ -26,7 +26,7 @@ describe("CoinService authenticated operations", () => {
     const coinApi = new CoinAPI(BE_URL);
     /* 
     UNCOMMENT IN CASE YOU WANT TO CREATE A NEW TX, remember to use the SUI_WALLET_SEED_PHRASE env var
-    const { digest } = await createCoin({
+    const { digest } = await createCoinAndTicket({
       description: "testtoken4am description",
       name: "testtoken4am",
       signerAddress: user,

@@ -1,12 +1,13 @@
 import { keypair, provider, user } from "../common";
-import { BondingPoolSingleton, CreateCoinTransactionParams } from "../../src";
+import { CoinManagerSingleton } from "../../src/coin/CoinManager";
+import { CreateCoinTransactionParams } from "../../src";
 
 // yarn ts-node examples/create-coin/create-coin.ts
 export const createCoin = async (params: CreateCoinTransactionParams) => {
-  const memeAndTicketCoinTx = await BondingPoolSingleton.createMemeAndTicketCoins(params);
+  const createCoinTx = await CoinManagerSingleton.getCreateCoinTransaction(params);
 
   const res = await provider.signAndExecuteTransactionBlock({
-    transactionBlock: memeAndTicketCoinTx,
+    transactionBlock: createCoinTx,
     signer: keypair,
     requestType: "WaitForLocalExecution",
     options: {
@@ -19,7 +20,6 @@ export const createCoin = async (params: CreateCoinTransactionParams) => {
   });
 
   console.debug("res: ", res);
-  return res;
 };
 
 createCoin({
