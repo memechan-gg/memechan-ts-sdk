@@ -27,7 +27,7 @@ export const coinSchema = z.object({
   marketcap: z.number(),
   creator: z.string(),
   creationTime: z.number(),
-  contractAddress: z.string(),
+  contractAddress: z.string().nullish(),
 });
 
 export const queryCoinsRequestParamsSchema = z.object({
