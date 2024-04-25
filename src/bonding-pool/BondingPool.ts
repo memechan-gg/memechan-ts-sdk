@@ -217,7 +217,7 @@ export class BondingPoolSingleton {
   }
 
   public async getAllPools({ transaction }: { transaction?: TransactionBlock } = {}) {
-    const registryTableId = await this.getRegistryTableAddress();
+    const registryTableId = await this.getRegistryTableAddress({ transaction });
 
     const tableDynamicFields = await getAllDynamicFields({
       parentObjectId: registryTableId,
