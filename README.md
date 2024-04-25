@@ -29,7 +29,19 @@ await authService.refreshSession({
 });
 ```
 
-Once that you did this you can perform any actions exposed by the CoinAPI, such as:
+Once that you did this you can perform the upload action exposed by the CoinAPI, which is the only authenticated API the moment, in the future also the create coin will have this protection:
+
+```
+    const coinService = new CoinAPI();
+    await api.uploadFile(file);
+```
+
+Others APIs are in read and are totally public, you can use them like this:
+
+```
+    const coinService = new CoinAPI();
+    const { result } = await coinService.getCoin('coin-type');
+```
 
 ```
     const coinService = new CoinAPI();
@@ -37,9 +49,4 @@ Once that you did this you can perform any actions exposed by the CoinAPI, such 
       sortBy: "marketcap",
       direction: "asc",
     });
-```
-
-```
-    const coinService = new CoinAPI();
-    const { result } = await coinService.getCoin('coin-type');
 ```

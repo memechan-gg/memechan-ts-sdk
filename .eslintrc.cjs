@@ -1,4 +1,5 @@
 module.exports = {
+  ignorePatterns: [],
   root: true,
   env: {
     es6: true,
@@ -19,9 +20,6 @@ module.exports = {
     project: ["tsconfig.json"],
     sourceType: "module",
   },
-  ignorePatterns: [
-    // "/lib/**/*", // Ignore built files.
-  ],
   plugins: ["@typescript-eslint", "import", "prettier"],
   rules: {
     quotes: ["error", "double"],
@@ -35,19 +33,6 @@ module.exports = {
       files: ["tests/**/*"],
       env: {
         jest: true,
-      },
-    },
-    // Generated types from sui-client-gen
-    {
-      files: ["__generated__/**/*", "src/launchpad/surfdog/__generated__/**/*"],
-      rules: {
-        "@typescript-eslint/ban-types": "off",
-        "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/no-unused-vars": "off",
-        "valid-jsdoc": "off",
-        "require-jsdoc": "off",
-        "max-len": "off",
-        camelcase: "off",
       },
     },
   ],

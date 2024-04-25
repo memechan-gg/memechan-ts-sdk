@@ -102,7 +102,7 @@ export const getBytecode = (info: ICreateTokenForm & { recipient: string }) => {
   updated = updateDescription(updated, info.description ?? "");
   updated = updateUrl(updated, info.imageUrl ?? "");
 
-  const supply = BigNumber(info.totalSupply).times(BigNumber(10).pow(info.decimals || 9));
+  const supply = new BigNumber(info.totalSupply).times(new BigNumber(10).pow(info.decimals || 9));
 
   updated = updateMintAmount(updated, supply);
   updated = updateTreasuryCapRecipient(updated, info.fixedSupply ? normalizeSuiAddress("0x0") : info.recipient);
