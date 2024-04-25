@@ -27,6 +27,7 @@ import { getAllObjects } from "./utils/getAllObjects";
 import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
 import { isPoolObjectData } from "./utils/isPoolObjectData";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
+import { isTokenPolicyCapObjectData } from "./utils/isTokenPolicyCapObjectData";
 
 /**
  * @class BondingPoolSingleton
@@ -219,7 +220,7 @@ export class BondingPoolSingleton {
     const registryTableId = await this.getRegistryTableAddress();
 
     const tableDynamicFields = await getAllDynamicFields({
-      tableId: registryTableId,
+      parentObjectId: registryTableId,
       provider: this.provider,
     });
 
@@ -292,5 +293,43 @@ export class BondingPoolSingleton {
     const decodedIsReadyToLivePhase: string = bcs.de("bool", new Uint8Array(isReadyToLivePhaseRaw));
 
     return decodedIsReadyToLivePhase;
+  }
+
+  public async getTokenPolicyCapByPoolId({ poolId }: { poolId: string }) {
+    const poolDynamicFields = await getAllDynamicFields({ parentObjectId: poolId, provider: this.provider });
+    const tokenPolicyCapList = poolDynamicFields.filter((el) => el.objectType.includes("0x2::token::TokenPolicyCap"));
+
+    if (tokenPolicyCapList.length === 0) {
+      throw new Error(`[getTokenPolicyCapByPoolId] No token policy cap found for the pool ${poolId}`);
+    }
+
+    if (tokenPolicyCapList.length > 1) {
+      console.warn(
+        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${poolId}, ignoring the rest except first`,
+        tokenPolicyCapList,
+      );
+    }
+
+    const [tokenPolicyCapObject] = tokenPolicyCapList;
+    const tokenPolicyCapObjectId = tokenPolicyCapObject.objectId;
+
+    return tokenPolicyCapObjectId;
+  }
+
+  public async getTokenPolicyByPoolId({ poolId }: { poolId: string }) {
+    const tokenPolicyCap = await this.getTokenPolicyCapByPoolId({ poolId });
+
+    const tokenPolicyCapObjectData = await this.provider.getObject({
+      id: tokenPolicyCap,
+      options: { showContent: true, showOwner: true, showType: true },
+    });
+
+    if (!isTokenPolicyCapObjectData(tokenPolicyCapObjectData)) {
+      throw new Error(`[getTokenPolicyByPoolId] No token policy cap found for the pool ${poolId}`);
+    }
+
+    const tokenPolicyObjectId = tokenPolicyCapObjectData.data?.content.fields.value.fields.for;
+
+    return tokenPolicyObjectId;
   }
 }

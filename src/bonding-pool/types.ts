@@ -1,7 +1,7 @@
 import { ObjectArg } from "@avernikoz/memechan-ts-interface/dist/_framework/util";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { CreateCoinTransactionParams } from "../coin/types";
-import { DynamicFieldInfo, SuiObjectResponse } from "@mysten/sui.js/client";
+import { DynamicFieldInfo, SuiObjectResponse, SuiParsedData } from "@mysten/sui.js/client";
 
 export type ExtractedCoinDataFromTransaction = {
   memeCoin: {
@@ -74,6 +74,28 @@ export interface PoolObjectData extends SuiObjectResponse {
           };
         };
         value: string;
+      };
+    };
+  };
+}
+
+export interface TokenPolicyCapObjectData extends SuiObjectResponse {
+  data: {
+    type: string;
+    version: string;
+    objectId: string;
+    digest: string;
+    content: {
+      dataType: "moveObject";
+      type: string;
+      hasPublicTransfer: boolean;
+      fields: {
+        value: {
+          type: string;
+          fields: {
+            for: string;
+          };
+        };
       };
     };
   };
