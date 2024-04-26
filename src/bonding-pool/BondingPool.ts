@@ -3,12 +3,14 @@ import {
   NewDefaultArgs,
   isReadyToLaunch,
   newDefault,
+  swapCoinX,
   swapCoinY,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/bound-curve-amm/functions";
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
+import { StakedLP } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/structs";
 
 import { bcs } from "@mysten/sui.js/bcs";
 import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
@@ -21,6 +23,10 @@ import {
   CreateBondingCurvePoolParams,
   CreateCoinTransactionParamsWithoutCertainProps,
   ExtractedRegistryKeyData,
+  SwapParams,
+  SwapParamsForSuiInput,
+  SwapParamsForSuiInputAndTicketOutput,
+  SwapParamsForTicketInput,
   SwapSuiForTicketParams,
 } from "./types";
 import { getAllDynamicFields } from "./utils/getAllDynamicFields";
@@ -30,6 +36,8 @@ import { isPoolObjectData } from "./utils/isPoolObjectData";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
 import { isTokenPolicyCapObjectData } from "./utils/isTokenPolicyCapObjectData";
 import { extractRegistryKeyData } from "./utils/extractRegistryKeyData";
+import { deductSlippage } from "./utils/deductSlippage";
+import { normalizeInputCoinAmount } from "./utils/normalizeInputCoinAmount";
 
 /**
  * @class BondingPoolSingleton
@@ -56,7 +64,10 @@ export class BondingPoolSingleton {
   public static MEMECOIN_MINT_AMOUNT = "0";
   public static MEMECOIN_FIXED_SUPPLY = false;
 
-  public static SIMLATION_ACCOUNT_ADDRESS = "0xe480f679929180f9016e4c7545f1f398640017d05ecccd96b944b7d07c97664c";
+  public static SWAP_GAS_BUDGET = 50_000_000;
+
+  // public static SIMULATION_ACCOUNT_ADDRESS = "0xe480f679929180f9016e4c7545f1f398640017d05ecccd96b944b7d07c97664c";
+  public static SIMULATION_ACCOUNT_ADDRESS = "0xac5bceec1b789ff840d7d4e6ce4ce61c90d190a7f8c4f4ddf0bff6ee2413c33c";
 
   public provider: SuiClient;
   public suiProviderUrl: string;
@@ -150,48 +161,150 @@ export class BondingPoolSingleton {
     return memeAndTicketCoinTx;
   }
 
-  // TODO: Add slippage instead of `minOutputTicketAmount` param
-  // TODO: Add method for simulating the swap to get the data how much for given
-  //  `inputAmount` client can receive `output`.
-  public static async swapSuiForTicket(params: SwapSuiForTicketParams) {
-    const { memeCoin, ticketCoin, transaction, bondingCurvePoolObjectId, minOutputTicketAmount, inputSuiAmount } =
-      params;
+  // TODO ASAP IMPORTANT: Issue? with 950 SUI Magic Number on simulation
+  public async getSwapOutputAmountForSuiInput(params: SwapParamsForSuiInput) {
+    const {
+      memeCoin,
+      ticketCoin,
+      transaction,
+      bondingCurvePoolObjectId,
+      inputSuiAmount,
+      slippagePercentage = 0,
+    } = params;
     const tx = transaction ?? new TransactionBlock();
 
-    // TODO: We might move these pre-processing to some separate method
-    // input
-    // Note: Be aware, we relay on the fact that `memecoin` pool is always in pair with SUI coin type, hence why
-    // we can specify the decimals right away
-    const inputCoinDecimals: number = SUI_DECIMALS;
-    const inputAmountWithDecimalsBigNumber = new BigNumber(inputSuiAmount).multipliedBy(10 ** inputCoinDecimals);
-    // We do removing the decimal part in case client send number with more decimal part
-    // than this particular token has decimal places allowed (`inputCoinDecimals`)
-    // That's prevent situation when casting
-    // BigNumber to BigInt fails with error ("Cannot convert 183763562.1 to a BigInt")
-    const inputAmountWithoutExceededDecimalPart = removeDecimalPart(inputAmountWithDecimalsBigNumber);
-    const inputAmountWithDecimals = BigInt(inputAmountWithoutExceededDecimalPart.toString());
+    const inputAmountWithDecimals = normalizeInputCoinAmount(inputSuiAmount, SUI_DECIMALS);
     const suiCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
+
+    const txResult = swapCoinY(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+      pool: bondingCurvePoolObjectId,
+      coinXMinValue: BigInt(1),
+      coinY: suiCoinObject,
+      clock: SUI_CLOCK_OBJECT_ID,
+    });
+
+    const res = await this.provider.devInspectTransactionBlock({
+      sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
+      transactionBlock: tx,
+    });
+
+    if (!res.results) {
+      throw new Error("No results found for simulation of swap");
+    }
+
+    const returnValues = res.results[1].returnValues;
+    if (!returnValues) {
+      throw new Error("Return values are undefined");
+    }
+    // console.debug("returnValues");
+    // console.dir(returnValues, { depth: null });
+
+    const rawAmountBytes = returnValues[0][0];
+    const decoded = StakedLP.bcs.parse(new Uint8Array(rawAmountBytes));
+    const outputRaw = decoded.balance.value;
+    const outputAmount = new BigNumber(outputRaw).div(10 ** parseInt(BondingPoolSingleton.MEMECOIN_DECIMALS));
+
+    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
+
+    return outputAmountRespectingSlippage.toString();
+  }
+
+  /**
+   * Retrieves the output amount for swapping based on ticket input.
+   * Note: This method is a work in progress and is not expected to work fully yet.
+   *
+   * @param {SwapParamsForTicketInput} params - Parameters for the swap.
+   * @param {string} params.memeCoin - The meme coin.
+   * @param {string} params.ticketCoin - The ticket coin.
+   * @param {TransactionBlock=} params.transaction - The transaction block.
+   * @param {string} params.bondingCurvePoolObjectId - The ID of the bonding curve pool.
+   * @param {number} params.inputTicketAmount - The input ticket amount.
+   * @param {number} [params.slippagePercentage=0] - The slippage percentage.
+   * @return {Promise<string>} - A promise resolving to the output amount.
+   */
+  public async getSwapOuputAmountForTicketInput(params: SwapParamsForTicketInput): Promise<string> {
+    const {
+      memeCoin,
+      ticketCoin,
+      transaction,
+      bondingCurvePoolObjectId,
+      inputTicketAmount,
+      slippagePercentage = 0,
+    } = params;
+    const tx = transaction ?? new TransactionBlock();
+
+    const tokenPolicyObjectId = await this.getTokenPolicyByPoolId({ poolId: bondingCurvePoolObjectId.toString() });
+    const inputAmountWithDecimals = normalizeInputCoinAmount(inputTicketAmount, SUI_DECIMALS);
+    // TODO: Change that to actual coin
+    const ticketCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
+
+    const txResult = swapCoinX(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+      pool: bondingCurvePoolObjectId,
+
+      coinYMinValue: BigInt(1),
+      policy: tokenPolicyObjectId,
+      coinX: ticketCoinObject,
+    });
+
+    const res = await this.provider.devInspectTransactionBlock({
+      sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
+      transactionBlock: tx,
+    });
+
+    if (!res.results) {
+      throw new Error("No results found for simulation of swap");
+    }
+
+    const returnValues = res.results[1].returnValues;
+    if (!returnValues) {
+      throw new Error("Return values are undefined");
+    }
+    // console.debug("returnValues");
+    // console.dir(returnValues, { depth: null });
+
+    const rawAmountBytes = returnValues[0][0];
+    const decoded = StakedLP.bcs.parse(new Uint8Array(rawAmountBytes));
+    const outputRaw = decoded.balance.value;
+    const outputAmount = new BigNumber(outputRaw).div(10 ** parseInt(BondingPoolSingleton.MEMECOIN_DECIMALS));
+
+    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
+
+    return outputAmountRespectingSlippage.toString();
+  }
+
+  public static async swapSuiForTicket(params: SwapParamsForSuiInputAndTicketOutput) {
+    const {
+      memeCoin,
+      ticketCoin,
+      transaction,
+      bondingCurvePoolObjectId,
+      minOutputTicketAmount,
+      inputSuiAmount,
+      slippagePercentage = 0,
+      signerAddress,
+    } = params;
+    const tx = transaction ?? new TransactionBlock();
+
+    const inputAmountWithDecimals = normalizeInputCoinAmount(inputSuiAmount, SUI_DECIMALS);
+    const [suiCoinObject] = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
 
     // output
     // Note: Be aware, we relay on the fact that `MEMECOIN_DECIMALS` would be always set same for all memecoins
     // As well as the fact that memecoins and tickets decimals are always the same
-    const outputAmountWithDecimalsBigNumber = new BigNumber(minOutputTicketAmount).multipliedBy(
-      10 ** +BondingPoolSingleton.MEMECOIN_DECIMALS,
-    );
-    // We do removing the decimal part in case client send number with more decimal part
-    // than this particular token has decimal places allowed (`outputCoinDecimals`)
-    // That's prevent situation when casting
-    // BigNumber to BigInt fails with error ("Cannot convert 183763562.1 to a BigInt")
-    const outputAmountWithoutExceededDecimalPart = removeDecimalPart(outputAmountWithDecimalsBigNumber);
-    const outputAmountWithDecimals = outputAmountWithoutExceededDecimalPart.toString();
-    const bigintMinOutput = BigInt(outputAmountWithDecimals);
+    const minOutput = normalizeInputCoinAmount(minOutputTicketAmount, +BondingPoolSingleton.MEMECOIN_DECIMALS);
+    const minOutputWithSlippage = deductSlippage(new BigNumber(minOutput.toString()), slippagePercentage);
+    const minOutputBigInt = BigInt(minOutputWithSlippage.toString());
 
     const txResult = swapCoinY(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
-      coinXMinValue: bigintMinOutput,
+      coinXMinValue: minOutputBigInt,
       coinY: suiCoinObject,
       clock: SUI_CLOCK_OBJECT_ID,
     });
+
+    tx.transferObjects([suiCoinObject], tx.pure(signerAddress));
+    tx.transferObjects([txResult], tx.pure(signerAddress));
+    tx.setGasBudget(BondingPoolSingleton.SWAP_GAS_BUDGET);
 
     return { tx, txResult };
   }
@@ -200,7 +313,7 @@ export class BondingPoolSingleton {
     const tx = transaction ?? new TransactionBlock();
     const txResult = seedPools(tx, BondingPoolSingleton.REGISTRY_OBJECT_ID);
     const res = await this.provider.devInspectTransactionBlock({
-      sender: BondingPoolSingleton.SIMLATION_ACCOUNT_ADDRESS,
+      sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
       transactionBlock: tx,
     });
     if (!res.results) {
@@ -296,7 +409,7 @@ export class BondingPoolSingleton {
     const txResult = isReadyToLaunch(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], poolId);
 
     const res = await this.provider.devInspectTransactionBlock({
-      sender: BondingPoolSingleton.SIMLATION_ACCOUNT_ADDRESS,
+      sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
       transactionBlock: tx,
     });
 
