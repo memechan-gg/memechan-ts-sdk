@@ -1,18 +1,12 @@
 {
   "name": "@avernikoz/memechan-ts-sdk",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "Typescript SDK for Memechan.gg",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "module",
   "files": [
-    "dist/**/*"
+    "dist"
   ],
-  "exports": {
-    ".": {
-      "import": "./dist/index.js"
-    }
-  },
   "author": "avernikoz <avernikoz@gmail.com>",
   "license": "private",
   "node": "v20",
