@@ -33,7 +33,7 @@ export type CreateCoinTransactionParamsWithoutCertainProps = Omit<
   "decimals" | "fixedSupply" | "mintAmount"
 >;
 
-export type SwapSuiForTicketParams = {
+export type SwapParamsForSuiInput = {
   memeCoin: { coinType: string };
   ticketCoin: { coinType: string };
   transaction?: TransactionBlock;
@@ -41,7 +41,29 @@ export type SwapSuiForTicketParams = {
   // swap params
   bondingCurvePoolObjectId: ObjectArg;
   inputSuiAmount: string;
+
+  slippagePercentage?: number;
+};
+
+export type SwapParamsForSuiInputAndTicketOutput = SwapParamsForSuiInput & {
+  signerAddress: string;
   minOutputTicketAmount: string;
+};
+
+export type SwapParamsForTicketInput = {
+  memeCoin: { coinType: string };
+  ticketCoin: { coinType: string };
+  transaction?: TransactionBlock;
+
+  bondingCurvePoolObjectId: ObjectArg;
+  inputTicketAmount: string;
+
+  slippagePercentage?: number;
+};
+
+export type SwapParamsForTicketInputAndSuiOutput = SwapParamsForSuiInput & {
+  signerAddress: string;
+  minOutputSuiAmount: string;
 };
 
 export interface RegistryTableTypenameDynamicField extends DynamicFieldInfo {
