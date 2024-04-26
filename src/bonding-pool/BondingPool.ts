@@ -18,26 +18,23 @@ import BigNumber from "bignumber.js";
 import { CoinManagerSingleton } from "../coin/CoinManager";
 import { CreateCoinTransactionParams } from "../coin/types";
 import { LONG_SUI_COIN_TYPE } from "../common/sui";
-import { removeDecimalPart } from "../utils/removeDecimalPart";
 import {
   CreateBondingCurvePoolParams,
   CreateCoinTransactionParamsWithoutCertainProps,
   ExtractedRegistryKeyData,
-  SwapParams,
   SwapParamsForSuiInput,
   SwapParamsForSuiInputAndTicketOutput,
   SwapParamsForTicketInput,
-  SwapSuiForTicketParams,
 } from "./types";
+import { deductSlippage } from "./utils/deductSlippage";
+import { extractRegistryKeyData } from "./utils/extractRegistryKeyData";
 import { getAllDynamicFields } from "./utils/getAllDynamicFields";
 import { getAllObjects } from "./utils/getAllObjects";
 import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
 import { isPoolObjectData } from "./utils/isPoolObjectData";
-import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
 import { isTokenPolicyCapObjectData } from "./utils/isTokenPolicyCapObjectData";
-import { extractRegistryKeyData } from "./utils/extractRegistryKeyData";
-import { deductSlippage } from "./utils/deductSlippage";
 import { normalizeInputCoinAmount } from "./utils/normalizeInputCoinAmount";
+import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
 
 /**
  * @class BondingPoolSingleton
