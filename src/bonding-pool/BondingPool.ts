@@ -20,6 +20,7 @@ import { removeDecimalPart } from "../utils/removeDecimalPart";
 import {
   CreateBondingCurvePoolParams,
   CreateCoinTransactionParamsWithoutCertainProps,
+  ExtractedRegistryKeyData,
   SwapSuiForTicketParams,
 } from "./types";
 import { getAllDynamicFields } from "./utils/getAllDynamicFields";
@@ -28,6 +29,7 @@ import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams
 import { isPoolObjectData } from "./utils/isPoolObjectData";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
 import { isTokenPolicyCapObjectData } from "./utils/isTokenPolicyCapObjectData";
+import { extractRegistryKeyData } from "./utils/extractRegistryKeyData";
 
 /**
  * @class BondingPoolSingleton
@@ -209,7 +211,6 @@ export class BondingPoolSingleton {
       throw new Error("Return values are undefined");
     }
 
-    // console.log("returnValues: ", returnValues);
     const registryTableAddress = returnValues[0][0];
     const decodedTableAddress: string = bcs.de("address", new Uint8Array(registryTableAddress));
 
@@ -238,7 +239,6 @@ export class BondingPoolSingleton {
     );
 
     const tableTypenameObjectIds = Object.keys(typenameObjectIdsMap);
-    // console.debug("tableTypenameObjectIds: ", tableTypenameObjectIds);
 
     const objectDataList = await getAllObjects({
       objectIds: tableTypenameObjectIds,
@@ -246,19 +246,39 @@ export class BondingPoolSingleton {
       options: { showContent: true, showDisplay: true },
     });
 
-    // console.debug("objectDataList: ");
-    // console.dir(objectDataList, { depth: null });
-
     if (!isPoolObjectData(objectDataList)) {
       throw new Error("Wrong shape of seed pools of bonding curve pools");
     }
 
-    const poolIds = objectDataList.map((el) => el.data.content.fields.value);
+    const pools = objectDataList.map((el) => ({
+      objectId: el.data.content.fields.value,
+      typename: el.data.content.fields.name.fields.name,
+      // TODO: Add pools data (e.g. CoinX, CoinY, Meme) when contract would be upgraded
+      ...extractRegistryKeyData(el.data.content.fields.name.fields.name),
+    }));
 
-    // TODO: Add pools data (e.g. CoinX, CoinY, Meme) when:
-    // 1. Contract would be upgraded
-    // 2. More time for it
-    return { poolIds };
+    const poolIds = pools.map((el) => el.objectId);
+    const poolsByTicketCoinTypeMap = pools.reduce(
+      (acc: { [ticketCoinType: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
+        acc[el.ticketCoinType] = { ...el };
+
+        return acc;
+      },
+      {},
+    );
+
+    return { poolIds, pools, poolsByTicketCoinTypeMap };
+  }
+
+  public async getPoolByTicket({ ticketCoin }: { ticketCoin: { coinType: string } }) {
+    const allPools = await this.getAllPools();
+    const pool = allPools.poolsByTicketCoinTypeMap[ticketCoin.coinType];
+
+    if (!pool) {
+      throw new Error(`No such pool found for provided ticketCoin coinType ${ticketCoin.coinType}`);
+    }
+
+    return pool;
   }
 
   public async isMemeCoinReadyToLivePhase({
@@ -288,7 +308,6 @@ export class BondingPoolSingleton {
       throw new Error("Return values are undefined");
     }
 
-    // console.log("returnValues: ", returnValues);
     const isReadyToLivePhaseRaw = returnValues[0][0];
     const decodedIsReadyToLivePhase: string = bcs.de("bool", new Uint8Array(isReadyToLivePhaseRaw));
 

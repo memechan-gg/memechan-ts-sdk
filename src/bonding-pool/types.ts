@@ -100,3 +100,12 @@ export interface TokenPolicyCapObjectData extends SuiObjectResponse {
     };
   };
 }
+
+export type ExtractedRegistryKeyData = {
+  boundingCurvePackageId: string;
+  boundingCurvePoolType: string;
+  ticketPackageId: string;
+  ticketCoinType: string;
+  quotePackageId: string;
+  quoteCoinType: string;
+};
