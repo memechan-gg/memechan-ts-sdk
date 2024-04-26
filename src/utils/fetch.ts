@@ -1,4 +1,4 @@
-import { Sha256 } from "@aws-crypto/sha256-browser/build/main/crossPlatformSha256";
+import { Sha256 } from "@aws-crypto/sha256-browser";
 import { IAMCredentials } from "../auth/types";
 import { BE_REGION } from "../constants";
 import { HttpRequest } from "@smithy/protocol-http";
