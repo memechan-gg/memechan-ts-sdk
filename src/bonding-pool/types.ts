@@ -1,7 +1,7 @@
 import { ObjectArg } from "@avernikoz/memechan-ts-interface/dist/_framework/util";
+import { DynamicFieldInfo, SuiObjectResponse } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { CreateCoinTransactionParams } from "../coin/types";
-import { DynamicFieldInfo, SuiObjectResponse } from "@mysten/sui.js/client";
 
 export type ExtractedCoinDataFromTransaction = {
   memeCoin: {
@@ -33,7 +33,7 @@ export type CreateCoinTransactionParamsWithoutCertainProps = Omit<
   "decimals" | "fixedSupply" | "mintAmount"
 >;
 
-export type SwapSuiForTicketParams = {
+export type SwapParamsForSuiInput = {
   memeCoin: { coinType: string };
   ticketCoin: { coinType: string };
   transaction?: TransactionBlock;
@@ -41,7 +41,29 @@ export type SwapSuiForTicketParams = {
   // swap params
   bondingCurvePoolObjectId: ObjectArg;
   inputSuiAmount: string;
+
+  slippagePercentage?: number;
+};
+
+export type SwapParamsForSuiInputAndTicketOutput = SwapParamsForSuiInput & {
+  signerAddress: string;
   minOutputTicketAmount: string;
+};
+
+export type SwapParamsForTicketInput = {
+  memeCoin: { coinType: string };
+  ticketCoin: { coinType: string };
+  transaction?: TransactionBlock;
+
+  bondingCurvePoolObjectId: ObjectArg;
+  inputTicketAmount: string;
+
+  slippagePercentage?: number;
+};
+
+export type SwapParamsForTicketInputAndSuiOutput = SwapParamsForSuiInput & {
+  signerAddress: string;
+  minOutputSuiAmount: string;
 };
 
 export interface RegistryTableTypenameDynamicField extends DynamicFieldInfo {
@@ -78,3 +100,34 @@ export interface PoolObjectData extends SuiObjectResponse {
     };
   };
 }
+
+export interface TokenPolicyCapObjectData extends SuiObjectResponse {
+  data: {
+    type: string;
+    version: string;
+    objectId: string;
+    digest: string;
+    content: {
+      dataType: "moveObject";
+      type: string;
+      hasPublicTransfer: boolean;
+      fields: {
+        value: {
+          type: string;
+          fields: {
+            for: string;
+          };
+        };
+      };
+    };
+  };
+}
+
+export type ExtractedRegistryKeyData = {
+  boundingCurvePackageId: string;
+  boundingCurvePoolType: string;
+  ticketPackageId: string;
+  ticketCoinType: string;
+  quotePackageId: string;
+  quoteCoinType: string;
+};
