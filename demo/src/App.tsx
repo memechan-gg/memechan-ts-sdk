@@ -5,8 +5,8 @@ import { FileUpload } from "./components/FileUpload";
 import { useEffect } from "react";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { Auth, CoinAPI } from "@avernikoz/memechan-ts-sdk";
-
-const BE_URL = "https://cp1mqp07c3.execute-api.us-east-1.amazonaws.com/prod";
+import { CreateCoin } from "./components/CreateCoin";
+import { BE_URL } from "./constants";
 
 const api = new CoinAPI(BE_URL);
 
@@ -15,34 +15,8 @@ function App() {
     (async () => {
       await authenticate();
       await getCoins();
-      await createCoin();
     })();
   }, []);
-
-  const createCoin = async () => {
-    /* 
-    UNCOMMENT IN CASE YOU WANT TO CREATE A NEW TX, remember to use the SUI_WALLET_SEED_PHRASE env var
-    const { digest } = await createCoin({
-      description: "testtoken4am description",
-      name: "testtoken4am",
-      signerAddress: user,
-      symbol: "TEST_TOKEN_4am",
-      url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8iB11vE7qmEdgHxD7Hnm4_gi6R4KJ9B8nzs_su6iaGg&s",
-      decimals: "9",
-      fixedSupply: false,
-      mintAmount: "9000",
-    });
-    */
-    console.log("creating coin");
-    const res = await api.createCoin({
-      txDigest: "BnEpQ5imAcSX6638cjjiewxtKR1QaKTUtNL35NeFzK1A",
-      socialLinks: {
-        twitter: "mytwitter",
-        discord: "mydiscord",
-      },
-    });
-    console.log("COIN created", res);
-  };
 
   const authenticate = async () => {
     const keypair = new Ed25519Keypair();
@@ -79,6 +53,7 @@ function App() {
       </div>
       <h1>Memchan SDK Demo</h1>
       <FileUpload />
+      <CreateCoin />
     </>
   );
 }
