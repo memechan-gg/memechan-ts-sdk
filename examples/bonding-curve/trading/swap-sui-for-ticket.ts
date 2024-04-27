@@ -21,7 +21,7 @@ export const swapSuiForTicketExample = async () => {
 
   const outputAmount = await bondingCurveInstance.getSwapOutputAmountForSuiInput({
     bondingCurvePoolObjectId: poolId,
-    inputSuiAmount: inputAmount,
+    inputAmount,
     memeCoin,
     ticketCoin,
     slippagePercentage: 0,
@@ -31,7 +31,7 @@ export const swapSuiForTicketExample = async () => {
 
   const swapTxData = await BondingPoolSingleton.swapSuiForTicket({
     bondingCurvePoolObjectId: poolId,
-    inputSuiAmount: inputAmount,
+    inputAmount,
     memeCoin,
     ticketCoin,
     minOutputTicketAmount: outputAmount,
