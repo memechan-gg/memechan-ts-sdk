@@ -1,7 +1,8 @@
 import { CoinAPI } from "@avernikoz/memechan-ts-sdk";
 import { useState } from "react";
+import { BE_URL } from "../constants";
 
-const api = new CoinAPI();
+const api = new CoinAPI(BE_URL);
 
 export const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
