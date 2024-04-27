@@ -32,7 +32,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
-    "@avernikoz/memechan-ts-interface": "^1.0.5",
+    "@avernikoz/memechan-ts-interface": "^1.0.6",
     "@aws-crypto/sha256-browser": "^5.2.0",
     "@mysten/sui.js": "^0.51.2",
     "@smithy/protocol-http": "^3.3.0",
