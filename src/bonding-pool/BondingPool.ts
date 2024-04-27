@@ -52,7 +52,7 @@ export class BondingPoolSingleton {
   public static UPGRADE_CAP_OBJECT_ID = "0x13cc80acb27dcef8048180bf4125362a5598cc941228c2c06ddf12b27f91ff3e";
   public static PACKAGE_OBJECT_ID = "0x2eeea63815b558faee960ea9e9cf53100bddd07fb1f1ca0fd627b564083dd7f4";
 
-  public static TICKET_COIN_MODULE_PREFIX = "ticket";
+  public static TICKET_COIN_MODULE_PREFIX = "ticket_";
   public static TICKET_COIN_NAME_PREFIX = "TicketFor";
   public static TICKET_COIN_DESCRIPTION_PREFIX = "Pre sale ticket of bonding curve pool for the following memecoin: ";
 
