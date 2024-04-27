@@ -432,6 +432,17 @@ export class BondingPoolSingleton {
     return pool;
   }
 
+  public async getPoolByMeme({ memeCoin }: { memeCoin: { coinType: string } }) {
+    const allPools = await this.getAllPools();
+    const pool = allPools.poolsByMemeCoinTypeMap[memeCoin.coinType];
+
+    if (!pool) {
+      throw new Error(`No such pool found for provided memeCoin coinType ${memeCoin.coinType}`);
+    }
+
+    return pool;
+  }
+
   public async isMemeCoinReadyToLivePhase({
     transaction,
     memeCoin,
@@ -442,8 +453,9 @@ export class BondingPoolSingleton {
     ticketCoin: { coinType: string };
     poolId: string;
     transaction?: TransactionBlock;
-  }) {
+  }): Promise<boolean> {
     const tx = transaction ?? new TransactionBlock();
+
     const txResult = isReadyToLaunch(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], poolId);
 
     const res = await this.provider.devInspectTransactionBlock({
@@ -460,7 +472,7 @@ export class BondingPoolSingleton {
     }
 
     const isReadyToLivePhaseRaw = returnValues[0][0];
-    const decodedIsReadyToLivePhase: string = bcs.de("bool", new Uint8Array(isReadyToLivePhaseRaw));
+    const decodedIsReadyToLivePhase: boolean = bcs.de("bool", new Uint8Array(isReadyToLivePhaseRaw));
 
     return decodedIsReadyToLivePhase;
   }
