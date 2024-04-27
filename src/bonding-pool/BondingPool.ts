@@ -25,6 +25,7 @@ import {
   SwapParamsForSuiInput,
   SwapParamsForSuiInputAndTicketOutput,
   SwapParamsForTicketInput,
+  SwapParamsForTicketInputAndSuiOutput,
 } from "./types";
 import { deductSlippage } from "./utils/deductSlippage";
 import { extractRegistryKeyData } from "./utils/extractRegistryKeyData";
@@ -160,17 +161,10 @@ export class BondingPoolSingleton {
 
   // TODO ASAP IMPORTANT: Issue? with 950 SUI Magic Number on simulation
   public async getSwapOutputAmountForSuiInput(params: SwapParamsForSuiInput) {
-    const {
-      memeCoin,
-      ticketCoin,
-      transaction,
-      bondingCurvePoolObjectId,
-      inputSuiAmount,
-      slippagePercentage = 0,
-    } = params;
+    const { memeCoin, ticketCoin, transaction, bondingCurvePoolObjectId, inputAmount, slippagePercentage = 0 } = params;
     const tx = transaction ?? new TransactionBlock();
 
-    const inputAmountWithDecimals = normalizeInputCoinAmount(inputSuiAmount, SUI_DECIMALS);
+    const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, SUI_DECIMALS);
     const suiCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
 
     const txResult = swapCoinY(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
@@ -219,7 +213,7 @@ export class BondingPoolSingleton {
    * @param {number} [params.slippagePercentage=0] - The slippage percentage.
    * @return {Promise<string>} - A promise resolving to the output amount.
    */
-  public async getSwapOuputAmountForTicketInput(params: SwapParamsForTicketInput): Promise<string> {
+  public async getSwapOutputAmountForTicketInput(params: SwapParamsForTicketInput): Promise<string> {
     const {
       memeCoin,
       ticketCoin,
@@ -276,21 +270,24 @@ export class BondingPoolSingleton {
       transaction,
       bondingCurvePoolObjectId,
       minOutputTicketAmount,
-      inputSuiAmount,
+      inputAmount,
       slippagePercentage = 0,
       signerAddress,
     } = params;
     const tx = transaction ?? new TransactionBlock();
 
-    const inputAmountWithDecimals = normalizeInputCoinAmount(inputSuiAmount, SUI_DECIMALS);
+    const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, SUI_DECIMALS);
     const [suiCoinObject] = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
 
     // output
     // Note: Be aware, we relay on the fact that `MEMECOIN_DECIMALS` would be always set same for all memecoins
     // As well as the fact that memecoins and tickets decimals are always the same
-    const minOutput = normalizeInputCoinAmount(minOutputTicketAmount, +BondingPoolSingleton.MEMECOIN_DECIMALS);
-    const minOutputWithSlippage = deductSlippage(new BigNumber(minOutput.toString()), slippagePercentage);
-    const minOutputBigInt = BigInt(minOutputWithSlippage.toString());
+    const minOutputWithSlippage = deductSlippage(new BigNumber(minOutputTicketAmount), slippagePercentage);
+    const minOutputNormalized = normalizeInputCoinAmount(
+      minOutputWithSlippage.toString(),
+      +BondingPoolSingleton.MEMECOIN_DECIMALS,
+    );
+    const minOutputBigInt = BigInt(minOutputNormalized);
 
     const txResult = swapCoinY(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
@@ -300,6 +297,44 @@ export class BondingPoolSingleton {
     });
 
     tx.transferObjects([suiCoinObject], tx.pure(signerAddress));
+    tx.transferObjects([txResult], tx.pure(signerAddress));
+    tx.setGasBudget(BondingPoolSingleton.SWAP_GAS_BUDGET);
+
+    return { tx, txResult };
+  }
+
+  public static async swapTicketForSui(params: SwapParamsForTicketInputAndSuiOutput) {
+    const {
+      memeCoin,
+      ticketCoin,
+      transaction,
+      bondingCurvePoolObjectId,
+      minOutputSuiAmount,
+      inputAmount,
+      slippagePercentage = 0,
+      signerAddress,
+    } = params;
+    const tx = transaction ?? new TransactionBlock();
+
+    const tokenPolicyObjectId = await BondingPoolSingleton.getInstance().getTokenPolicyByPoolId({
+      poolId: bondingCurvePoolObjectId.toString(),
+    });
+    const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, SUI_DECIMALS);
+    // TODO: Change that to actual coin
+    const ticketCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
+
+    const minOutputWithSlippage = deductSlippage(new BigNumber(minOutputSuiAmount), slippagePercentage);
+    const minOutputNormalized = normalizeInputCoinAmount(minOutputWithSlippage.toString(), SUI_DECIMALS);
+    const minOutputBigInt = BigInt(minOutputNormalized);
+
+    const txResult = swapCoinX(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+      pool: bondingCurvePoolObjectId,
+      coinYMinValue: minOutputBigInt,
+      policy: tokenPolicyObjectId,
+      coinX: ticketCoinObject,
+    });
+
+    tx.transferObjects([ticketCoinObject], tx.pure(signerAddress));
     tx.transferObjects([txResult], tx.pure(signerAddress));
     tx.setGasBudget(BondingPoolSingleton.SWAP_GAS_BUDGET);
 
