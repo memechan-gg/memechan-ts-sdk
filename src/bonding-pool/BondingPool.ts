@@ -288,9 +288,12 @@ export class BondingPoolSingleton {
     // output
     // Note: Be aware, we relay on the fact that `MEMECOIN_DECIMALS` would be always set same for all memecoins
     // As well as the fact that memecoins and tickets decimals are always the same
-    const minOutput = normalizeInputCoinAmount(minOutputTicketAmount, +BondingPoolSingleton.MEMECOIN_DECIMALS);
-    const minOutputWithSlippage = deductSlippage(new BigNumber(minOutput.toString()), slippagePercentage);
-    const minOutputBigInt = BigInt(minOutputWithSlippage.toString());
+    const minOutputWithSlippage = deductSlippage(new BigNumber(minOutputTicketAmount), slippagePercentage);
+    const minOutputNormalized = normalizeInputCoinAmount(
+      minOutputWithSlippage.toString(),
+      +BondingPoolSingleton.MEMECOIN_DECIMALS,
+    );
+    const minOutputBigInt = BigInt(minOutputNormalized);
 
     const txResult = swapCoinY(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
