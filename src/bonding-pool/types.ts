@@ -40,7 +40,7 @@ export type SwapParamsForSuiInput = {
 
   // swap params
   bondingCurvePoolObjectId: ObjectArg;
-  inputSuiAmount: string;
+  inputAmount: string;
 
   slippagePercentage?: number;
 };

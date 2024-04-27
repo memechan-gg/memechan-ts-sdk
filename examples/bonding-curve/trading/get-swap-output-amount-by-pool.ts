@@ -21,7 +21,7 @@ export const getSwapOutputAmountByPoolExample = async () => {
 
   const res = await bondingCurveInstance.getSwapOutputAmountForSuiInput({
     bondingCurvePoolObjectId: poolId,
-    inputSuiAmount: inputAmount,
+    inputAmount,
     memeCoin,
     ticketCoin,
     // slippagePercentage: 1,
