@@ -70,6 +70,9 @@ export const unsignedMultipartRequest = async (input: string, file: File) => {
   try {
     const response = await fetch(input, {
       method: "POST",
+      headers: {
+        Accept: file.type,
+      },
       body: formData,
     });
     return response;
