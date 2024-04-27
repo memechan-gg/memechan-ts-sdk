@@ -45,12 +45,12 @@ import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypen
 export class BondingPoolSingleton {
   private static _instance: BondingPoolSingleton;
   public static TX_OF_CONTRACT_DEPLOY =
-    "https://suivision.xyz/txblock/BPVHXQpgpeieDBHHSirSKvcDCyVkrH9T21Mg4iXAv7Ft?tab=Changes";
+    "https://suivision.xyz/txblock/yuq1Lnf1rkLp8mDGaE592yg4XkkHfShY9gpx8vqAt2A?tab=Changes";
 
-  public static REGISTRY_OBJECT_ID = "0x3ead77c9b66289431d0b88eb3d37fe76ad87df927c8f3f6b64ae56e10b01d631";
-  public static ADMIN_OBJECT_ID = "0x71b59802f1849666e00a9e8799d655a4ade679222e655a098a559586ef6bfb84";
-  public static UPGRADE_CAP_OBJECT_ID = "0x13cc80acb27dcef8048180bf4125362a5598cc941228c2c06ddf12b27f91ff3e";
-  public static PACKAGE_OBJECT_ID = "0x2eeea63815b558faee960ea9e9cf53100bddd07fb1f1ca0fd627b564083dd7f4";
+  public static REGISTRY_OBJECT_ID = "0x16a28f0b68d3395c454bb59a32200ed863235f3902a623b14daa245c7ff680bf";
+  public static ADMIN_OBJECT_ID = "0x10c2e5e3b154a187d2790092209493f204c23eca572769b3e740bb1cd068cde4";
+  public static UPGRADE_CAP_OBJECT_ID = "0x4d1726a538f640974a609bfe4e4db45bc3484bf11852ffacc771d5344728671e";
+  public static PACKAGE_OBJECT_ID = "0x9e1701ec8d7942a79874a40d4d5c9d94c45ffd141c9cd2cff4f4fc3820329b61";
 
   public static TICKET_COIN_MODULE_PREFIX = "ticket_";
   public static TICKET_COIN_NAME_PREFIX = "TicketFor";
