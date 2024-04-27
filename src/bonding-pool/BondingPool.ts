@@ -396,7 +396,6 @@ export class BondingPoolSingleton {
     const pools = objectDataList.map((el) => ({
       objectId: el.data.content.fields.value,
       typename: el.data.content.fields.name.fields.name,
-      // TODO: Add pools data (e.g. CoinX, CoinY, Meme) when contract would be upgraded
       ...extractRegistryKeyData(el.data.content.fields.name.fields.name),
     }));
 
@@ -410,7 +409,16 @@ export class BondingPoolSingleton {
       {},
     );
 
-    return { poolIds, pools, poolsByTicketCoinTypeMap };
+    const poolsByMemeCoinTypeMap = pools.reduce(
+      (acc: { [memeCoinType: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
+        acc[el.memeCoinType] = { ...el };
+
+        return acc;
+      },
+      {},
+    );
+
+    return { poolIds, pools, poolsByTicketCoinTypeMap, poolsByMemeCoinTypeMap };
   }
 
   public async getPoolByTicket({ ticketCoin }: { ticketCoin: { coinType: string } }) {
