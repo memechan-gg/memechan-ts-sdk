@@ -8,41 +8,50 @@ import { ExtractedRegistryKeyData } from "../types";
  */
 export function extractRegistryKeyData(typename: string): ExtractedRegistryKeyData {
   const [packageId, rest] = typename.split("::index::RegistryKey<");
+  const normalizedPackageId = normalizeSuiAddress(packageId);
+
   if (!rest) {
     throw new Error("Invalid typename format. Expected '::index::RegistryKey' pattern.");
   }
 
-  const [boundingCurvePoolType, ticketCoinType, quoteCoinTypeRaw] = rest.split(",");
+  const [ticketCoinType, quoteCoinType, memeCoinTypeRaw] = rest.split(",");
   if (!ticketCoinType) {
     throw new Error("Invalid typename format. Missing ticketCoinType.");
   }
 
-  const [quoteCoinTypeDenormalized] = quoteCoinTypeRaw.split(">");
-  const quoteCoinTypeParts = quoteCoinTypeDenormalized.split("::");
-  if (quoteCoinTypeParts.length < 2) {
-    throw new Error("Invalid typename format. Invalid quoteCoinTypeDenormalized format.");
+  if (!memeCoinTypeRaw) {
+    throw new Error("Invalid typename format. Missing memeCoinType.");
   }
-  const normalizedQuoteCoinPackageId = normalizeSuiAddress(quoteCoinTypeParts[0]);
-  // Join the normalized parts to form the final ticketCoinType
-  const normalizedQuoteCoinType = `${normalizedQuoteCoinPackageId}::${quoteCoinTypeParts.slice(1).join("::")}`;
 
-  // Normalize the packageId and part of the ticketCoinType
-  const normalizedPackageId = normalizeSuiAddress(packageId);
+  // Ticket (base)
   const ticketCoinTypeParts = ticketCoinType.split("::");
   if (ticketCoinTypeParts.length < 2) {
     throw new Error("Invalid typename format. Invalid ticketCoinType format.");
   }
   const normalizedTicketCoinPackageId = normalizeSuiAddress(ticketCoinTypeParts[0]);
-
-  // Join the normalized parts to form the final ticketCoinType
   const normalizedTicketCoinType = `${normalizedTicketCoinPackageId}::${ticketCoinTypeParts.slice(1).join("::")}`;
+
+  // Sui (quote)
+  const quoteCoinTypeParts = quoteCoinType.split("::");
+  if (quoteCoinTypeParts.length < 2) {
+    throw new Error("Invalid typename format. Invalid quoteCoinTypeDenormalized format.");
+  }
+  const normalizedQuoteCoinPackageId = normalizeSuiAddress(quoteCoinTypeParts[0]);
+  const normalizedQuoteCoinType = `${normalizedQuoteCoinPackageId}::${quoteCoinTypeParts.slice(1).join("::")}`;
+
+  // Meme
+  const [memeCoinTypeDenormalized] = memeCoinTypeRaw.split(">");
+  const memeCoinTypeParts = memeCoinTypeDenormalized.split("::");
+  const normalizedMemePackageId = normalizeSuiAddress(memeCoinTypeParts[0]);
+  const memeCoinType = `${normalizedMemePackageId}::${memeCoinTypeParts.slice(1).join("::")}`;
 
   return {
     boundingCurvePackageId: normalizedPackageId,
-    boundingCurvePoolType,
     ticketPackageId: normalizedTicketCoinPackageId,
     ticketCoinType: normalizedTicketCoinType,
     quotePackageId: normalizedQuoteCoinPackageId,
     quoteCoinType: normalizedQuoteCoinType,
+    memePackageId: normalizedMemePackageId,
+    memeCoinType,
   };
 }

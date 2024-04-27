@@ -3,7 +3,7 @@ import { RegistryTableTypenameDynamicField } from "../types";
 
 const REGISTRY_TYPENAME_PATTERN = new RegExp(
   // eslint-disable-next-line max-len
-  "^[a-f0-9]{64}::index::RegistryKey<[a-f0-9]{64}::curves::Bound,[a-f0-9]{64}::[a-zA-Z0-9_]+::[a-zA-Z0-9_]+,0000000000000000000000000000000000000000000000000000000000000002::sui::SUI>$",
+  "^[a-f0-9]{64}::index::RegistryKey<[a-f0-9]{64}::[a-zA-Z0-9_]+::[a-zA-Z0-9_]+,0000000000000000000000000000000000000000000000000000000000000002::sui::SUI,[a-f0-9]{64}::[a-zA-Z0-9_]+::[a-zA-Z0-9_]+>$",
 );
 
 /**
