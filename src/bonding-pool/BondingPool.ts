@@ -3,8 +3,8 @@ import {
   NewDefaultArgs,
   isReadyToLaunch,
   newDefault,
-  swapCoinX,
-  swapCoinY,
+  buyMeme,
+  sellMeme,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/bound-curve-amm/functions";
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
@@ -44,17 +44,15 @@ import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypen
  */
 export class BondingPoolSingleton {
   private static _instance: BondingPoolSingleton;
-  // TODO: REMOVE THAT BEFORE PROD DEPLOY (TEMP VAR `TX_OF_CONTRACT_DEPLOY`)
   public static TX_OF_CONTRACT_DEPLOY =
-    "https://suivision.xyz/txblock/H1jzJ9vPHe2kg3eRYPy6Z6t3CPHe4Mi91H2rrUb9P14z?tab=Changes";
+    "https://suivision.xyz/txblock/BPVHXQpgpeieDBHHSirSKvcDCyVkrH9T21Mg4iXAv7Ft?tab=Changes";
 
-  public static REGISTRY_OBJECT_ID = "0x1627e67622491f0d6fb132148822ab8423ae178a4bb670cfa1270f22457247de";
-  public static ADMIN_OBJECT_ID = "0x8f6e687d53b1d0390325da368bd0e7911f9e394a456095199b340596ee8f6ae9";
-  public static UPGRADE_CAP_OBJECT_ID = "0xc8fefd616fa07e815340863b091f7ed9477c4010a4d521cf513860c370db57da";
-  public static PACKAGE_OBJECT_ID = "0x8f9a0538e30a67e900fe0db14ed6845b72e1f89378f204c2f3ba5b25eadc7fd1";
+  public static REGISTRY_OBJECT_ID = "0x3ead77c9b66289431d0b88eb3d37fe76ad87df927c8f3f6b64ae56e10b01d631";
+  public static ADMIN_OBJECT_ID = "0x71b59802f1849666e00a9e8799d655a4ade679222e655a098a559586ef6bfb84";
+  public static UPGRADE_CAP_OBJECT_ID = "0x13cc80acb27dcef8048180bf4125362a5598cc941228c2c06ddf12b27f91ff3e";
+  public static PACKAGE_OBJECT_ID = "0x2eeea63815b558faee960ea9e9cf53100bddd07fb1f1ca0fd627b564083dd7f4";
 
-  // TODO: These prefixes would be changed once we'll re-depoy the contract & re-generate the types
-  public static TICKET_COIN_MODULE_PREFIX = "ac_b_";
+  public static TICKET_COIN_MODULE_PREFIX = "ticket";
   public static TICKET_COIN_NAME_PREFIX = "TicketFor";
   public static TICKET_COIN_DESCRIPTION_PREFIX = "Pre sale ticket of bonding curve pool for the following memecoin: ";
 
@@ -167,10 +165,10 @@ export class BondingPoolSingleton {
     const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, SUI_DECIMALS);
     const suiCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
 
-    const txResult = swapCoinY(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    const txResult = buyMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
-      coinXMinValue: BigInt(1),
-      coinY: suiCoinObject,
+      coinMMinValue: BigInt(1),
+      coinS: suiCoinObject,
       clock: SUI_CLOCK_OBJECT_ID,
     });
 
@@ -229,12 +227,12 @@ export class BondingPoolSingleton {
     // TODO: Change that to actual coin
     const ticketCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
 
-    const txResult = swapCoinX(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    const txResult = sellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
 
-      coinYMinValue: BigInt(1),
+      coinSMinValue: BigInt(1),
       policy: tokenPolicyObjectId,
-      coinX: ticketCoinObject,
+      coinM: ticketCoinObject,
     });
 
     const res = await this.provider.devInspectTransactionBlock({
@@ -289,10 +287,10 @@ export class BondingPoolSingleton {
     );
     const minOutputBigInt = BigInt(minOutputNormalized);
 
-    const txResult = swapCoinY(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    const txResult = buyMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
-      coinXMinValue: minOutputBigInt,
-      coinY: suiCoinObject,
+      coinMMinValue: minOutputBigInt,
+      coinS: suiCoinObject,
       clock: SUI_CLOCK_OBJECT_ID,
     });
 
@@ -327,11 +325,11 @@ export class BondingPoolSingleton {
     const minOutputNormalized = normalizeInputCoinAmount(minOutputWithSlippage.toString(), SUI_DECIMALS);
     const minOutputBigInt = BigInt(minOutputNormalized);
 
-    const txResult = swapCoinX(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    const txResult = sellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
-      coinYMinValue: minOutputBigInt,
+      coinSMinValue: minOutputBigInt,
       policy: tokenPolicyObjectId,
-      coinX: ticketCoinObject,
+      coinM: ticketCoinObject,
     });
 
     tx.transferObjects([ticketCoinObject], tx.pure(signerAddress));
