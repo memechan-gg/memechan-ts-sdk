@@ -21,10 +21,10 @@
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
-"@avernikoz/memechan-ts-interface@^1.0.7":
-  version "1.0.7"
-  resolved "https://registry.npmjs.org/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.7.tgz#8f713b05e7c48718dc02548b6437b01703948cc5"
-  integrity sha512-CXxMr7IdpJNEP7Kpvm2uNybUmJWmFhmM9T3U1dub/bWyJ02S+tbGg8gRcJb/VVflaOs81scd2Sg90uN6Qrc0Rw==
+"@avernikoz/memechan-ts-interface@^1.0.9":
+  version "1.0.9"
+  resolved "https://registry.npmjs.org/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.9.tgz#75e37f2cadf948fea9f80a1c30767e9d793040ae"
+  integrity sha512-PqjdmFD/dDHD7lnNXbi3mb1TVoBBsDkcJUNcU2UarzBXMLT2uvk54NMIodM3N77SkJ+CuNK/X6jLukD7PLMmUw==
   dependencies:
     "@mysten/bcs" "0.11.1"
     "@mysten/sui.js" "0.51.2"
