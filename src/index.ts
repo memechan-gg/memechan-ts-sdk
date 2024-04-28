@@ -14,5 +14,8 @@ export * from "./bonding-pool/utils/getTicketDataFromCoinParams";
 export * from "./bonding-pool/utils/parseTransactionDataCoinAndTicketCreation";
 export * from "./bonding-pool/utils/validateExtractedCoinDataFromTransaction";
 
+export * from "./staking-pool/StakingPool";
+export * from "./staking-pool/types";
+
 export * from "./coin/PoolApi";
 export * from "./coin/schemas/poolsSchema";
