@@ -20,6 +20,8 @@ export class LiveCLMMSingleton {
   private static _instance: LiveCLMMSingleton;
   private static SUI_TEARS_ADDRESS = "0xf7334947a5037552a94cee15fc471dbda71bf24d46c97ee24e1fdac38e26644c";
   private static CLMM_ADDRESS = "0xc9751e2b4dca6a2b1a0b4879f8add562573830dc91cb8e42f121e168602e9ac9";
+  // TODO: We need to move it outside and store it somewhere across different classes (CLMM, Bonding, Staking)
+  // Somewhere in config
   public static MEMECOIN_DECIMALS = "6";
 
   public clamm: CLAMM;
@@ -75,7 +77,7 @@ export class LiveCLMMSingleton {
   }
 
   public async addLiquidity(params: AddLiquidityArgs) {
-    let tx = new TransactionBlock();
+    const tx = new TransactionBlock();
     const { signerAddress, memeCoin, memeCoinInput, suiCoinInput, minOutputAmount, slippagePercentage = 0 } = params;
     const pool = await this.getPool();
 
@@ -114,7 +116,7 @@ export class LiveCLMMSingleton {
   }
 
   public async removeLiquidity(params: RemoveLiquidityArgs) {
-    let tx = new TransactionBlock();
+    const tx = new TransactionBlock();
     const { signerAddress, lpCoinInput, lpCoin, minAmounts, slippagePercentage = 0 } = params;
     const pool = await this.getPool();
 
@@ -158,15 +160,15 @@ export class LiveCLMMSingleton {
   }
 
   public async swap(params: SwapArgs) {
-    let tx = new TransactionBlock();
+    const tx = new TransactionBlock();
     const { signerAddress, memeCoin, inputAmount, SuiToMeme, minOutputAmount, slippagePercentage = 0 } = params;
     const pool = await this.getPool();
 
-    let splitAmount = SuiToMeme
+    const splitAmount = SuiToMeme
       ? normalizeInputCoinAmount(inputAmount, SUI_DECIMALS)
       : normalizeInputCoinAmount(inputAmount, parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
 
-    let coinIn = SuiToMeme
+    const coinIn = SuiToMeme
       ? tx.splitCoins(tx.gas, [splitAmount])
       : tx.splitCoins(
           mergeCoins({
@@ -188,7 +190,7 @@ export class LiveCLMMSingleton {
 
     const minOutputBigInt = BigInt(minOutputNormalized);
 
-    let coinOut = await this.clamm.swap({
+    const coinOut = await this.clamm.swap({
       coinIn,
       pool,
       txb: tx,
@@ -235,11 +237,11 @@ export class LiveCLMMSingleton {
     const { memeCoin, inputAmount, SuiToMeme } = params;
     const pool = await this.getPool();
 
-    let splitAmount = SuiToMeme
+    const splitAmount = SuiToMeme
       ? normalizeInputCoinAmount(inputAmount, SUI_DECIMALS)
       : normalizeInputCoinAmount(inputAmount, parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
 
-    let coinOut = await this.clamm.quoteSwap({
+    const coinOut = await this.clamm.quoteSwap({
       amount: splitAmount,
       pool,
       coinInType: SuiToMeme ? LONG_SUI_COIN_TYPE : memeCoin.coinType,
