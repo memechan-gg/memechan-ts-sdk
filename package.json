@@ -1,6 +1,6 @@
 {
   "name": "@avernikoz/memechan-ts-sdk",
-  "version": "1.0.26",
+  "version": "1.0.28",
   "description": "Typescript SDK for Memechan.gg",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +21,9 @@
     "build": "yarn lint && tsup",
     "build:watch": "tsc --watch",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
-    "deploy": "yarn lint && yarn build && yarn publish --access restricted"
+    "deploy": "yarn run delete-npmrc && yarn lint && yarn build && yarn publish --access restricted && yarn run restore-npmrc",
+    "delete-npmrc": "mv .npmrc .npmrc.bak",
+    "restore-npmrc": "mv .npmrc.bak .npmrc"
   },
   "repository": {
     "type": "git",
