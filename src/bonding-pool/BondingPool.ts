@@ -198,13 +198,17 @@ export class BondingPoolSingleton {
       objectId: el.data.objectId,
       type: el.data.type,
       balance: el.data.content.fields.balance,
-      untilTimestamp: el.data.content.fields.until_timestamp,
+      untilTimestamp: +el.data.content.fields.until_timestamp,
       ticketCoinType: extractCoinType(el.data.type),
     }));
 
     const stakedLpObjectsByTicketCoinTypeMap = stakedLpObjectList.reduce(
-      (acc: { [ticketCoinType: string]: StakedLpObject }, el) => {
-        acc[el.ticketCoinType] = { ...el };
+      (acc: { [ticketCoinType: string]: StakedLpObject[] }, el) => {
+        if (acc[el.ticketCoinType]) {
+          acc[el.ticketCoinType] = [...acc[el.ticketCoinType], el];
+        } else {
+          acc[el.ticketCoinType] = [el];
+        }
 
         return acc;
       },
@@ -212,6 +216,29 @@ export class BondingPoolSingleton {
     );
 
     return { stakedLpObjectList, stakedLpObjectsByTicketCoinTypeMap };
+  }
+
+  public async getAvailableStakedLpByOwner({ owner }: { owner: string }) {
+    const allStakedLpsByOwner = await this.getAllStakedLPObjectsByOwner({ owner });
+    const currentTimestampMs = Date.now();
+    const availableStakedLps = allStakedLpsByOwner.stakedLpObjectList.filter(
+      (el) => currentTimestampMs > el.untilTimestamp,
+    );
+
+    const availableStakedLpObjectsByTicketCoinTypeMap = availableStakedLps.reduce(
+      (acc: { [ticketCoinType: string]: StakedLpObject[] }, el) => {
+        if (acc[el.ticketCoinType]) {
+          acc[el.ticketCoinType] = [...acc[el.ticketCoinType], el];
+        } else {
+          acc[el.ticketCoinType] = [el];
+        }
+
+        return acc;
+      },
+      {},
+    );
+
+    return { availableStakedLps, availableStakedLpObjectsByTicketCoinTypeMap };
   }
 
   // TODO ASAP IMPORTANT: Issue? with 950 SUI Magic Number on simulation

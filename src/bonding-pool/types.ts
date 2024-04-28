@@ -158,6 +158,6 @@ export interface StakedLpObject {
   objectId: string;
   type: string;
   balance: string;
-  untilTimestamp: string;
+  untilTimestamp: number;
   ticketCoinType: string;
 }
