@@ -15,4 +15,4 @@ export * from "./bonding-pool/utils/parseTransactionDataCoinAndTicketCreation";
 export * from "./bonding-pool/utils/validateExtractedCoinDataFromTransaction";
 
 export * from "./coin/PoolApi";
-export * from "./coin/schemas/poolsSchema";
+export * from "./coin/schemas/pools-schema";

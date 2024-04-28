@@ -12,7 +12,7 @@ describe("CoinService authenticated operations", () => {
   beforeAll(async () => {
     keypair = new Ed25519Keypair();
     console.log("Testing with wallet", keypair.getPublicKey().toSuiAddress());
-    const authService = new Auth();
+    const authService = new Auth(BE_URL);
     const messageToSign = await authService.requestMessageToSign(keypair.getPublicKey().toSuiAddress());
     const { signature } = await keypair.signPersonalMessage(Buffer.from(messageToSign));
     await authService.refreshSession({
