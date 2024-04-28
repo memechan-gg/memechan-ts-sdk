@@ -1,5 +1,7 @@
 import { BE_URL } from "../constants";
 import { jsonFetch } from "../utils/fetch";
+import { SeedPool } from "./schemas/pools-schema";
+import { QueryAllSeedPoolsResponse } from "./types";
 
 /**
  * Service class for handling pool-related operations.
@@ -16,7 +18,7 @@ export class PoolAPI {
    * @param {string} [paginationToken] - A token for pagination, if more results are available beyond the first page.
    * @return {Promise<any>} A Promise that resolves with the list of all seed pools.
    */
-  getAllSeedPools(paginationToken?: string) {
+  getAllSeedPools(paginationToken?: string): Promise<QueryAllSeedPoolsResponse> {
     return jsonFetch(`${this.url}/presale/seed-pools${paginationToken ? "?paginationToken=" + paginationToken : ""}`, {
       method: "GET",
     });
@@ -27,7 +29,7 @@ export class PoolAPI {
    * @param {string} coinType - The type of coin for filtering seed pools.
    * @return {Promise<any>} A Promise that resolves with the list of seed pools matching the specified coin type.
    */
-  getSeedPoolByCoinType(coinType: string) {
+  getSeedPoolByCoinType(coinType: string): Promise<SeedPool> {
     return jsonFetch(`${this.url}/presale/seed-pools?coinType=${coinType}`, {
       method: "GET",
     });
@@ -38,7 +40,7 @@ export class PoolAPI {
    * @param {string} ticketType - The type of ticket for filtering seed pools.
    * @return {Promise<any>} A Promise that resolves with the list of seed pools matching the specified ticket type.
    */
-  getSeedPoolByTicketType(ticketType: string) {
+  getSeedPoolByTicketType(ticketType: string): Promise<SeedPool> {
     return jsonFetch(`${this.url}/presale/seed-pools?ticketType=${ticketType}`, {
       method: "GET",
     });
