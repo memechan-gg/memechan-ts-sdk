@@ -1,5 +1,5 @@
 import { PoolAPI } from "../../src/coin/PoolApi";
-import { seedPool } from "../../src/coin/schemas/poolsSchema";
+import { seedPool } from "../../src/coin/schemas/pools-schema";
 
 const BE_URL = "https://cp1mqp07c3.execute-api.us-east-1.amazonaws.com/prod";
 
