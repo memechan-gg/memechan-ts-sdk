@@ -1,5 +1,8 @@
 import { CoinMetadata } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { z } from "zod";
+import { Coin, coinSchema, paginatedResultSchema, Ticket } from "./schemas/coin-schemas";
+import { SeedPool, seedPool } from "./schemas/pools-schema";
 
 export type CreateCoinTransactionParams = {
   name: string;
@@ -22,3 +25,25 @@ export type CommonCoinData = {
 export interface ICoinManager {
   getCoinByType2(coinType: string): Promise<CommonCoinData | null>;
 }
+
+export type CreateCoinResponse = {
+  coin: Coin;
+  ticket: Ticket;
+};
+
+export const paginatedCoinResultSchema = () => paginatedResultSchema(coinSchema);
+export type QueryCoinsResponse = z.infer<ReturnType<typeof paginatedCoinResultSchema>>;
+
+export const paginatedSeedPoolsResultSchema = () => paginatedResultSchema(seedPool);
+export type QueryAllSeedPoolsResponse = z.infer<ReturnType<typeof paginatedSeedPoolsResultSchema>>;
+
+export type GetCoinResponse = Coin;
+
+export type GetSeedPool = SeedPool;
+
+export type UploadFileResponse = {
+  IpfsHash: string;
+  PinSize: number;
+  Timestamp: string;
+  isDuplicate: boolean;
+};
