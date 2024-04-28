@@ -7,6 +7,7 @@ import {
   createCoinRequestBodySchema,
   QueryCoinsRequestParams,
 } from "./schemas/coin-schemas";
+import { CreateCoinResponse, GetCoinResponse, QueryCoinsResponse, UploadFileResponse } from "./types";
 
 /**
  * Service class for handling coin-related operations.
@@ -25,7 +26,7 @@ export class CoinAPI {
    * @throws Will throw an error if authentication session is not active.
    * @return {Promise<any>} A promise that resolves with the coin data.
    */
-  getCoin(status: CoinStatus, coinType: string) {
+  getCoin(status: CoinStatus, coinType: string): Promise<GetCoinResponse> {
     return jsonFetch(`${this.url}/${status.toLowerCase()}/coin?coinType=${coinType}`, {
       method: "GET",
     });
@@ -37,7 +38,7 @@ export class CoinAPI {
    * @throws Will throw an error if authentication session is not active.
    * @return {Promise<any>} A promise that resolves with the queried coin data.
    */
-  queryCoins(params: QueryCoinsRequestParams) {
+  queryCoins(params: QueryCoinsRequestParams): Promise<QueryCoinsResponse> {
     const queryParams = new URLSearchParams(params as Record<string, string>);
     return jsonFetch(`${this.url}/${params.status.toLowerCase()}/coins?${queryParams.toString()}`, {
       method: "GET",
@@ -50,7 +51,7 @@ export class CoinAPI {
    * @throws Will throw an error if authentication session is not active.
    * @return {Promise<any>} A promise that resolves with the queried coin data.
    */
-  createCoin(params: CreateCoinRequestBody) {
+  createCoin(params: CreateCoinRequestBody): Promise<CreateCoinResponse> {
     if (!Auth.currentSession) throw new Error("You don't have any active session, please run the Auth.refreshSession");
     return signedJsonFetch(`${this.url}/coin`, Auth.currentSession, {
       method: "POST",
@@ -63,7 +64,7 @@ export class CoinAPI {
    * @param {File} file The URL to which the request is sent.
    * @return {Promise<void>} A promise that resolves with the response of the fetch request.
    */
-  uploadFile(file: File) {
+  uploadFile(file: File): Promise<UploadFileResponse> {
     return unsignedMultipartRequest(`${this.url}/upload-image`, file);
   }
 }
