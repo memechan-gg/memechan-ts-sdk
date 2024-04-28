@@ -61,7 +61,7 @@ export type SwapParamsForTicketInput = {
   slippagePercentage?: number;
 };
 
-export type SwapParamsForTicketInputAndSuiOutput = SwapParamsForSuiInput & {
+export type SwapParamsForTicketInputAndSuiOutput = SwapParamsForTicketInput & {
   signerAddress: string;
   minOutputSuiAmount: string;
 };
@@ -158,6 +158,7 @@ export interface StakedLpObject {
   objectId: string;
   type: string;
   balance: string;
+  balanceWithDecimals: string;
   untilTimestamp: number;
   ticketCoinType: string;
 }
