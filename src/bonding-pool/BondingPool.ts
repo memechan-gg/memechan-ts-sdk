@@ -77,9 +77,9 @@ export class BondingPoolSingleton {
   public static TICKET_COIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
 
   // TODO: Change these values
-  public static LP_COIN_MODULE_PREFIX = "lp_coin_";
+  public static LP_COIN_MODULE_PREFIX = "lp_coin";
   public static LP_COIN_NAME_PREFIX = "LpCoin";
-  public static LP_COIN_DESCRIPTION_PREFIX = "";
+  public static LP_COIN_DESCRIPTION_PREFIX = "Lp coin for CLMM pool";
   // TODO: Re-visit this
   public static LP_COIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
 
@@ -602,7 +602,7 @@ export class BondingPoolSingleton {
   public static getLpCoinCreateParams({ signer }: { signer: string }): CreateCoinTransactionParams {
     return {
       // TODO: Change all these values to make it look as a lp coin
-      decimals: "10",
+      decimals: BondingPoolSingleton.LP_COIN_DECIMALS,
       description: BondingPoolSingleton.LP_COIN_DESCRIPTION_PREFIX,
       fixedSupply: false,
       mintAmount: "900000000",
