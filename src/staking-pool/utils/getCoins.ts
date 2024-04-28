@@ -6,6 +6,12 @@ type GetCoinArgs = {
   provider: SuiClient;
 };
 
+/**
+ * Gets the coins of the provided type owned by the provided address.
+ *
+ * @param {GetCoinArgs} params - The parameters for getting coins.
+ * @return {Array} The coins of the provided type owned by the provided address.
+ */
 export async function getCoins(params: GetCoinArgs) {
   const { coin, address, provider } = params;
   let hasNextPage = true;

@@ -90,7 +90,7 @@ export class StakingPoolSingleton {
 
     const ticketCoinObject = tx.splitCoins(mergedCoin, [inputAmountWithDecimals]);
 
-    let [memecoin, lpcoin] = unstake(tx, [ticketCoin.coinType, memeCoin.coinType, LONG_SUI_COIN_TYPE], {
+    const [memecoin, lpcoin] = unstake(tx, [ticketCoin.coinType, memeCoin.coinType, LONG_SUI_COIN_TYPE], {
       clock: SUI_CLOCK_OBJECT_ID,
       coinX: ticketCoinObject,
       policy: tokenPolicyObjectId,
@@ -109,7 +109,7 @@ export class StakingPoolSingleton {
     const { stakingPoolObjectId, memeCoin, ticketCoin, signerAddress } = params;
     const tx = new TransactionBlock();
 
-    let [memecoin, lpcoin] = withdrawFees(
+    const [memecoin, lpcoin] = withdrawFees(
       tx,
       [ticketCoin.coinType, memeCoin.coinType, LONG_SUI_COIN_TYPE],
       stakingPoolObjectId,
