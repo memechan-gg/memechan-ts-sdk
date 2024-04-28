@@ -132,3 +132,32 @@ export type ExtractedRegistryKeyData = {
   memePackageId: string;
   memeCoinType: string;
 };
+
+export interface StakedLpObjectData extends SuiObjectResponse {
+  data: {
+    objectId: string;
+    version: string;
+    digest: string;
+    type: string;
+    content: {
+      dataType: "moveObject";
+      type: string;
+      hasPublicTransfer: boolean;
+      fields: {
+        balance: string;
+        id: {
+          id: string;
+        };
+        until_timestamp: string;
+      };
+    };
+  };
+}
+
+export interface StakedLpObject {
+  objectId: string;
+  type: string;
+  balance: string;
+  untilTimestamp: string;
+  ticketCoinType: string;
+}

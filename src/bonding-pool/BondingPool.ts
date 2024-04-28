@@ -40,6 +40,7 @@ import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypen
 import { getAllOwnedObjects } from "./utils/getAllOwnedObjects";
 import { isStakedLpObjectData, isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
 import { extractCoinType } from "./utils/extractCoinType";
+import { initSecondaryMarket } from "@avernikoz/memechan-ts-interface/dist/memechan/initialize/functions";
 
 /**
  * @class BondingPoolSingleton
@@ -53,6 +54,7 @@ export class BondingPoolSingleton {
 
   public static TX_OF_TICKET_BUY =
     "https://suivision.xyz/txblock/Gz6vfDgeE9tErU2iUJ9Yh1NitDkKZC2CzM17sgu9PkT7?tab=Changes";
+  public static SUI_METADATA_OBJECT_ID = "0x9258181f5ceac8dbffb7030890243caed69a9599d2886d957a9cb7656af3bdb3";
 
   public static REGISTRY_OBJECT_ID = "0x16a28f0b68d3395c454bb59a32200ed863235f3902a623b14daa245c7ff680bf";
   public static ADMIN_OBJECT_ID = "0x10c2e5e3b154a187d2790092209493f204c23eca572769b3e740bb1cd068cde4";
@@ -67,6 +69,11 @@ export class BondingPoolSingleton {
   public static TICKET_COIN_MODULE_PREFIX = "ticket_";
   public static TICKET_COIN_NAME_PREFIX = "TicketFor";
   public static TICKET_COIN_DESCRIPTION_PREFIX = "Pre sale ticket of bonding curve pool for the following memecoin: ";
+
+  // TODO: Change these values
+  public static LP_COIN_MODULE_PREFIX = "lp_coin_";
+  public static LP_COIN_NAME_PREFIX = "LpCoin";
+  public static LP_COIN_DESCRIPTION_PREFIX = "";
 
   public static MEMECOIN_DECIMALS = "6";
   public static MEMECOIN_MINT_AMOUNT = "0";
@@ -468,7 +475,16 @@ export class BondingPoolSingleton {
       {},
     );
 
-    return { poolIds, pools, poolsByTicketCoinTypeMap, poolsByMemeCoinTypeMap };
+    const poolsByPoolId = pools.reduce(
+      (acc: { [objectId: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
+        acc[el.objectId] = { ...el };
+
+        return acc;
+      },
+      {},
+    );
+
+    return { poolIds, pools, poolsByTicketCoinTypeMap, poolsByMemeCoinTypeMap, poolsByPoolId };
   }
 
   public async getPoolByTicket({ ticketCoin }: { ticketCoin: { coinType: string } }) {
@@ -564,5 +580,87 @@ export class BondingPoolSingleton {
     const tokenPolicyObjectId = tokenPolicyCapObjectData.data?.content.fields.value.fields.for;
 
     return tokenPolicyObjectId;
+  }
+
+  public static getLpCoinCreateParams({ signer }: { signer: string }): CreateCoinTransactionParams {
+    return {
+      // TODO: Change all these values to make it look as a lp coin
+      decimals: "10",
+      description: BondingPoolSingleton.LP_COIN_DESCRIPTION_PREFIX,
+      fixedSupply: false,
+      mintAmount: "900000000",
+      name: BondingPoolSingleton.LP_COIN_NAME_PREFIX,
+      signerAddress: signer,
+      symbol: BondingPoolSingleton.LP_COIN_MODULE_PREFIX,
+      // TODO: Add LP COIN URL
+      url: "",
+    };
+  }
+
+  public static initSecondaryMarket(params: {
+    transaction?: TransactionBlock;
+    adminCap: string;
+    seedPool: string;
+    memeMeta: string;
+    memeCoinType: string;
+    lpCoinType: string;
+    lpCoinTreasureCapId: string;
+    suiMetadataObject: string;
+    coinTicketType: string;
+  }) {
+    const tx = params.transaction ?? new TransactionBlock();
+
+    const txResult = initSecondaryMarket(tx, [params.coinTicketType, params.memeCoinType, params.lpCoinType], {
+      adminCap: params.adminCap,
+      clock: SUI_CLOCK_OBJECT_ID,
+      memeMeta: params.memeMeta,
+      suiMeta: params.suiMetadataObject,
+      seedPool: params.seedPool,
+      treasuryCap: params.lpCoinTreasureCapId,
+    });
+
+    return { tx, txResult };
+  }
+
+  public async getInitSecondaryMarketData(params: { poolId: string }) {
+    const { poolId } = params;
+    const { poolsByPoolId } = await this.getAllPools();
+    const pool = poolsByPoolId[poolId];
+
+    const instance = CoinManagerSingleton.getInstance(this.suiProviderUrl);
+    const memeMetaDataPromise = instance.fetchCoinMetadata(pool.memeCoinType);
+    const ticketMetaDataPromise = instance.fetchCoinMetadata(pool.ticketCoinType);
+
+    const [memeMetaData, ticketMetaData] = await Promise.all([memeMetaDataPromise, ticketMetaDataPromise]);
+
+    if (!memeMetaData) {
+      throw new Error("Meme metadata is null");
+    }
+
+    if (!ticketMetaData) {
+      throw new Error("Ticket metadata is null");
+    }
+
+    const memeMetaDataObjectId = memeMetaData.id;
+    const ticketMetaDataObjectId = ticketMetaData.id;
+
+    if (!memeMetaDataObjectId) {
+      throw new Error("Meme id is empty");
+    }
+
+    if (!ticketMetaDataObjectId) {
+      throw new Error("Ticket id is empty");
+    }
+
+    return {
+      adminCap: BondingPoolSingleton.ADMIN_OBJECT_ID,
+      seedPool: pool.objectId,
+      memeMeta: memeMetaDataObjectId,
+      memeCoinType: pool.memeCoinType,
+      // lpCoinType: string;
+      // lpCoinTreasureCapId: string;
+      suiMetadataObject: BondingPoolSingleton.SUI_METADATA_OBJECT_ID,
+      coinTicketType: pool.ticketCoinType,
+    };
   }
 }
