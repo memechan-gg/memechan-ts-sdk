@@ -1,8 +1,9 @@
-import { keypair, provider, user } from "../common";
+import { keypair, provider, suiProviderUrl, user } from "../common";
 import { StakingPoolSingleton } from "../../src";
 
 // yarn tsx examples/staking-pool/unstake-from-pool.ts
 export const unstakeFromPool = async () => {
+  let stakingPoolInstance = StakingPoolSingleton.getInstance(suiProviderUrl);
   const memeCoin = {
     coinType: "0x5a63a58787c6ebc1faf9741a6ef9292020b2a02278a8d23b15c03938aadb8237::test_token_4am::TEST_TOKEN_4AM",
   };
@@ -17,7 +18,7 @@ export const unstakeFromPool = async () => {
   // Input amount that user wants to unstake from the staking pool, ticket coin
   const inputAmount = "0.4151519";
 
-  let unstakeFromStakingPoolTx = await StakingPoolSingleton.unstakeFromStakingPool({
+  let unstakeFromStakingPoolTx = await stakingPoolInstance.unstakeFromStakingPool({
     inputAmount,
     memeCoin,
     signerAddress: user,

@@ -1,8 +1,9 @@
-import { keypair, provider } from "../common";
+import { keypair, user, provider, suiProviderUrl } from "../common";
 import { StakingPoolSingleton } from "../../src";
 
 // yarn tsx examples/staking-pool/add-fees-to-pool.ts
 export const addFeesToPool = async () => {
+  let stakingPoolInstance = StakingPoolSingleton.getInstance(suiProviderUrl);
   const memeCoin = {
     coinType: "0x5a63a58787c6ebc1faf9741a6ef9292020b2a02278a8d23b15c03938aadb8237::test_token_4am::TEST_TOKEN_4AM",
   };
@@ -17,12 +18,13 @@ export const addFeesToPool = async () => {
   const memeCoinInput = "0.4151519";
   const suiCoinInput = "0.4151519";
 
-  let addFeesToStakingPoolTx = await StakingPoolSingleton.addFeesToStakingPool({
+  let addFeesToStakingPoolTx = await stakingPoolInstance.addFeesToStakingPool({
     memeCoin,
     stakingPoolObjectId,
     memeCoinInput,
     suiCoinInput,
     ticketCoin,
+    signerAddress: user,
   });
 
   console.debug("addFeesToStakingPoolTx: ", addFeesToStakingPoolTx);

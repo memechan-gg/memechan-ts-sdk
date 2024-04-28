@@ -31,4 +31,5 @@ export type StakingPoolAddFeesArgs = {
   ticketCoin: {
     coinType: string;
   };
+  signerAddress: string;
 };

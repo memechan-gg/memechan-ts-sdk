@@ -8,6 +8,8 @@ import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
 import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyCapObjectData";
 import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
 import { LONG_SUI_COIN_TYPE } from "../common/sui";
+import { getCoins } from "./utils/getCoins";
+import { mergeCoins } from "./utils/mergeCoins";
 /**
  * @class StakingPoolSingleton
  * @implements {StakingPoolSingleton}
@@ -17,6 +19,9 @@ export class StakingPoolSingleton {
   private static _instance: StakingPoolSingleton;
   public static GAS_BUDGET = 50_000_000;
   public static SIMULATION_ACCOUNT_ADDRESS = "0xac5bceec1b789ff840d7d4e6ce4ce61c90d190a7f8c4f4ddf0bff6ee2413c33c";
+
+  public static TICKETCOIN_DECIMALS = "6";
+  public static MEMECOIN_DECIMALS = "6";
 
   public provider: SuiClient;
   public suiProviderUrl: string;
@@ -55,7 +60,7 @@ export class StakingPoolSingleton {
     return StakingPoolSingleton._instance;
   }
 
-  public static async unstakeFromStakingPool(params: StakingPoolUnstakeArgs) {
+  public async unstakeFromStakingPool(params: StakingPoolUnstakeArgs) {
     const { stakingPoolObjectId, inputAmount, memeCoin, ticketCoin, signerAddress } = params;
     const tx = new TransactionBlock();
 
@@ -63,10 +68,27 @@ export class StakingPoolSingleton {
       poolId: stakingPoolObjectId.toString(),
     });
 
-    const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, SUI_DECIMALS);
+    const inputAmountWithDecimals = normalizeInputCoinAmount(
+      inputAmount,
+      parseInt(StakingPoolSingleton.TICKETCOIN_DECIMALS),
+    );
 
-    // TODO: Change that to actual coin
-    const ticketCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
+    const ticketCoins = await getCoins({
+      address: signerAddress,
+      coin: ticketCoin.coinType,
+      provider: this.provider,
+    });
+
+    if (ticketCoins.length === 0) {
+      throw new Error(`[unstakeFromStakingPool] No ticket coins found for the user ${signerAddress}`);
+    }
+
+    const { mergedCoin } = mergeCoins({
+      coins: ticketCoins,
+      tx,
+    });
+
+    const ticketCoinObject = tx.splitCoins(mergedCoin, [inputAmountWithDecimals]);
 
     let [memecoin, lpcoin] = unstake(tx, [ticketCoin.coinType, memeCoin.coinType, LONG_SUI_COIN_TYPE], {
       clock: SUI_CLOCK_OBJECT_ID,
@@ -100,13 +122,33 @@ export class StakingPoolSingleton {
     return { tx };
   }
 
-  public static async addFeesToStakingPool(params: StakingPoolAddFeesArgs) {
-    const { stakingPoolObjectId, memeCoin, memeCoinInput, suiCoinInput, ticketCoin } = params;
+  public async addFeesToStakingPool(params: StakingPoolAddFeesArgs) {
+    const { stakingPoolObjectId, memeCoin, memeCoinInput, suiCoinInput, ticketCoin, signerAddress } = params;
     const tx = new TransactionBlock();
 
-    // TODO: Change that to actual coin
-    const memeCoinObject = tx.splitCoins(tx.gas, [memeCoinInput]);
-    const suiCoinObject = tx.splitCoins(tx.gas, [suiCoinInput]);
+    const memeCoinSplitAmount = normalizeInputCoinAmount(
+      memeCoinInput,
+      parseInt(StakingPoolSingleton.MEMECOIN_DECIMALS),
+    );
+    const suiCoinSplitAmount = normalizeInputCoinAmount(suiCoinInput, SUI_DECIMALS);
+
+    const memeCoins = await getCoins({
+      address: signerAddress,
+      coin: memeCoin.coinType,
+      provider: this.provider,
+    });
+
+    if (memeCoins.length === 0) {
+      throw new Error(`[addFeesToStakingPool] No meme coins found for the user ${signerAddress}`);
+    }
+
+    const { mergedCoin } = mergeCoins({
+      coins: memeCoins,
+      tx,
+    });
+
+    const memeCoinObject = tx.splitCoins(mergedCoin, [memeCoinSplitAmount]);
+    const suiCoinObject = tx.splitCoins(tx.gas, [suiCoinSplitAmount]);
 
     addFees(tx, [ticketCoin.coinType, memeCoin.coinType, LONG_SUI_COIN_TYPE], {
       coinMeme: memeCoinObject,
