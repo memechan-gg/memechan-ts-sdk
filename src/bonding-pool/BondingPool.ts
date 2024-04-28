@@ -1,17 +1,18 @@
 /* eslint-disable require-jsdoc */
 import {
   NewDefaultArgs,
+  buyMeme,
   isReadyToLaunch,
   newDefault,
-  buyMeme,
   sellMeme,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/bound-curve-amm/functions";
-import { SuiClient, SuiObjectDataFilter } from "@mysten/sui.js/client";
+import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
 import { StakedLP } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/structs";
 
+import { initSecondaryMarket } from "@avernikoz/memechan-ts-interface/dist/memechan/initialize/functions";
 import { bcs } from "@mysten/sui.js/bcs";
 import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
 import BigNumber from "bignumber.js";
@@ -29,18 +30,17 @@ import {
   SwapParamsForTicketInputAndSuiOutput,
 } from "./types";
 import { deductSlippage } from "./utils/deductSlippage";
+import { extractCoinType } from "./utils/extractCoinType";
 import { extractRegistryKeyData } from "./utils/extractRegistryKeyData";
 import { getAllDynamicFields } from "./utils/getAllDynamicFields";
 import { getAllObjects } from "./utils/getAllObjects";
+import { getAllOwnedObjects } from "./utils/getAllOwnedObjects";
 import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
 import { isPoolObjectData } from "./utils/isPoolObjectData";
+import { isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
 import { isTokenPolicyCapObjectData } from "./utils/isTokenPolicyCapObjectData";
 import { normalizeInputCoinAmount } from "./utils/normalizeInputCoinAmount";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
-import { getAllOwnedObjects } from "./utils/getAllOwnedObjects";
-import { isStakedLpObjectData, isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
-import { extractCoinType } from "./utils/extractCoinType";
-import { initSecondaryMarket } from "@avernikoz/memechan-ts-interface/dist/memechan/initialize/functions";
 
 /**
  * @class BondingPoolSingleton
@@ -370,13 +370,13 @@ export class BondingPoolSingleton {
       transaction,
       bondingCurvePoolObjectId,
       inputTicketAmount,
-      slippagePercentage = 0,
+      // slippagePercentage = 0,
       signerAddress: owner,
     } = params;
     const tx = transaction ?? new TransactionBlock();
 
     const {
-      amount,
+      // amount,
       amountWithDecimals,
       tickets: availableTickets,
     } = await this.getAvailableAmountOfTicketsToSell({ owner, ticketCoin });
