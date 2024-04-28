@@ -61,7 +61,7 @@ export type SwapParamsForTicketInput = {
   slippagePercentage?: number;
 };
 
-export type SwapParamsForTicketInputAndSuiOutput = SwapParamsForSuiInput & {
+export type SwapParamsForTicketInputAndSuiOutput = SwapParamsForTicketInput & {
   signerAddress: string;
   minOutputSuiAmount: string;
 };
@@ -125,9 +125,40 @@ export interface TokenPolicyCapObjectData extends SuiObjectResponse {
 
 export type ExtractedRegistryKeyData = {
   boundingCurvePackageId: string;
-  boundingCurvePoolType: string;
   ticketPackageId: string;
   ticketCoinType: string;
   quotePackageId: string;
   quoteCoinType: string;
+  memePackageId: string;
+  memeCoinType: string;
 };
+
+export interface StakedLpObjectData extends SuiObjectResponse {
+  data: {
+    objectId: string;
+    version: string;
+    digest: string;
+    type: string;
+    content: {
+      dataType: "moveObject";
+      type: string;
+      hasPublicTransfer: boolean;
+      fields: {
+        balance: string;
+        id: {
+          id: string;
+        };
+        until_timestamp: string;
+      };
+    };
+  };
+}
+
+export interface StakedLpObject {
+  objectId: string;
+  type: string;
+  balance: string;
+  balanceWithDecimals: string;
+  untilTimestamp: number;
+  ticketCoinType: string;
+}
