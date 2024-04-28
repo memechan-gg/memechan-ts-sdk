@@ -6,7 +6,7 @@ import {
   buyMeme,
   sellMeme,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/bound-curve-amm/functions";
-import { SuiClient } from "@mysten/sui.js/client";
+import { SuiClient, SuiObjectDataFilter } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
@@ -22,6 +22,7 @@ import {
   CreateBondingCurvePoolParams,
   CreateCoinTransactionParamsWithoutCertainProps,
   ExtractedRegistryKeyData,
+  StakedLpObject,
   SwapParamsForSuiInput,
   SwapParamsForSuiInputAndTicketOutput,
   SwapParamsForTicketInput,
@@ -36,6 +37,9 @@ import { isPoolObjectData } from "./utils/isPoolObjectData";
 import { isTokenPolicyCapObjectData } from "./utils/isTokenPolicyCapObjectData";
 import { normalizeInputCoinAmount } from "./utils/normalizeInputCoinAmount";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
+import { getAllOwnedObjects } from "./utils/getAllOwnedObjects";
+import { isStakedLpObjectData, isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
+import { extractCoinType } from "./utils/extractCoinType";
 
 /**
  * @class BondingPoolSingleton
@@ -47,10 +51,18 @@ export class BondingPoolSingleton {
   public static TX_OF_CONTRACT_DEPLOY =
     "https://suivision.xyz/txblock/yuq1Lnf1rkLp8mDGaE592yg4XkkHfShY9gpx8vqAt2A?tab=Changes";
 
+  public static TX_OF_TICKET_BUY =
+    "https://suivision.xyz/txblock/Gz6vfDgeE9tErU2iUJ9Yh1NitDkKZC2CzM17sgu9PkT7?tab=Changes";
+
   public static REGISTRY_OBJECT_ID = "0x16a28f0b68d3395c454bb59a32200ed863235f3902a623b14daa245c7ff680bf";
   public static ADMIN_OBJECT_ID = "0x10c2e5e3b154a187d2790092209493f204c23eca572769b3e740bb1cd068cde4";
   public static UPGRADE_CAP_OBJECT_ID = "0x4d1726a538f640974a609bfe4e4db45bc3484bf11852ffacc771d5344728671e";
   public static PACKAGE_OBJECT_ID = "0x9e1701ec8d7942a79874a40d4d5c9d94c45ffd141c9cd2cff4f4fc3820329b61";
+  // TODO: Move that to StakingPool
+  public static STAKING_MODULE_NAME = "staked_lp";
+  public static STAKING_LP_STRUCT_TYPE = "StakedLP";
+  // eslint-disable-next-line max-len
+  public static STAKED_LP_OBJECT_TYPE = `${BondingPoolSingleton.PACKAGE_OBJECT_ID}::${BondingPoolSingleton.STAKING_MODULE_NAME}::${BondingPoolSingleton.STAKING_LP_STRUCT_TYPE}`;
 
   public static TICKET_COIN_MODULE_PREFIX = "ticket_";
   public static TICKET_COIN_NAME_PREFIX = "TicketFor";
@@ -155,6 +167,44 @@ export class BondingPoolSingleton {
     });
 
     return memeAndTicketCoinTx;
+  }
+
+  public async getAllStakedLPObjectsByOwner({ owner }: { owner: string }) {
+    const stakedLpObjects = await getAllOwnedObjects({
+      provider: this.provider,
+      options: {
+        owner: owner,
+        // TODO: (?) Might require update to support multiple packages for STAKED_LP_OBJECT_TYPE
+        filter: { StructType: BondingPoolSingleton.STAKED_LP_OBJECT_TYPE },
+        options: {
+          showContent: true,
+          showType: true,
+        },
+      },
+    });
+
+    if (!isStakedLpObjectDataList(stakedLpObjects)) {
+      throw new Error("[getAllStakedLPObjectsByOwner] Wrong shape of staked lp objects");
+    }
+
+    const stakedLpObjectList: StakedLpObject[] = stakedLpObjects.map((el) => ({
+      objectId: el.data.objectId,
+      type: el.data.type,
+      balance: el.data.content.fields.balance,
+      untilTimestamp: el.data.content.fields.until_timestamp,
+      ticketCoinType: extractCoinType(el.data.type),
+    }));
+
+    const stakedLpObjectsByTicketCoinTypeMap = stakedLpObjectList.reduce(
+      (acc: { [ticketCoinType: string]: StakedLpObject }, el) => {
+        acc[el.ticketCoinType] = { ...el };
+
+        return acc;
+      },
+      {},
+    );
+
+    return { stakedLpObjectList, stakedLpObjectsByTicketCoinTypeMap };
   }
 
   // TODO ASAP IMPORTANT: Issue? with 950 SUI Magic Number on simulation
