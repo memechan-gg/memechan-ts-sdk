@@ -5,6 +5,8 @@ export type AddLiquidityArgs = {
   };
   memeCoinInput: string;
   suiCoinInput: string;
+  minOutputAmount: string;
+  slippagePercentage: number;
 };
 
 export type RemoveLiquidityArgs = {
@@ -13,6 +15,11 @@ export type RemoveLiquidityArgs = {
   lpCoin: {
     coinType: string;
   };
+  minAmounts: {
+    suiCoin: string;
+    memeCoin: string;
+  };
+  slippagePercentage: number;
 };
 
 export type SwapArgs = {
@@ -22,4 +29,6 @@ export type SwapArgs = {
   };
   inputAmount: string;
   SuiToMeme: boolean;
+  minOutputAmount: string;
+  slippagePercentage: number;
 };
