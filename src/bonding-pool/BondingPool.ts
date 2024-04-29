@@ -5,14 +5,14 @@ import {
   isReadyToLaunch,
   newDefault,
   sellMeme,
-} from "@avernikoz/memechan-ts-interface/dist/memechan/bound-curve-amm/functions";
+} from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
 import { StakedLP } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/structs";
 
-import { initSecondaryMarket } from "@avernikoz/memechan-ts-interface/dist/memechan/initialize/functions";
+import { goLive } from "@avernikoz/memechan-ts-interface/dist/memechan/go-live/functions";
 import { bcs } from "@mysten/sui.js/bcs";
 import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
 import BigNumber from "bignumber.js";
@@ -627,7 +627,7 @@ export class BondingPoolSingleton {
   }) {
     const tx = params.transaction ?? new TransactionBlock();
 
-    const txResult = initSecondaryMarket(tx, [params.coinTicketType, params.memeCoinType, params.lpCoinType], {
+    const txResult = goLive(tx, [params.coinTicketType, params.memeCoinType, params.lpCoinType], {
       adminCap: params.adminCap,
       clock: SUI_CLOCK_OBJECT_ID,
       memeMeta: params.memeMeta,
