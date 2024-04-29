@@ -1,9 +1,12 @@
 /* eslint-disable require-jsdoc */
 import {
+  NewArgs,
   NewDefaultArgs,
   buyMeme,
+  defaultAdmin,
   isReadyToLaunch,
   newDefault,
+  new_,
   sellMeme,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 import { SuiClient } from "@mysten/sui.js/client";
@@ -20,9 +23,11 @@ import { CoinManagerSingleton } from "../coin/CoinManager";
 import { CreateCoinTransactionParams } from "../coin/types";
 import { LONG_SUI_COIN_TYPE } from "../common/sui";
 import {
+  BondingCurveCustomParams,
   CreateBondingCurvePoolParams,
   CreateCoinTransactionParamsWithoutCertainProps,
   ExtractedRegistryKeyData,
+  GetBondingCurveCustomParams,
   StakedLpObject,
   SwapParamsForSuiInput,
   SwapParamsForSuiInputAndTicketOutput,
@@ -136,23 +141,73 @@ export class BondingPoolSingleton {
     return { tx, txResult };
   }
 
+  public static createBondingCurvePoolWithCustomParams(
+    args: NewArgs,
+    typeArgs: [string, string, string],
+    transaction?: TransactionBlock,
+  ) {
+    console.debug("args: ", args);
+    console.debug("typeArgs: ", typeArgs);
+
+    const tx = new TransactionBlock() ?? transaction;
+    const txResult = new_(tx, typeArgs, args);
+
+    return { tx, txResult };
+  }
+
+  public static getBondingCurveCustomParams(params: GetBondingCurveCustomParams): BondingCurveCustomParams {
+    // TODO: Later on we can fetch these values on-chain by using tx simulation with devInspect
+    const DEFAULT_ADMIN_FEE = BigInt(5_000_000_000_000_000); // 0.5%
+    const DEFAULT_PRICE_FACTOR = BigInt(2);
+    const DEFAULT_MAX_M_LP = BigInt(200_000_000_000_000);
+    const DEFAULT_MAX_M = BigInt(900_000_000_000_000);
+    const DEFAULT_MAX_S = BigInt(30_000);
+    const DEFAULT_SELL_DELAY_MS = BigInt(12 * 3600 * 1000);
+
+    return {
+      feeInPercent: params.feeInPercent ?? DEFAULT_ADMIN_FEE,
+      feeOutPercent: params.feeOutPercent ?? DEFAULT_ADMIN_FEE,
+      gammaS: params.gammaS ?? DEFAULT_MAX_S,
+      gammaM: params.gammaM ?? DEFAULT_MAX_M,
+      omegaM: params.omegaM ?? DEFAULT_MAX_M_LP,
+      priceFactor: params.priceFactor ?? DEFAULT_PRICE_FACTOR,
+      sellDelayMs: params.sellDelayMs ?? DEFAULT_SELL_DELAY_MS,
+    };
+  }
+
   public static createBondingCurvePool(params: CreateBondingCurvePoolParams) {
-    const { memeCoin, ticketCoin, transaction } = params;
+    const { memeCoin, ticketCoin, transaction, bondingCurveCustomParams } = params;
     const tx = transaction ?? new TransactionBlock();
 
-    const createBondingCurvePoolTx = BondingPoolSingleton.createBondingCurvePoolWithDefaultParams(
-      {
-        registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
-        memeCoinCap: memeCoin.treasureCapId,
-        memeCoinMetadata: memeCoin.metadataObjectId,
-        ticketCoinCap: ticketCoin.treasureCapId,
-        ticketCoinMetadata: ticketCoin.metadataObjectId,
-      },
-      [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
-      tx,
-    );
+    if (bondingCurveCustomParams) {
+      const createBondingCurvePoolTxResult = BondingPoolSingleton.createBondingCurvePoolWithCustomParams(
+        {
+          registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
+          memeCoinCap: memeCoin.treasureCapId,
+          memeCoinMetadata: memeCoin.metadataObjectId,
+          ticketCoinCap: ticketCoin.treasureCapId,
+          ticketCoinMetadata: ticketCoin.metadataObjectId,
+          ...bondingCurveCustomParams,
+        },
+        [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
+        tx,
+      );
 
-    return createBondingCurvePoolTx;
+      return createBondingCurvePoolTxResult;
+    } else {
+      const createBondingCurvePoolTx = BondingPoolSingleton.createBondingCurvePoolWithDefaultParams(
+        {
+          registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
+          memeCoinCap: memeCoin.treasureCapId,
+          memeCoinMetadata: memeCoin.metadataObjectId,
+          ticketCoinCap: ticketCoin.treasureCapId,
+          ticketCoinMetadata: ticketCoin.metadataObjectId,
+        },
+        [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
+        tx,
+      );
+      return createBondingCurvePoolTx;
+    }
   }
 
   public static async createMemeAndTicketCoins(params: CreateCoinTransactionParamsWithoutCertainProps) {
