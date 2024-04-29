@@ -18,14 +18,25 @@ export const createCoinRequestBodySchema = z.object({
   socialLinks: socialLinks.nullish(),
 });
 
+export const coinStatus = z.literal("LIVE").or(z.literal("PRESALE"));
+
 export const coinSchema = z.object({
   name: z.string(),
   type: z.string(),
+  decimals: z.number(),
+  symbol: z.string(),
+  objectId: z.string(),
+  treasureCapId: z.string(),
+  objectType: z.string(),
   description: z.string(),
   image: z.string(),
+  metadataObjectId: z.string(),
   lastReply: z.number(),
   marketcap: z.number(),
   creator: z.string(),
+  status: coinStatus,
+  socialLinks: socialLinks.nullish(),
+  txDigest: z.string(),
   creationTime: z.number(),
   contractAddress: z.string().nullish(),
 });
@@ -48,8 +59,6 @@ export const ticketSchema = z.object({
   creationTime: z.number(),
   contractAddress: z.string().nullish(),
 });
-
-export const coinStatus = z.literal("LIVE").or(z.literal("PRESALE"));
 
 export const queryCoinsRequestParamsSchema = z.object({
   sortBy: coinsSortableColumns,
