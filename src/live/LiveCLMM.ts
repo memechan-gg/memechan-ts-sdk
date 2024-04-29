@@ -3,7 +3,14 @@ import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { SUI_DECIMALS } from "@mysten/sui.js/utils";
 import { CLAMM, InterestPool } from "@interest-protocol/clamm-sdk";
-import { AddLiquidityArgs, RemoveLiquidityArgs, SwapArgs } from "./types";
+import {
+  AddLiquidityArgs,
+  QuoteAddLiquidityArgs,
+  QuoteRemoveLiquidityArgs,
+  QuoteSwapArgs,
+  RemoveLiquidityArgs,
+  SwapArgs,
+} from "./types";
 import { getCoins } from "./utils/getCoins";
 import { mergeCoins } from "./utils/mergeCoins";
 import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
@@ -204,7 +211,7 @@ export class LiveCLMMSingleton {
     return coinOut.txb;
   }
 
-  public async quoteAddLiquidity(params: AddLiquidityArgs) {
+  public async quoteAddLiquidity(params: QuoteAddLiquidityArgs) {
     const { memeCoinInput, suiCoinInput } = params;
     const pool = await this.getPool();
 
@@ -219,7 +226,7 @@ export class LiveCLMMSingleton {
     return coinOut;
   }
 
-  public async quoteRemoveLiquidity(params: RemoveLiquidityArgs) {
+  public async quoteRemoveLiquidity(params: QuoteRemoveLiquidityArgs) {
     const { lpCoinInput } = params;
     const pool = await this.getPool();
 
@@ -233,7 +240,7 @@ export class LiveCLMMSingleton {
     return coinOut;
   }
 
-  public async quoteSwap(params: SwapArgs) {
+  public async quoteSwap(params: QuoteSwapArgs) {
     const { memeCoin, inputAmount, SuiToMeme } = params;
     const pool = await this.getPool();
 
