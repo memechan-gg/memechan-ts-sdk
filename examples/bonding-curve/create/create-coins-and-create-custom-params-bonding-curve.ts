@@ -41,7 +41,7 @@ export const createCustomBondingCurveAndCoins = async (params: CreateCoinTransac
     bondingCurveCustomParams: bondingCurveCustomParams,
   });
 
-  await sleep(7000);
+  await sleep(30000);
 
   console.debug(
     " createBondingCurvePoolTx tx.serialize: ",

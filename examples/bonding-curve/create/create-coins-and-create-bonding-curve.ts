@@ -22,6 +22,7 @@ export const createCoinsForBondingCurve = async (params: CreateCoinTransactionPa
     },
   });
 
+  console.debug("tx coin res: ", res);
   const { memeCoin, ticketCoin } = parseTransactionDataCoinAndTicketCreation(res.objectChanges);
   const createBondingCurvePoolTx = BondingPoolSingleton.createBondingCurvePool({ memeCoin, ticketCoin });
   await sleep(7000);
