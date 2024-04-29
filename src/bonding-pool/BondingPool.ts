@@ -3,7 +3,6 @@ import {
   NewArgs,
   NewDefaultArgs,
   buyMeme,
-  defaultAdmin,
   isReadyToLaunch,
   newDefault,
   new_,
