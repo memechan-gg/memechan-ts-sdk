@@ -2,6 +2,11 @@ import { ObjectArg } from "@avernikoz/memechan-ts-interface/dist/_framework/util
 import { DynamicFieldInfo, SuiObjectResponse } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { CreateCoinTransactionParams } from "../coin/types";
+import { NewArgs } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
+
+export type Optional<T> = {
+  [K in keyof T]?: T[K];
+};
 
 export type ExtractedCoinDataFromTransaction = {
   memeCoin: {
@@ -22,10 +27,18 @@ export type ExtractedCoinDataFromTransaction = {
   };
 };
 
+export type BondingCurveCustomParams = Omit<
+  NewArgs,
+  "registry" | "ticketCoinCap" | "memeCoinCap" | "ticketCoinMetadata" | "memeCoinMetadata"
+>;
+
+export type GetBondingCurveCustomParams = Optional<BondingCurveCustomParams>;
+
 export type CreateBondingCurvePoolParams = {
   memeCoin: { treasureCapId: string; metadataObjectId: string; coinType: string };
   ticketCoin: { treasureCapId: string; metadataObjectId: string; coinType: string };
   transaction?: TransactionBlock;
+  bondingCurveCustomParams?: BondingCurveCustomParams;
 };
 
 export type CreateCoinTransactionParamsWithoutCertainProps = Omit<
@@ -39,7 +52,7 @@ export type SwapParamsForSuiInput = {
   transaction?: TransactionBlock;
 
   // swap params
-  bondingCurvePoolObjectId: ObjectArg;
+  bondingCurvePoolObjectId;
   inputAmount: string;
 
   slippagePercentage?: number;
@@ -55,7 +68,7 @@ export type SwapParamsForTicketInput = {
   ticketCoin: { coinType: string };
   transaction?: TransactionBlock;
 
-  bondingCurvePoolObjectId: ObjectArg;
+  bondingCurvePoolObjectId;
   inputTicketAmount: string;
 
   slippagePercentage?: number;
