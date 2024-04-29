@@ -21,10 +21,10 @@
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
-"@avernikoz/memechan-ts-interface@^1.0.9":
-  version "1.0.9"
-  resolved "https://registry.npmjs.org/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.9.tgz#75e37f2cadf948fea9f80a1c30767e9d793040ae"
-  integrity sha512-PqjdmFD/dDHD7lnNXbi3mb1TVoBBsDkcJUNcU2UarzBXMLT2uvk54NMIodM3N77SkJ+CuNK/X6jLukD7PLMmUw==
+"@avernikoz/memechan-ts-interface@^1.0.11":
+  version "1.0.11"
+  resolved "https://registry.npmjs.org/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.11.tgz#dd724c0062ce27963d6a8b6c23859d800701a481"
+  integrity sha512-QImnnqpl71JK7DF6089/UpR2y3jfwOL+xWRk7gCsu2VsAvzGlUQgTG8NW7veHad0zGb6ThSEh7VsW2+ioFdx6Q==
   dependencies:
     "@mysten/bcs" "0.11.1"
     "@mysten/sui.js" "0.51.2"
@@ -429,6 +429,15 @@
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-2.0.3.tgz#4a2868d75d6d6963e423bcf90b7fd1be343409d3"
   integrity sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==
+
+"@interest-protocol/clamm-sdk@3.2.0-alpha":
+  version "3.2.0-alpha"
+  resolved "https://registry.npmjs.org/@interest-protocol/clamm-sdk/-/clamm-sdk-3.2.0-alpha.tgz#825c99e88d5f3fc1e2c30660d4165c6052e0dda6"
+  integrity sha512-jMdEOPsYz/qtGZyuM7cLsybpShCSP4J/nlSVkMHhrBp1GYax5T7oXXst8rOW6RMb50xmJLDYBXTo4SzE1bE4rg==
+  dependencies:
+    "@mysten/sui.js" "^0.51.2"
+    ramda "^0.29.1"
+    tiny-invariant "^1.3.3"
 
 "@isaacs/cliui@^8.0.2":
   version "8.0.2"
@@ -3160,6 +3169,11 @@ queue-microtask@^1.2.2:
   resolved "https://registry.yarnpkg.com/queue-microtask/-/queue-microtask-1.2.3.tgz#4929228bbc724dfac43e0efb058caf7b6cfb6243"
   integrity sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==
 
+ramda@^0.29.1:
+  version "0.29.1"
+  resolved "https://registry.npmjs.org/ramda/-/ramda-0.29.1.tgz#408a6165b9555b7ba2fc62555804b6c5a2eca196"
+  integrity sha512-OfxIeWzd4xdUNxlWhgFazxsA/nl3mS4/jGZI5n00uWOoSSFRhC1b6gl6xvmzUamgmqELraWp0J/qqVlXYPDPyA==
+
 react-is@^18.0.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-18.2.0.tgz#199431eeaaa2e09f86427efbb4f1473edb47609b"
@@ -3533,6 +3547,11 @@ thenify-all@^1.0.0:
   integrity sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==
   dependencies:
     any-promise "^1.0.0"
+
+tiny-invariant@^1.3.3:
+  version "1.3.3"
+  resolved "https://registry.npmjs.org/tiny-invariant/-/tiny-invariant-1.3.3.tgz#46680b7a873a0d5d10005995eb90a70d74d60127"
+  integrity sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==
 
 tinybench@^2.5.1:
   version "2.8.0"
