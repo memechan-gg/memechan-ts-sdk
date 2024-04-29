@@ -1,7 +1,7 @@
 import { suiProviderUrl } from "../../common";
 import { BondingPoolSingleton } from "../../../src";
 
-// yarn tsx examples/bonding-curve/get-swap-output-amount-by-pool.ts
+// yarn tsx examples/bonding-curve/trading/get-swap-output-amount-by-pool.ts
 export const getSwapOutputAmountByPoolExample = async () => {
   const bondingCurveInstance = BondingPoolSingleton.getInstance(suiProviderUrl);
 

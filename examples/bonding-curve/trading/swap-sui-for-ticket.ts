@@ -1,7 +1,7 @@
 import { keypair, provider, suiProviderUrl, user } from "../../common";
 import { BondingPoolSingleton } from "../../../src";
 
-// yarn tsx examples/bonding-curve/trading/swap-sui-for-ticket.ts
+// yarn tsx examples/bonding-curve/trading/trading/swap-sui-for-ticket.ts
 export const swapSuiForTicketExample = async () => {
   const bondingCurveInstance = BondingPoolSingleton.getInstance(suiProviderUrl);
 
