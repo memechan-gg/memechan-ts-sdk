@@ -6,6 +6,7 @@ import {
   isReadyToLaunch,
   newDefault,
   new_,
+  quoteSellMeme,
   sellMeme,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 import { SuiClient } from "@mysten/sui.js/client";
@@ -364,11 +365,60 @@ export class BondingPoolSingleton {
     return outputAmountRespectingSlippage.toString();
   }
 
+  // TODO: update eslint jsdoc for that method
   // eslint-disable-next-line valid-jsdoc
   /**
-   * ⚠️ WARNING: This method is not functional and still in development. DO NOT USE.
+   * Be aware, that this method could return 0 in case there is no sui in pool
+   * (that might be a case when pool just launched)
+   * That case should be handled on the client-side
    */
-  public async getSwapOutputAmountForTicketInput(params: SwapParamsForTicketInput) {}
+  public async getSwapOutputAmountForTicketInput(params: SwapParamsForTicketInput) {
+    const {
+      bondingCurvePoolObjectId,
+      inputTicketAmount,
+      slippagePercentage = 0,
+      transaction,
+      memeCoin,
+      ticketCoin,
+    } = params;
+    const tx = transaction ?? new TransactionBlock();
+
+    const inputAmountWithDecimals = normalizeInputCoinAmount(
+      inputTicketAmount,
+      +BondingPoolSingleton.TICKET_COIN_DECIMALS,
+    );
+
+    const txResult = quoteSellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+      coinM: inputAmountWithDecimals,
+      pool: bondingCurvePoolObjectId,
+    });
+
+    const res = await this.provider.devInspectTransactionBlock({
+      sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
+      transactionBlock: tx,
+    });
+
+    if (!res.results) {
+      throw new Error("No results found for simulation of swap");
+    }
+
+    const returnValues = res.results[0].returnValues;
+    if (!returnValues) {
+      throw new Error("Return values are undefined");
+    }
+
+    // console.debug("returnValues");
+    // console.dir(returnValues, { depth: null });
+
+    const rawAmountBytes = returnValues[0][0];
+    const decoded = bcs.de("u64", new Uint8Array(rawAmountBytes));
+    const outputRaw = decoded;
+    const outputAmount = new BigNumber(outputRaw).div(10 ** SUI_DECIMALS);
+
+    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
+
+    return outputAmountRespectingSlippage.toString();
+  }
 
   public static async swapSuiForTicket(params: SwapParamsForSuiInputAndTicketOutput) {
     const {
