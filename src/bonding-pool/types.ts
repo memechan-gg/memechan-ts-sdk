@@ -52,7 +52,7 @@ export type SwapParamsForSuiInput = {
   transaction?: TransactionBlock;
 
   // swap params
-  bondingCurvePoolObjectId;
+  bondingCurvePoolObjectId: string;
   inputAmount: string;
 
   slippagePercentage?: number;
@@ -68,7 +68,7 @@ export type SwapParamsForTicketInput = {
   ticketCoin: { coinType: string };
   transaction?: TransactionBlock;
 
-  bondingCurvePoolObjectId;
+  bondingCurvePoolObjectId: string;
   inputTicketAmount: string;
 
   slippagePercentage?: number;
