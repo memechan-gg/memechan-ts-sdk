@@ -50,16 +50,16 @@ import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypen
 export class BondingPoolSingleton {
   private static _instance: BondingPoolSingleton;
   public static TX_OF_CONTRACT_DEPLOY =
-    "https://suivision.xyz/txblock/yuq1Lnf1rkLp8mDGaE592yg4XkkHfShY9gpx8vqAt2A?tab=Changes";
+    "https://suivision.xyz/txblock/536hPEhVWyiakHHsBNJVaDTB68WtB8VYuqYbJEDYjVJy?tab=Changes";
 
   public static TX_OF_TICKET_BUY =
     "https://suivision.xyz/txblock/Gz6vfDgeE9tErU2iUJ9Yh1NitDkKZC2CzM17sgu9PkT7?tab=Changes";
   public static SUI_METADATA_OBJECT_ID = "0x9258181f5ceac8dbffb7030890243caed69a9599d2886d957a9cb7656af3bdb3";
 
-  public static REGISTRY_OBJECT_ID = "0x16a28f0b68d3395c454bb59a32200ed863235f3902a623b14daa245c7ff680bf";
-  public static ADMIN_OBJECT_ID = "0x10c2e5e3b154a187d2790092209493f204c23eca572769b3e740bb1cd068cde4";
-  public static UPGRADE_CAP_OBJECT_ID = "0x4d1726a538f640974a609bfe4e4db45bc3484bf11852ffacc771d5344728671e";
-  public static PACKAGE_OBJECT_ID = "0x9e1701ec8d7942a79874a40d4d5c9d94c45ffd141c9cd2cff4f4fc3820329b61";
+  public static REGISTRY_OBJECT_ID = "0x6ff7439c76e7c848d2b873d23791d268b2d29fbd2cf49cc4f54df4ae6765d94a";
+  public static ADMIN_OBJECT_ID = "0x35f98538e17fdbfc07040c92fdccf2755ccbde027bf0f0d5ed2ff50415d547e5";
+  public static UPGRADE_CAP_OBJECT_ID = "0x2dd0d836c5088835221e02d41067db3ff6817b7c2248a29938a5b0b4074a9acf";
+  public static PACKAGE_OBJECT_ID = "0x1eee8b5dd7e1d5a1788e7efe8281336003a67b445e8ef0bb11489bc8b32b20b3";
   // TODO: Move that to StakingPool
   public static STAKING_MODULE_NAME = "staked_lp";
   public static STAKING_LP_STRUCT_TYPE = "StakedLP";
