@@ -145,9 +145,6 @@ export class BondingPoolSingleton {
     typeArgs: [string, string, string],
     transaction?: TransactionBlock,
   ) {
-    console.debug("args: ", args);
-    console.debug("typeArgs: ", typeArgs);
-
     const tx = new TransactionBlock() ?? transaction;
     const txResult = new_(tx, typeArgs, args);
 
