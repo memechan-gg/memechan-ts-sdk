@@ -1,11 +1,11 @@
 /* eslint-disable max-len */
-import { BondingPoolSingleton } from "../../src/bonding-pool/BondingPool";
-import { CreateCoinTransactionParamsWithoutCertainProps } from "../../src/bonding-pool/types";
-import { parseTransactionDataCoinAndTicketCreation } from "../../src/bonding-pool/utils/parseTransactionDataCoinAndTicketCreation";
-import { keypair, provider, user } from "../common";
-import { sleep } from "../utils/sleep";
+import { BondingPoolSingleton } from "../../../src/bonding-pool/BondingPool";
+import { CreateCoinTransactionParamsWithoutCertainProps } from "../../../src/bonding-pool/types";
+import { parseTransactionDataCoinAndTicketCreation } from "../../../src/bonding-pool/utils/parseTransactionDataCoinAndTicketCreation";
+import { keypair, provider, user } from "../../common";
+import { sleep } from "../../utils/sleep";
 
-// yarn tsx examples/bonding-curve/create-coins-and-create-bonding-curve.ts
+// yarn tsx examples/bonding-curve/create/create-coins-and-create-bonding-curve.ts
 export const createCoinsForBondingCurve = async (params: CreateCoinTransactionParamsWithoutCertainProps) => {
   const memeAndTicketCoinTx = await BondingPoolSingleton.createMemeAndTicketCoins(params);
 
