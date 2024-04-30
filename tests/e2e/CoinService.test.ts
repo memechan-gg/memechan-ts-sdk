@@ -4,7 +4,7 @@ import { Coin, coinSchema } from "../../src/coin/schemas/coin-schemas";
 import { isSorted } from "./helpers";
 // eslint-disable-next-line max-len
 
-const BE_URL = "https://cp1mqp07c3.execute-api.us-east-1.amazonaws.com/prod";
+const BE_URL = "https://14r6b4r6kf.execute-api.us-east-1.amazonaws.com/prod";
 
 describe("CoinService authenticated operations", () => {
   let keypair: Ed25519Keypair;
@@ -39,62 +39,71 @@ describe("CoinService authenticated operations", () => {
     */
 
     const { ticket, coin } = await coinApi.createCoin({
-      txDigest: "BnEpQ5imAcSX6638cjjiewxtKR1QaKTUtNL35NeFzK1A",
+      txDigest: "Bdkcg4Z2HuUTRkvG5mrCZRya8fxqwPzbHnY3cfD1tTYQ",
       socialLinks: {
         twitter: "mytwitter",
         discord: "mydiscord",
       },
     });
     expect(ticket).toEqual({
-      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8iB11vE7qmEdgHxD7Hnm4_gi6R4KJ9B8nzs_su6iaGg&s",
-      contractAddress: "0x86b4a77d4f19a703bf23e9a68743684ed69a1dfb43412cbee55f0308ed986657",
-      creationTime: 1714056680328,
+      image:
+        // eslint-disable-next-line max-len
+        "https://i.seadn.io/gae/2hDpuTi-0AMKvoZJGd-yKWvK4tKdQr_kLIpB_qSeMau2TNGCNidAosMEvrEXFO9G6tmlFlPQplpwiqirgrIPWnCKMvElaYgI-HiVvXc?auto=format&dpr=1&w=1000",
+      contractAddress: "0xf45c3c4ffb1466384e2b904454c220ab28eca72c7b5d36df57e5e8afc54cab1b",
+      creationTime: 1714397293646,
       associatedCoin:
-        "0xd847d01c74caf23c46352927c7023dad07e78e12da60376a779b2cb0642cfd56::test_token_4am::TEST_TOKEN_4AM",
-      creator: "0x86e3289eada655152a41cb1045c0b26b3ed981eee9529fcdebda70f2c511595a",
-      txDigest: "BnEpQ5imAcSX6638cjjiewxtKR1QaKTUtNL35NeFzK1A",
+        "0xd4c0f2f4a375fd37e57c2e8f6597def5934140bb1f0629af7182c9f30f7da524::test_token_4am::TEST_TOKEN_4AM",
+      creator: "0x9a32c41920a66f4919a3d011dac7d45fb79d2629d4c5dce937d550339bbad8e2",
+      txDigest: "Bdkcg4Z2HuUTRkvG5mrCZRya8fxqwPzbHnY3cfD1tTYQ",
       // eslint-disable-next-line max-len
-      type: "0x86b4a77d4f19a703bf23e9a68743684ed69a1dfb43412cbee55f0308ed986657::ac_b_test_token_4am::AC_B_TEST_TOKEN_4AM",
+      type: "0xf45c3c4ffb1466384e2b904454c220ab28eca72c7b5d36df57e5e8afc54cab1b::ticket_test_token_4am::TICKET_TEST_TOKEN_4AM",
       socialLinks: { twitter: "mytwitter", discord: "mydiscord" },
       decimals: 6,
       description: "Pre sale ticket of bonding curve pool for the following memecoin: testtoken4am",
-      icon_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8iB11vE7qmEdgHxD7Hnm4_gi6R4KJ9B8nzs_su6iaGg&s",
+      icon_url:
+        // eslint-disable-next-line max-len
+        "https://i.seadn.io/gae/2hDpuTi-0AMKvoZJGd-yKWvK4tKdQr_kLIpB_qSeMau2TNGCNidAosMEvrEXFO9G6tmlFlPQplpwiqirgrIPWnCKMvElaYgI-HiVvXc?auto=format&dpr=1&w=1000",
       name: "TicketFortesttoken4am",
-      symbol: "ac_b_TEST_TOKEN_4am",
+      symbol: "ticket_TEST_TOKEN_4am",
       coinType:
-        "0x86b4a77d4f19a703bf23e9a68743684ed69a1dfb43412cbee55f0308ed986657::ac_b_test_token_4am::AC_B_TEST_TOKEN_4AM",
-      objectId: "0xaa497abcf74c69e5f2468684067ed6a053f114075bd5a4dcf719b0421973fc13",
+        // eslint-disable-next-line max-len
+        "0xf45c3c4ffb1466384e2b904454c220ab28eca72c7b5d36df57e5e8afc54cab1b::ticket_test_token_4am::TICKET_TEST_TOKEN_4AM",
+      objectId: "0xacbe19a3f77ff703a8aaedf155c8fb2e3d14b6776ef34a4f20fa9c3a75983fdf",
       objectType:
         // eslint-disable-next-line max-len
-        "0x2::coin::Coin<0x86b4a77d4f19a703bf23e9a68743684ed69a1dfb43412cbee55f0308ed986657::ac_b_test_token_4am::AC_B_TEST_TOKEN_4AM>",
-      treasureCapId: "0xddc80c19ec40d5382b895730e61d420ab8f4f964a28b7922ceae65113259751e",
-      packageId: "0x86b4a77d4f19a703bf23e9a68743684ed69a1dfb43412cbee55f0308ed986657",
-      metadataObjectId: "0x092b7e50972e8c855d2c72d15c84bd4b8982312603bfc4647296c815b9100e3c",
+        "0x2::coin::Coin<0xf45c3c4ffb1466384e2b904454c220ab28eca72c7b5d36df57e5e8afc54cab1b::ticket_test_token_4am::TICKET_TEST_TOKEN_4AM>",
+      treasureCapId: "0xf6ea44e563c85b0b2baf4f91805f4b0e14711913cd4d5cc9664fca876d0a1386",
+      packageId: "0xf45c3c4ffb1466384e2b904454c220ab28eca72c7b5d36df57e5e8afc54cab1b",
+      metadataObjectId: "0x9ab44ff5c74c3db7c0a1f3688e5ed833f1c6f68652b12ba52d10c372cda656b4",
     });
     expect(coin).toEqual({
-      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8iB11vE7qmEdgHxD7Hnm4_gi6R4KJ9B8nzs_su6iaGg&s",
-      contractAddress: "0xd847d01c74caf23c46352927c7023dad07e78e12da60376a779b2cb0642cfd56",
-      creationTime: 1714056680328,
-      creator: "0x86e3289eada655152a41cb1045c0b26b3ed981eee9529fcdebda70f2c511595a",
-      txDigest: "BnEpQ5imAcSX6638cjjiewxtKR1QaKTUtNL35NeFzK1A",
+      image:
+        // eslint-disable-next-line max-len
+        "https://i.seadn.io/gae/2hDpuTi-0AMKvoZJGd-yKWvK4tKdQr_kLIpB_qSeMau2TNGCNidAosMEvrEXFO9G6tmlFlPQplpwiqirgrIPWnCKMvElaYgI-HiVvXc?auto=format&dpr=1&w=1000",
+      contractAddress: "0xd4c0f2f4a375fd37e57c2e8f6597def5934140bb1f0629af7182c9f30f7da524",
+      creationTime: 1714397293646,
+      creator: "0x9a32c41920a66f4919a3d011dac7d45fb79d2629d4c5dce937d550339bbad8e2",
+      txDigest: "Bdkcg4Z2HuUTRkvG5mrCZRya8fxqwPzbHnY3cfD1tTYQ",
       status: "PRESALE",
-      type: "0xd847d01c74caf23c46352927c7023dad07e78e12da60376a779b2cb0642cfd56::test_token_4am::TEST_TOKEN_4AM",
+      type: "0xd4c0f2f4a375fd37e57c2e8f6597def5934140bb1f0629af7182c9f30f7da524::test_token_4am::TEST_TOKEN_4AM",
       marketcap: 0,
       lastReply: 0,
       socialLinks: { twitter: "mytwitter", discord: "mydiscord" },
       decimals: 6,
       description: "testtoken4am description",
-      icon_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8iB11vE7qmEdgHxD7Hnm4_gi6R4KJ9B8nzs_su6iaGg&s",
+      icon_url:
+        // eslint-disable-next-line max-len
+        "https://i.seadn.io/gae/2hDpuTi-0AMKvoZJGd-yKWvK4tKdQr_kLIpB_qSeMau2TNGCNidAosMEvrEXFO9G6tmlFlPQplpwiqirgrIPWnCKMvElaYgI-HiVvXc?auto=format&dpr=1&w=1000",
       name: "testtoken4am",
       symbol: "TEST_TOKEN_4am",
-      coinType: "0xd847d01c74caf23c46352927c7023dad07e78e12da60376a779b2cb0642cfd56::test_token_4am::TEST_TOKEN_4AM",
-      objectId: "0x0faba95e0786296b71397f3aeb57e34bffa118a66d3815c1a3fd9799706e746c",
+      coinType: "0xd4c0f2f4a375fd37e57c2e8f6597def5934140bb1f0629af7182c9f30f7da524::test_token_4am::TEST_TOKEN_4AM",
+      objectId: "0xf110c32923e77de35505352fcd631a83beb38a1cbe9ab0ba85ac7100c4ee9281",
       objectType:
         // eslint-disable-next-line max-len
-        "0x2::coin::Coin<0xd847d01c74caf23c46352927c7023dad07e78e12da60376a779b2cb0642cfd56::test_token_4am::TEST_TOKEN_4AM>",
-      treasureCapId: "0x1e518d9be81062825789a2f2bb52a23de163836ebc55d997023aa286641b41a8",
-      packageId: "0xd847d01c74caf23c46352927c7023dad07e78e12da60376a779b2cb0642cfd56",
-      metadataObjectId: "0x59f9d521ce91646fc4e353c7bd1aa4af9e82a3e9e5be994b2e104504fd7279bd",
+        "0x2::coin::Coin<0xd4c0f2f4a375fd37e57c2e8f6597def5934140bb1f0629af7182c9f30f7da524::test_token_4am::TEST_TOKEN_4AM>",
+      treasureCapId: "0xbc71c728e951aeb0986114f32b500f77af96d0d2e2278b25df6adadef11b97b4",
+      packageId: "0xd4c0f2f4a375fd37e57c2e8f6597def5934140bb1f0629af7182c9f30f7da524",
+      metadataObjectId: "0xbaab84e4a437b223097cabf43b666e1666d460b9d83506d6281b85ea4e17267b",
     });
   });
 });

@@ -1,14 +1,14 @@
 /* eslint-disable max-len */
-import { CreateCoinTransactionParams } from "../../src";
-import { BondingPoolSingleton } from "../../src/bonding-pool/BondingPool";
-import { getTicketDataFromCoinParams } from "../../src/bonding-pool/utils/getTicketDataFromCoinParams";
-import { parseTransactionDataCoinAndTicketCreation } from "../../src/bonding-pool/utils/parseTransactionDataCoinAndTicketCreation";
-import { CoinManagerSingleton } from "../../src/coin/CoinManager";
-import { LONG_SUI_COIN_TYPE } from "../../src/common/sui";
-import { keypair, provider, user } from "../common";
-import { sleep } from "../utils/sleep";
+import { CreateCoinTransactionParams } from "../../../src";
+import { BondingPoolSingleton } from "../../../src/bonding-pool/BondingPool";
+import { getTicketDataFromCoinParams } from "../../../src/bonding-pool/utils/getTicketDataFromCoinParams";
+import { parseTransactionDataCoinAndTicketCreation } from "../../../src/bonding-pool/utils/parseTransactionDataCoinAndTicketCreation";
+import { CoinManagerSingleton } from "../../../src/coin/CoinManager";
+import { LONG_SUI_COIN_TYPE } from "../../../src/common/sui";
+import { keypair, provider, user } from "../../common";
+import { sleep } from "../../utils/sleep";
 
-// yarn ts-node examples/bonding-curve/create-coins-and-create-bonding-curve-granural-version.ts
+// yarn tsx examples/bonding-curve/create/create-coins-and-create-bonding-curve-granural-version.ts
 export const createCoinsForBondingCurve = async (params: CreateCoinTransactionParams) => {
   // Create Coin
   const coinTx = await CoinManagerSingleton.getCreateCoinTransaction(params);
