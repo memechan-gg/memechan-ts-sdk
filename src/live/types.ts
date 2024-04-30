@@ -12,6 +12,7 @@ export type AddLiquidityArgs = {
 export type QuoteAddLiquidityArgs = {
   memeCoinInput: string;
   suiCoinInput: string;
+  slippagePercentage: number;
 };
 
 export type RemoveLiquidityArgs = {
@@ -29,6 +30,7 @@ export type RemoveLiquidityArgs = {
 
 export type QuoteRemoveLiquidityArgs = {
   lpCoinInput: string;
+  slippagePercentage: number;
 };
 
 export type SwapArgs = {
@@ -48,4 +50,5 @@ export type QuoteSwapArgs = {
   memeCoin: {
     coinType: string;
   };
+  slippagePercentage: number;
 };

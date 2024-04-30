@@ -212,7 +212,7 @@ export class LiveCLMMSingleton {
   }
 
   public async quoteAddLiquidity(params: QuoteAddLiquidityArgs) {
-    const { memeCoinInput, suiCoinInput } = params;
+    const { memeCoinInput, suiCoinInput, slippagePercentage } = params;
     const pool = await this.getPool();
 
     const suiCoinSplitAmount = normalizeInputCoinAmount(suiCoinInput, SUI_DECIMALS);
@@ -223,11 +223,13 @@ export class LiveCLMMSingleton {
       pool,
     });
 
-    return coinOut;
+    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
+    return outputAmountRespectingSlippage.toString();
   }
 
   public async quoteRemoveLiquidity(params: QuoteRemoveLiquidityArgs) {
-    const { lpCoinInput } = params;
+    const { lpCoinInput, slippagePercentage } = params;
     const pool = await this.getPool();
 
     const lpCoinSplitAmount = normalizeInputCoinAmount(lpCoinInput, SUI_DECIMALS);
@@ -237,11 +239,13 @@ export class LiveCLMMSingleton {
       pool,
     });
 
-    return coinOut;
+    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
+    return outputAmountRespectingSlippage.toString();
   }
 
   public async quoteSwap(params: QuoteSwapArgs) {
-    const { memeCoin, inputAmount, SuiToMeme } = params;
+    const { memeCoin, inputAmount, SuiToMeme, slippagePercentage } = params;
     const pool = await this.getPool();
 
     const splitAmount = SuiToMeme
@@ -255,6 +259,8 @@ export class LiveCLMMSingleton {
       coinOutType: SuiToMeme ? memeCoin.coinType : LONG_SUI_COIN_TYPE,
     });
 
-    return coinOut;
+    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
+    return outputAmountRespectingSlippage.toString();
   }
 }
