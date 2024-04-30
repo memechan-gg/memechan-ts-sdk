@@ -3,7 +3,14 @@ import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { SUI_DECIMALS } from "@mysten/sui.js/utils";
 import { CLAMM, InterestPool } from "@interest-protocol/clamm-sdk";
-import { AddLiquidityArgs, RemoveLiquidityArgs, SwapArgs } from "./types";
+import {
+  AddLiquidityArgs,
+  QuoteAddLiquidityArgs,
+  QuoteRemoveLiquidityArgs,
+  QuoteSwapArgs,
+  RemoveLiquidityArgs,
+  SwapArgs,
+} from "./types";
 import { getCoins } from "./utils/getCoins";
 import { mergeCoins } from "./utils/mergeCoins";
 import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
@@ -204,8 +211,8 @@ export class LiveCLMMSingleton {
     return coinOut.txb;
   }
 
-  public async quoteAddLiquidity(params: AddLiquidityArgs) {
-    const { memeCoinInput, suiCoinInput } = params;
+  public async quoteAddLiquidity(params: QuoteAddLiquidityArgs) {
+    const { memeCoinInput, suiCoinInput, slippagePercentage } = params;
     const pool = await this.getPool();
 
     const suiCoinSplitAmount = normalizeInputCoinAmount(suiCoinInput, SUI_DECIMALS);
@@ -216,11 +223,13 @@ export class LiveCLMMSingleton {
       pool,
     });
 
-    return coinOut;
+    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
+    return outputAmountRespectingSlippage.toString();
   }
 
-  public async quoteRemoveLiquidity(params: RemoveLiquidityArgs) {
-    const { lpCoinInput } = params;
+  public async quoteRemoveLiquidity(params: QuoteRemoveLiquidityArgs) {
+    const { lpCoinInput, slippagePercentage } = params;
     const pool = await this.getPool();
 
     const lpCoinSplitAmount = normalizeInputCoinAmount(lpCoinInput, SUI_DECIMALS);
@@ -230,11 +239,13 @@ export class LiveCLMMSingleton {
       pool,
     });
 
-    return coinOut;
+    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
+    return outputAmountRespectingSlippage.toString();
   }
 
-  public async quoteSwap(params: SwapArgs) {
-    const { memeCoin, inputAmount, SuiToMeme } = params;
+  public async quoteSwap(params: QuoteSwapArgs) {
+    const { memeCoin, inputAmount, SuiToMeme, slippagePercentage } = params;
     const pool = await this.getPool();
 
     const splitAmount = SuiToMeme
@@ -248,6 +259,8 @@ export class LiveCLMMSingleton {
       coinOutType: SuiToMeme ? memeCoin.coinType : LONG_SUI_COIN_TYPE,
     });
 
-    return coinOut;
+    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
+    return outputAmountRespectingSlippage.toString();
   }
 }
