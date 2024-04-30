@@ -30,7 +30,9 @@ export const CreateCoin: React.FC = () => {
     console.log("Coin&Ticket creation success");
 
     const { memeCoin, ticketCoin } = parseTransactionDataCoinAndTicketCreation(objectChanges);
+    console.log(memeCoin, ticketCoin);
     const createBondingCurvePoolTx = BondingPoolSingleton.createBondingCurvePool({ memeCoin, ticketCoin });
+
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     await new CoinAPI(BE_URL).createCoin({

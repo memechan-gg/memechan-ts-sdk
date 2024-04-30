@@ -1,9 +1,12 @@
 /* eslint-disable require-jsdoc */
 import {
+  NewArgs,
   NewDefaultArgs,
   buyMeme,
   isReadyToLaunch,
   newDefault,
+  new_,
+  quoteSellMeme,
   sellMeme,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 import { SuiClient } from "@mysten/sui.js/client";
@@ -20,9 +23,11 @@ import { CoinManagerSingleton } from "../coin/CoinManager";
 import { CreateCoinTransactionParams } from "../coin/types";
 import { LONG_SUI_COIN_TYPE } from "../common/sui";
 import {
+  BondingCurveCustomParams,
   CreateBondingCurvePoolParams,
   CreateCoinTransactionParamsWithoutCertainProps,
   ExtractedRegistryKeyData,
+  GetBondingCurveCustomParams,
   StakedLpObject,
   SwapParamsForSuiInput,
   SwapParamsForSuiInputAndTicketOutput,
@@ -50,16 +55,16 @@ import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypen
 export class BondingPoolSingleton {
   private static _instance: BondingPoolSingleton;
   public static TX_OF_CONTRACT_DEPLOY =
-    "https://suivision.xyz/txblock/536hPEhVWyiakHHsBNJVaDTB68WtB8VYuqYbJEDYjVJy?tab=Changes";
+    "https://suivision.xyz/txblock/7vwqjLH2QZXiDyUYBT8haL1YT5k5PtCiWfpsBiLjw4C9?tab=Changes";
 
   public static TX_OF_TICKET_BUY =
     "https://suivision.xyz/txblock/Gz6vfDgeE9tErU2iUJ9Yh1NitDkKZC2CzM17sgu9PkT7?tab=Changes";
   public static SUI_METADATA_OBJECT_ID = "0x9258181f5ceac8dbffb7030890243caed69a9599d2886d957a9cb7656af3bdb3";
 
-  public static REGISTRY_OBJECT_ID = "0x6ff7439c76e7c848d2b873d23791d268b2d29fbd2cf49cc4f54df4ae6765d94a";
-  public static ADMIN_OBJECT_ID = "0x35f98538e17fdbfc07040c92fdccf2755ccbde027bf0f0d5ed2ff50415d547e5";
-  public static UPGRADE_CAP_OBJECT_ID = "0x2dd0d836c5088835221e02d41067db3ff6817b7c2248a29938a5b0b4074a9acf";
-  public static PACKAGE_OBJECT_ID = "0x1eee8b5dd7e1d5a1788e7efe8281336003a67b445e8ef0bb11489bc8b32b20b3";
+  public static PACKAGE_OBJECT_ID = "0x1a0c65c5850f32caf3b8bc1973837c830e1159b566b3684ace43e37c59868974";
+  public static UPGRADE_CAP_OBJECT_ID = "0x80cad8ae4b6ecf68bb6d699f7710b43b941a7fb0f1ac7c476e2087d188b1448b";
+  public static REGISTRY_OBJECT_ID = "0xdce76690fe5d10fa91c8ad1fa37896c7cdc370c71d27620cb48bc315f4a255af";
+  public static ADMIN_OBJECT_ID = "0xf5399ac8c3ce69f423e841c6b14e3f3c4bcab45405151b1614721e189fda527d";
   // TODO: Move that to StakingPool
   public static STAKING_MODULE_NAME = "staked_lp";
   public static STAKING_LP_STRUCT_TYPE = "StakedLP";
@@ -136,23 +141,70 @@ export class BondingPoolSingleton {
     return { tx, txResult };
   }
 
+  public static createBondingCurvePoolWithCustomParams(
+    args: NewArgs,
+    typeArgs: [string, string, string],
+    transaction?: TransactionBlock,
+  ) {
+    const tx = new TransactionBlock() ?? transaction;
+    const txResult = new_(tx, typeArgs, args);
+
+    return { tx, txResult };
+  }
+
+  public static getBondingCurveCustomParams(params: GetBondingCurveCustomParams): BondingCurveCustomParams {
+    // TODO: Later on we can fetch these values on-chain by using tx simulation with devInspect
+    const DEFAULT_ADMIN_FEE = BigInt(5_000_000_000_000_000); // 0.5%
+    const DEFAULT_PRICE_FACTOR = BigInt(2);
+    const DEFAULT_MAX_M_LP = BigInt(200_000_000_000_000);
+    const DEFAULT_MAX_M = BigInt(900_000_000_000_000);
+    const DEFAULT_MAX_S = BigInt(30_000);
+    const DEFAULT_SELL_DELAY_MS = BigInt(12 * 3600 * 1000);
+
+    return {
+      feeInPercent: params.feeInPercent ?? DEFAULT_ADMIN_FEE,
+      feeOutPercent: params.feeOutPercent ?? DEFAULT_ADMIN_FEE,
+      gammaS: params.gammaS ?? DEFAULT_MAX_S,
+      gammaM: params.gammaM ?? DEFAULT_MAX_M,
+      omegaM: params.omegaM ?? DEFAULT_MAX_M_LP,
+      priceFactor: params.priceFactor ?? DEFAULT_PRICE_FACTOR,
+      sellDelayMs: params.sellDelayMs ?? DEFAULT_SELL_DELAY_MS,
+    };
+  }
+
   public static createBondingCurvePool(params: CreateBondingCurvePoolParams) {
-    const { memeCoin, ticketCoin, transaction } = params;
+    const { memeCoin, ticketCoin, transaction, bondingCurveCustomParams } = params;
     const tx = transaction ?? new TransactionBlock();
 
-    const createBondingCurvePoolTx = BondingPoolSingleton.createBondingCurvePoolWithDefaultParams(
-      {
-        registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
-        memeCoinCap: memeCoin.treasureCapId,
-        memeCoinMetadata: memeCoin.metadataObjectId,
-        ticketCoinCap: ticketCoin.treasureCapId,
-        ticketCoinMetadata: ticketCoin.metadataObjectId,
-      },
-      [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
-      tx,
-    );
+    if (bondingCurveCustomParams) {
+      const createBondingCurvePoolTxResult = BondingPoolSingleton.createBondingCurvePoolWithCustomParams(
+        {
+          registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
+          memeCoinCap: memeCoin.treasureCapId,
+          memeCoinMetadata: memeCoin.metadataObjectId,
+          ticketCoinCap: ticketCoin.treasureCapId,
+          ticketCoinMetadata: ticketCoin.metadataObjectId,
+          ...bondingCurveCustomParams,
+        },
+        [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
+        tx,
+      );
 
-    return createBondingCurvePoolTx;
+      return createBondingCurvePoolTxResult;
+    } else {
+      const createBondingCurvePoolTx = BondingPoolSingleton.createBondingCurvePoolWithDefaultParams(
+        {
+          registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
+          memeCoinCap: memeCoin.treasureCapId,
+          memeCoinMetadata: memeCoin.metadataObjectId,
+          ticketCoinCap: ticketCoin.treasureCapId,
+          ticketCoinMetadata: ticketCoin.metadataObjectId,
+        },
+        [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
+        tx,
+      );
+      return createBondingCurvePoolTx;
+    }
   }
 
   public static async createMemeAndTicketCoins(params: CreateCoinTransactionParamsWithoutCertainProps) {
@@ -313,11 +365,60 @@ export class BondingPoolSingleton {
     return outputAmountRespectingSlippage.toString();
   }
 
+  // TODO: update eslint jsdoc for that method
   // eslint-disable-next-line valid-jsdoc
   /**
-   * ⚠️ WARNING: This method is not functional and still in development. DO NOT USE.
+   * Be aware, that this method could return 0 in case there is no sui in pool
+   * (that might be a case when pool just launched)
+   * That case should be handled on the client-side
    */
-  public async getSwapOutputAmountForTicketInput(params: SwapParamsForTicketInput) {}
+  public async getSwapOutputAmountForTicketInput(params: SwapParamsForTicketInput) {
+    const {
+      bondingCurvePoolObjectId,
+      inputTicketAmount,
+      slippagePercentage = 0,
+      transaction,
+      memeCoin,
+      ticketCoin,
+    } = params;
+    const tx = transaction ?? new TransactionBlock();
+
+    const inputAmountWithDecimals = normalizeInputCoinAmount(
+      inputTicketAmount,
+      +BondingPoolSingleton.TICKET_COIN_DECIMALS,
+    );
+
+    const txResult = quoteSellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+      coinM: inputAmountWithDecimals,
+      pool: bondingCurvePoolObjectId,
+    });
+
+    const res = await this.provider.devInspectTransactionBlock({
+      sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
+      transactionBlock: tx,
+    });
+
+    if (!res.results) {
+      throw new Error("No results found for simulation of swap");
+    }
+
+    const returnValues = res.results[0].returnValues;
+    if (!returnValues) {
+      throw new Error("Return values are undefined");
+    }
+
+    // console.debug("returnValues");
+    // console.dir(returnValues, { depth: null });
+
+    const rawAmountBytes = returnValues[0][0];
+    const decoded = bcs.de("u64", new Uint8Array(rawAmountBytes));
+    const outputRaw = decoded;
+    const outputAmount = new BigNumber(outputRaw).div(10 ** SUI_DECIMALS);
+
+    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
+
+    return outputAmountRespectingSlippage.toString();
+  }
 
   public static async swapSuiForTicket(params: SwapParamsForSuiInputAndTicketOutput) {
     const {
