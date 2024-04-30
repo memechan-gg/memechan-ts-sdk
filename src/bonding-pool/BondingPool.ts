@@ -616,15 +616,17 @@ export class BondingPoolSingleton {
     // and it would be always set same for all memecoins
     const minOutputWithSlippage = deductSlippage(new BigNumber(minOutputSuiAmount), slippagePercentage);
     const minOutputNormalized = normalizeInputCoinAmount(minOutputWithSlippage.toString(), SUI_DECIMALS);
-    const minOutputBigInt = BigInt(minOutputNormalized);
 
     const txResult = sellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
-      coinSMinValue: minOutputBigInt,
+      coinSMinValue: minOutputNormalized,
       policy: tokenPolicyObjectId,
       coinM: ticketObject,
     });
 
+    const [suiCoin] = txResult;
+
+    tx.transferObjects([suiCoin], owner);
     tx.setGasBudget(BondingPoolSingleton.SWAP_GAS_BUDGET);
 
     return { tx, txResult };

@@ -12,7 +12,7 @@ export const swapTicketForSuiExample = async () => {
   const ticketCoinType =
     "0xbab599a35e42232bb8af53d7c2dc747d186fe5720b7c06306c22055d44da3dce::ticket_meme_26_2024::TICKET_MEME_26_2024";
   const pool = poolsByTicketCoinTypeMap[ticketCoinType];
-  const inputTicketAmount = "15246386";
+  const inputTicketAmount = "10672466";
 
   console.debug("pool: ", pool);
 
@@ -21,7 +21,7 @@ export const swapTicketForSuiExample = async () => {
     inputTicketAmount,
     memeCoin: { coinType: pool.memeCoinType },
     ticketCoin: { coinType: pool.ticketCoinType },
-    slippagePercentage: 0,
+    slippagePercentage: 10,
   });
 
   console.debug("outputAmount: ", outputAmount);
@@ -33,27 +33,28 @@ export const swapTicketForSuiExample = async () => {
     ticketCoin: { coinType: pool.ticketCoinType },
     minOutputSuiAmount: outputAmount,
     signerAddress: user,
+    slippagePercentage: 10,
   });
 
   // console.debug("swapTxData.tx: ", swapTxData.tx);
   // console.debug("tx.serialize: ", JSON.stringify(JSON.parse(swapTxData.tx.serialize()), null, 2));
 
-  const res = await provider.devInspectTransactionBlock({
-    transactionBlock: swapTxData.tx,
-    sender: user,
-  });
+  // const res = await provider.devInspectTransactionBlock({
+  //   transactionBlock: swapTxData.tx,
+  //   sender: user,
+  // });
 
-  //   const res = await provider.signAndExecuteTransactionBlock({
-  //     transactionBlock: swapTxData.tx,
-  //     signer: keypair,
-  //     options: {
-  //       showBalanceChanges: true,
-  //       showEffects: true,
-  //       showEvents: true,
-  //       showObjectChanges: true,
-  //       showInput: true,
-  //     },
-  //   });
+  const res = await provider.signAndExecuteTransactionBlock({
+    transactionBlock: swapTxData.tx,
+    signer: keypair,
+    options: {
+      showBalanceChanges: true,
+      showEffects: true,
+      showEvents: true,
+      showObjectChanges: true,
+      showInput: true,
+    },
+  });
 
   console.debug("res: ", res);
 };
