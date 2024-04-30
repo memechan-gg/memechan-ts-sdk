@@ -1,7 +1,7 @@
 import { keypair, provider, suiProviderUrl, user } from "../../common";
 import { BondingPoolSingleton } from "../../../src";
 
-// yarn tsx examples/bonding-curve/trading/trading/swap-sui-for-ticket.ts
+// yarn tsx examples/bonding-curve/trading/swap-sui-for-ticket.ts
 export const swapSuiForTicketExample = async () => {
   const bondingCurveInstance = BondingPoolSingleton.getInstance(suiProviderUrl);
 
@@ -9,9 +9,8 @@ export const swapSuiForTicketExample = async () => {
   const { pools, poolsByMemeCoinTypeMap, poolsByTicketCoinTypeMap } = await bondingCurveInstance.getAllPools();
 
   // get random pool
-  const pool = pools[0];
-
-  const inputAmount = "0.4151519";
+  const pool = pools[1];
+  const inputAmount = "0.077";
   //   const inputAmount = "30000";
 
   const outputAmount = await bondingCurveInstance.getSwapOutputAmountForSuiInput({
