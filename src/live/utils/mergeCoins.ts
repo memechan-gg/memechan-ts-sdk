@@ -15,7 +15,7 @@ type MergeCoinArgs = {
  * Returns the merged transaction block and the merged coin.
  * @throws {Error} Throws an error if no coins are provided to merge.
  */
-export function mergeCoins(params: MergeCoinArgs) {
+export function mergeCoins(params: MergeCoinArgs): { tx: TransactionBlock; mergeCoin: TransactionObjectArgument } {
   const { tx, coins } = params;
   if (coins.length === 0) throw new Error("No coins provided to merge");
 
