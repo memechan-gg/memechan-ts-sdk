@@ -13,6 +13,7 @@ export * from "./bonding-pool/utils/extractCoinType";
 export * from "./bonding-pool/utils/getTicketDataFromCoinParams";
 export * from "./bonding-pool/utils/parseTransactionDataCoinAndTicketCreation";
 export * from "./bonding-pool/utils/validateExtractedCoinDataFromTransaction";
+export * from "./bonding-pool/utils/parseTransactionDataLpCoinCreation";
 
 export * from "./coin/PoolApi";
 export * from "./coin/schemas/pools-schema";
