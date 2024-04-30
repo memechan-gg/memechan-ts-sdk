@@ -9,8 +9,10 @@ import {
   quoteSellMeme,
   sellMeme,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
+
+import { split, join, intoToken } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/functions";
 import { SuiClient } from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
 import { StakedLP } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/structs";
@@ -309,8 +311,10 @@ export class BondingPoolSingleton {
     owner: string;
     ticketCoin: { coinType: string };
   }) {
-    const { availableStakedLpObjectsByTicketCoinTypeMap } = await this.getAvailableStakedLpByOwner({ owner });
-    const availableTickets = availableStakedLpObjectsByTicketCoinTypeMap[ticketCoin.coinType];
+    const { availableStakedLpObjectsByTicketCoinTypeMap } = await this.getAvailableStakedLpByOwner({
+      owner,
+    });
+    const availableTickets = availableStakedLpObjectsByTicketCoinTypeMap[ticketCoin.coinType] ?? [];
 
     const aggregatedAmount = availableTickets.reduce(
       (acc: BigNumber, el) => acc.plus(new BigNumber(el.balance)),
@@ -332,7 +336,8 @@ export class BondingPoolSingleton {
     const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, SUI_DECIMALS);
     const suiCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
 
-    const txResult = buyMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    // Please note, mutation of `tx` happening below
+    buyMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
       coinMMinValue: BigInt(1),
       coinS: suiCoinObject,
@@ -388,7 +393,8 @@ export class BondingPoolSingleton {
       +BondingPoolSingleton.TICKET_COIN_DECIMALS,
     );
 
-    const txResult = quoteSellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    // Please note, mutation of `tx` happening below
+    quoteSellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       coinM: inputAmountWithDecimals,
       pool: bondingCurvePoolObjectId,
     });
@@ -460,10 +466,107 @@ export class BondingPoolSingleton {
     return { tx, txResult };
   }
 
-  // eslint-disable-next-line valid-jsdoc
   /**
-   * ⚠️ WARNING: This method is not functional and still in development. DO NOT USE.
+   *
+   * This method generates a merged ticket object for a swap transaction.
+   * It combines available tickets to fulfill the remaining amount.
+   * Note: It relies on the assumption that the client always provides available tickets
+   * with a total balance greater than the remaining amount to be swapped.
+   * In other words, `remainingAmountBN` should always be less than sum of all availableTickets `balance`.
+   *
+   * @param {Object} options - The options object.
+   * @param {BigNumber} options.remainingAmountBN - The remaining amount to be swapped.
+   * @param {StakedLpObject[]} options.availableTickets - An array of available staked LP objects.
+   * @param {string} options.tokenPolicyObjectId - The ID of the token policy object.
+   * @param {string} options.ticketCoinType - The coin type of the ticket.
+   * @param {TransactionBlock} [options.transaction] - Optional transaction block object.
+   * @return {TransactionObject} - The merged ticket object for the swap.
    */
+  private async getMergedTicketObjectForSwap({
+    remainingAmountBN,
+    availableTickets,
+    tokenPolicyObjectId,
+    ticketCoinType,
+    transaction,
+  }: {
+    remainingAmountBN: BigNumber;
+    availableTickets: StakedLpObject[];
+    tokenPolicyObjectId: string;
+    ticketCoinType: string;
+    transaction?: TransactionBlock;
+  }) {
+    const tx = transaction ?? new TransactionBlock();
+    const firstTicket = availableTickets[0];
+    let ticketObject: TransactionArgument = tx.object(firstTicket.objectId);
+
+    const firstTicketAmountBN = new BigNumber(firstTicket.balance);
+
+    // if first ticket object can fulfill all remaining amount at once without split
+    if (firstTicketAmountBN.isEqualTo(remainingAmountBN)) {
+      remainingAmountBN = remainingAmountBN.minus(firstTicketAmountBN);
+    } else if (firstTicketAmountBN.isGreaterThan(remainingAmountBN)) {
+      // if first ticket object can fulfill all remaining amount with split
+      const splitAmountBigInt = BigInt(remainingAmountBN.toString());
+      const splitTxResult = split(tx, firstTicket.ticketCoinType, {
+        self: firstTicket.objectId,
+        splitAmount: splitAmountBigInt,
+      });
+      const [ticketSplittedObject] = splitTxResult;
+      ticketObject = ticketSplittedObject;
+      remainingAmountBN = remainingAmountBN.minus(remainingAmountBN);
+    } else if (firstTicketAmountBN.isLessThan(remainingAmountBN)) {
+      // if first ticket object can't fulfull remaining amount, we just skip it, since we set it initially
+      // in the ticketObject above
+      remainingAmountBN = remainingAmountBN.minus(firstTicketAmountBN);
+
+      availableTickets = availableTickets.slice(1);
+    }
+
+    for (const ticket of availableTickets) {
+      // check if the first ticket fulfulled already the remaining amount
+      if (remainingAmountBN.isEqualTo(0)) {
+        // console.warn("Remaining amount is 0, skipping");
+        break;
+      }
+
+      const ticketBalanceBN = new BigNumber(ticket.balance);
+
+      if (ticketBalanceBN.isEqualTo(remainingAmountBN)) {
+        // if current ticket is equal to remainingAmount
+        join(tx, ticket.ticketCoinType, { self: ticketObject, c: ticket.objectId });
+
+        break;
+      } else if (ticketBalanceBN.isGreaterThan(remainingAmountBN)) {
+        // if current ticket amount is bigger than the remainingAmount, we need to split, and then exit from the loop
+        const splitAmountBigInt = BigInt(remainingAmountBN.toString());
+        const splitTxResult = split(tx, ticket.ticketCoinType, {
+          self: ticket.objectId,
+          splitAmount: splitAmountBigInt,
+        });
+        const [ticketSplittedObject] = splitTxResult;
+        join(tx, ticket.ticketCoinType, { self: ticketObject, c: ticketSplittedObject });
+
+        break;
+      } else if (ticketBalanceBN.isLessThan(remainingAmountBN)) {
+        // if current ticket amount is less than the remainingAmount, we need to join with existing tickets
+        // and continue iterating over cycle
+        join(tx, ticket.ticketCoinType, { self: ticketObject, c: ticket.objectId });
+      }
+
+      remainingAmountBN = remainingAmountBN.minus(ticketBalanceBN);
+    }
+
+    // converting ticket into token object
+    const ticketTokenObjectTxResult = intoToken(tx, ticketCoinType, {
+      clock: SUI_CLOCK_OBJECT_ID,
+      policy: tokenPolicyObjectId,
+      stakedLp: ticketObject,
+    });
+    const [ticketTokenObject] = ticketTokenObjectTxResult;
+
+    return ticketTokenObject;
+  }
+
   public async swapTicketForSui(params: SwapParamsForTicketInputAndSuiOutput) {
     const {
       memeCoin,
@@ -471,23 +574,26 @@ export class BondingPoolSingleton {
       transaction,
       bondingCurvePoolObjectId,
       inputTicketAmount,
-      // slippagePercentage = 0,
+      slippagePercentage = 0,
       signerAddress: owner,
+      minOutputSuiAmount,
     } = params;
     const tx = transaction ?? new TransactionBlock();
 
-    const {
-      // amount,
-      amountWithDecimals,
-      tickets: availableTickets,
-    } = await this.getAvailableAmountOfTicketsToSell({ owner, ticketCoin });
+    const { amountWithDecimals, tickets: availableTickets } = await this.getAvailableAmountOfTicketsToSell({
+      owner,
+      ticketCoin,
+    });
 
     const isInputTicketAmountIsLargerThanAvailable = new BigNumber(inputTicketAmount).isGreaterThan(
       new BigNumber(amountWithDecimals),
     );
 
     if (isInputTicketAmountIsLargerThanAvailable) {
-      throw new Error("Provided inputTicketAmount is larger than available ticket amount for sell");
+      throw new Error(
+        "Provided inputTicketAmount is larger than available ticket amount for sell. " +
+          `Available ticket amount: ${amountWithDecimals}`,
+      );
     }
 
     const tokenPolicyObjectId = await this.getTokenPolicyByPoolId({ poolId: bondingCurvePoolObjectId.toString() });
@@ -495,28 +601,41 @@ export class BondingPoolSingleton {
       inputTicketAmount,
       +BondingPoolSingleton.TICKET_COIN_DECIMALS,
     );
-    const remainingAmount = inputAmountWithDecimals;
+    const remainingAmountBN = new BigNumber(inputAmountWithDecimals.toString());
 
-    for (const availableTicket of availableTickets) {
-      const txResult = sellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
-        pool: bondingCurvePoolObjectId,
+    const ticketObject = await this.getMergedTicketObjectForSwap({
+      remainingAmountBN,
+      availableTickets,
+      tokenPolicyObjectId,
+      ticketCoinType: ticketCoin.coinType,
+      transaction: tx,
+    });
 
-        coinSMinValue: BigInt(0),
-        policy: tokenPolicyObjectId,
-        coinM: availableTicket.objectId,
-      });
-    }
+    // output
+    // Note: Be aware, we relay on the fact that all pools are paired with `SUI`
+    // and it would be always set same for all memecoins
+    const minOutputWithSlippage = deductSlippage(new BigNumber(minOutputSuiAmount), slippagePercentage);
+    const minOutputNormalized = normalizeInputCoinAmount(minOutputWithSlippage.toString(), SUI_DECIMALS);
 
+    const txResult = sellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+      pool: bondingCurvePoolObjectId,
+      coinSMinValue: minOutputNormalized,
+      policy: tokenPolicyObjectId,
+      coinM: ticketObject,
+    });
+
+    const [suiCoin] = txResult;
+
+    tx.transferObjects([suiCoin], owner);
     tx.setGasBudget(BondingPoolSingleton.SWAP_GAS_BUDGET);
 
-    // return { tx, txResult };
-
-    return tx;
+    return { tx, txResult };
   }
 
   public async getRegistryTableAddress({ transaction }: { transaction?: TransactionBlock } = {}) {
     const tx = transaction ?? new TransactionBlock();
-    const txResult = seedPools(tx, BondingPoolSingleton.REGISTRY_OBJECT_ID);
+    // Please note, mutation of `tx` happening below
+    seedPools(tx, BondingPoolSingleton.REGISTRY_OBJECT_ID);
     const res = await this.provider.devInspectTransactionBlock({
       sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
       transactionBlock: tx,
@@ -640,7 +759,8 @@ export class BondingPoolSingleton {
   }): Promise<boolean> {
     const tx = transaction ?? new TransactionBlock();
 
-    const txResult = isReadyToLaunch(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], poolId);
+    // Please note, mutation of `tx` happening below
+    isReadyToLaunch(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], poolId);
 
     const res = await this.provider.devInspectTransactionBlock({
       sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
@@ -775,8 +895,6 @@ export class BondingPoolSingleton {
       seedPool: pool.objectId,
       memeMeta: memeMetaDataObjectId,
       memeCoinType: pool.memeCoinType,
-      // lpCoinType: string;
-      // lpCoinTreasureCapId: string;
       suiMetadataObject: BondingPoolSingleton.SUI_METADATA_OBJECT_ID,
       coinTicketType: pool.ticketCoinType,
     };
