@@ -9,8 +9,10 @@ export const swapTicketForSuiExample = async () => {
   const { pools, poolsByMemeCoinTypeMap, poolsByTicketCoinTypeMap } = await bondingCurveInstance.getAllPools();
 
   // get random pool
-  const pool = pools[1];
-  const inputTicketAmount = "15246385";
+  const ticketCoinType =
+    "0xbab599a35e42232bb8af53d7c2dc747d186fe5720b7c06306c22055d44da3dce::ticket_meme_26_2024::TICKET_MEME_26_2024";
+  const pool = poolsByTicketCoinTypeMap[ticketCoinType];
+  const inputTicketAmount = "15246386";
 
   console.debug("pool: ", pool);
 
@@ -33,8 +35,8 @@ export const swapTicketForSuiExample = async () => {
     signerAddress: user,
   });
 
-  console.debug("swapTxData.tx: ", swapTxData.tx);
-  console.debug("tx.serialize: ", JSON.stringify(JSON.parse(swapTxData.tx.serialize()), null, 2));
+  // console.debug("swapTxData.tx: ", swapTxData.tx);
+  // console.debug("tx.serialize: ", JSON.stringify(JSON.parse(swapTxData.tx.serialize()), null, 2));
 
   const res = await provider.devInspectTransactionBlock({
     transactionBlock: swapTxData.tx,
