@@ -97,7 +97,7 @@ export class LiveCLMMSingleton {
     const mergedMemeCoin = mergeCoins({
       coins: memeCoins,
       tx,
-    }).mergedCoin;
+    }).mergeCoin;
 
     const suiCoinSplitAmount = normalizeInputCoinAmount(suiCoinInput, SUI_DECIMALS);
     const memeCoinSplitAmount = normalizeInputCoinAmount(memeCoinInput, parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
@@ -136,7 +136,7 @@ export class LiveCLMMSingleton {
     const mergedLpCoin = mergeCoins({
       coins: lpCoins,
       tx,
-    }).mergedCoin;
+    }).mergeCoin;
 
     const lpCoinSplitAmount = normalizeInputCoinAmount(lpCoinInput, SUI_DECIMALS);
     const lpCoinSplitted = tx.splitCoins(mergedLpCoin, [lpCoinSplitAmount]);
@@ -185,7 +185,7 @@ export class LiveCLMMSingleton {
               provider: this.provider,
             }),
             tx,
-          }).mergedCoin,
+          }).mergeCoin,
           [splitAmount],
         );
 

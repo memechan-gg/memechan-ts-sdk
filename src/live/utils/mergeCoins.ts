@@ -31,6 +31,6 @@ export function mergeCoins(params: MergeCoinArgs): { tx: TransactionBlock; merge
 
   return {
     tx,
-    mergedCoin: firstCoinInput,
+    mergeCoin: firstCoinInput,
   };
 }
