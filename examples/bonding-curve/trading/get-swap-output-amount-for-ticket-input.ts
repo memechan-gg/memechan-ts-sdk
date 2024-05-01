@@ -5,7 +5,7 @@ import { BondingPoolSingleton } from "../../../src";
 export const getSwapOutputAmountByPoolExample = async () => {
   const bondingCurveInstance = BondingPoolSingleton.getInstance(suiProviderUrl);
   const { pools } = await bondingCurveInstance.getAllPools();
-  const pool = pools[1];
+  const pool = pools[0];
 
   console.debug("pool: ", pool);
 
@@ -15,7 +15,6 @@ export const getSwapOutputAmountByPoolExample = async () => {
     bondingCurvePoolObjectId: pool.objectId,
     inputTicketAmount: inputAmount,
     memeCoin: { coinType: pool.memeCoinType },
-    ticketCoin: { coinType: pool.ticketCoinType },
     // slippagePercentage: 1,
   });
   console.debug("res: ", res);

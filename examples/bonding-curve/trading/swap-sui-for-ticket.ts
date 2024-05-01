@@ -6,18 +6,17 @@ export const swapSuiForTicketExample = async () => {
   const bondingCurveInstance = BondingPoolSingleton.getInstance(suiProviderUrl);
 
   // get all pools
-  const { pools, poolsByMemeCoinTypeMap, poolsByTicketCoinTypeMap } = await bondingCurveInstance.getAllPools();
+  const { pools, poolsByMemeCoinTypeMap } = await bondingCurveInstance.getAllPools();
 
   // get random pool
-  const pool = pools[1];
-  const inputAmount = "0.077";
+  const pool = pools[0];
+  const inputAmount = "0.2";
   //   const inputAmount = "30000";
 
   const outputAmount = await bondingCurveInstance.getSwapOutputAmountForSuiInput({
     bondingCurvePoolObjectId: pool.objectId,
     inputAmount,
     memeCoin: { coinType: pool.memeCoinType },
-    ticketCoin: { coinType: pool.ticketCoinType },
     slippagePercentage: 0,
   });
 
@@ -27,9 +26,9 @@ export const swapSuiForTicketExample = async () => {
     bondingCurvePoolObjectId: pool.objectId,
     inputAmount,
     memeCoin: { coinType: pool.memeCoinType },
-    ticketCoin: { coinType: pool.ticketCoinType },
     minOutputTicketAmount: outputAmount,
     signerAddress: user,
+    slippagePercentage: 0,
   });
 
   console.debug("swapTxData.tx: ", swapTxData.tx);
