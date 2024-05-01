@@ -21,7 +21,7 @@
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
-"@avernikoz/memechan-ts-interface@^1.0.20":
+"@avernikoz/memechan-ts-interface@^1.0.18":
   version "1.0.18"
   resolved "https://registry.yarnpkg.com/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.18.tgz#7113fb7d5dd8e8884a56a6cb728f2aa592c1e923"
   integrity sha512-J6GIEc+X52VufefcCKNneE7Fb2m9NbCMD0rOJx63+Cl2aT5C8AVfISYSpba+7QvKsR6TvLoaB3IOXQ1uHolcWA==
