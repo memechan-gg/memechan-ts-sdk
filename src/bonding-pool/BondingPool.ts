@@ -6,6 +6,7 @@ import {
   isReadyToLaunch,
   newDefault,
   new_,
+  quoteBuyMeme,
   quoteSellMeme,
   sellMeme,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
@@ -315,20 +316,16 @@ export class BondingPoolSingleton {
     };
   }
 
-  // TODO ASAP IMPORTANT: Issue? with 950 SUI Magic Number on simulation
   public async getSwapOutputAmountForSuiInput(params: SwapParamsForSuiInput) {
     const { memeCoin, transaction, bondingCurvePoolObjectId, inputAmount, slippagePercentage = 0 } = params;
     const tx = transaction ?? new TransactionBlock();
 
     const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, SUI_DECIMALS);
-    const suiCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
 
     // Please note, mutation of `tx` happening below
-    buyMeme(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    quoteBuyMeme(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+      coinS: inputAmountWithDecimals,
       pool: bondingCurvePoolObjectId,
-      coinMMinValue: BigInt(1),
-      coinS: suiCoinObject,
-      clock: SUI_CLOCK_OBJECT_ID,
     });
 
     const res = await this.provider.devInspectTransactionBlock({
@@ -340,16 +337,14 @@ export class BondingPoolSingleton {
       throw new Error("No results found for simulation of swap");
     }
 
-    const returnValues = res.results[1].returnValues;
+    const returnValues = res.results[0].returnValues;
     if (!returnValues) {
       throw new Error("Return values are undefined");
     }
-    // console.debug("returnValues");
-    // console.dir(returnValues, { depth: null });
 
     const rawAmountBytes = returnValues[0][0];
-    const decoded = StakedLP.bcs.parse(new Uint8Array(rawAmountBytes));
-    const outputRaw = decoded.balance.value;
+    const decoded = bcs.de("u64", new Uint8Array(rawAmountBytes));
+    const outputRaw = decoded;
     const outputAmount = new BigNumber(outputRaw).div(10 ** parseInt(BondingPoolSingleton.MEMECOIN_DECIMALS));
 
     const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
