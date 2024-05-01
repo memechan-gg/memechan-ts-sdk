@@ -2,7 +2,7 @@ import { BondingPoolSingleton, CreateCoinTransactionParams } from "../../src";
 import { keypair, provider } from "../common";
 
 export const createCoinAndTicket = async (params: CreateCoinTransactionParams) => {
-  const memeAndTicketCoinTx = await BondingPoolSingleton.createMemeAndTicketCoins(params);
+  const memeAndTicketCoinTx = await BondingPoolSingleton.createMemeCoin(params);
 
   const res = await provider.signAndExecuteTransactionBlock({
     transactionBlock: memeAndTicketCoinTx,
