@@ -14,7 +14,9 @@ export function extractRegistryKeyData(typename: string): ExtractedRegistryKeyDa
     throw new Error("Invalid typename format. Expected '::index::RegistryKey' pattern.");
   }
 
-  const [quoteCoinType, memeCoinType] = rest.split(",");
+  const [quoteCoinType, memeCoinTypeRaw] = rest.split(",");
+  const [memeCoinType] = memeCoinTypeRaw.split(">");
+
   if (!quoteCoinType) {
     throw new Error("Invalid typename format. Missing quoteCoinType.");
   }
