@@ -674,14 +674,6 @@ export class BondingPoolSingleton {
     }));
 
     const poolIds = pools.map((el) => el.objectId);
-    const poolsByTicketCoinTypeMap = pools.reduce(
-      (acc: { [ticketCoinType: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
-        acc[el.ticketCoinType] = { ...el };
-
-        return acc;
-      },
-      {},
-    );
 
     const poolsByMemeCoinTypeMap = pools.reduce(
       (acc: { [memeCoinType: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
@@ -701,18 +693,7 @@ export class BondingPoolSingleton {
       {},
     );
 
-    return { poolIds, pools, poolsByTicketCoinTypeMap, poolsByMemeCoinTypeMap, poolsByPoolId };
-  }
-
-  public async getPoolByTicket({ ticketCoin }: { ticketCoin: { coinType: string } }) {
-    const allPools = await this.getAllPools();
-    const pool = allPools.poolsByTicketCoinTypeMap[ticketCoin.coinType];
-
-    if (!pool) {
-      throw new Error(`No such pool found for provided ticketCoin coinType ${ticketCoin.coinType}`);
-    }
-
-    return pool;
+    return { poolIds, pools, poolsByMemeCoinTypeMap, poolsByPoolId };
   }
 
   public async getPoolByMeme({ memeCoin }: { memeCoin: { coinType: string } }) {

@@ -126,8 +126,6 @@ export interface TokenPolicyCapObjectData extends SuiObjectResponse {
 
 export type ExtractedRegistryKeyData = {
   boundingCurvePackageId: string;
-  ticketPackageId: string;
-  ticketCoinType: string;
   quotePackageId: string;
   quoteCoinType: string;
   memePackageId: string;
