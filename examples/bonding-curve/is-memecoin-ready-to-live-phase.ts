@@ -8,11 +8,12 @@ export const isMemecoinReadyToLivePhase = async () => {
   const { pools } = await bondingCurveInstance.getAllPools();
   const [pool] = pools;
 
+  console.debug("allPools: ", pools);
   console.debug("poolId: ", pool.objectId);
+  console.debug("pool: ", pool);
 
   const res = await bondingCurveInstance.isMemeCoinReadyToLivePhase({
     memeCoin: { coinType: pool.memeCoinType },
-    ticketCoin: { coinType: pool.ticketCoinType },
     poolId: pool.objectId,
   });
   console.debug("res: ", res);

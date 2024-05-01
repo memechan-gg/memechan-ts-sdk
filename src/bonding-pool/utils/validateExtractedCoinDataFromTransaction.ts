@@ -7,7 +7,6 @@ import { ExtractedCoinDataFromTransaction } from "../types";
  */
 export const validateExtractedCoinDataFromTransaction = (data: ExtractedCoinDataFromTransaction): void => {
   validateCoinData("memeCoin", data.memeCoin);
-  validateCoinData("ticketCoin", data.ticketCoin);
 };
 
 /**

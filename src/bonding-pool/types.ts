@@ -16,14 +16,6 @@ export type ExtractedCoinDataFromTransaction = {
     packageId: string;
     metadataObjectId: string;
   };
-  ticketCoin: {
-    coinType: string;
-    objectId: string;
-    objectType: string;
-    treasureCapId: string;
-    packageId: string;
-    metadataObjectId: string;
-  };
 };
 
 export type BondingCurveCustomParams = Omit<
@@ -35,7 +27,6 @@ export type GetBondingCurveCustomParams = Optional<BondingCurveCustomParams>;
 
 export type CreateBondingCurvePoolParams = {
   memeCoin: { treasureCapId: string; metadataObjectId: string; coinType: string };
-  ticketCoin: { treasureCapId: string; metadataObjectId: string; coinType: string };
   transaction?: TransactionBlock;
   bondingCurveCustomParams?: BondingCurveCustomParams;
 };
@@ -47,7 +38,6 @@ export type CreateCoinTransactionParamsWithoutCertainProps = Omit<
 
 export type SwapParamsForSuiInput = {
   memeCoin: { coinType: string };
-  ticketCoin: { coinType: string };
   transaction?: TransactionBlock;
 
   // swap params
@@ -64,7 +54,6 @@ export type SwapParamsForSuiInputAndTicketOutput = SwapParamsForSuiInput & {
 
 export type SwapParamsForTicketInput = {
   memeCoin: { coinType: string };
-  ticketCoin: { coinType: string };
   transaction?: TransactionBlock;
 
   bondingCurvePoolObjectId: string;
@@ -137,8 +126,6 @@ export interface TokenPolicyCapObjectData extends SuiObjectResponse {
 
 export type ExtractedRegistryKeyData = {
   boundingCurvePackageId: string;
-  ticketPackageId: string;
-  ticketCoinType: string;
   quotePackageId: string;
   quoteCoinType: string;
   memePackageId: string;
@@ -172,5 +159,81 @@ export interface StakedLpObject {
   balance: string;
   balanceWithDecimals: string;
   untilTimestamp: number;
-  ticketCoinType: string;
+  memeCoinType: string;
+}
+
+export interface DetailedPoolInfo extends SuiObjectResponse {
+  data: {
+    type: string;
+    version: string;
+    objectId: string;
+    digest: string;
+    content: {
+      dataType: "moveObject";
+      type: string;
+      hasPublicTransfer: boolean;
+      fields: {
+        accounting: {
+          type: string;
+          fields: {
+            id: {
+              id: string;
+            };
+            size: string;
+          };
+        };
+        admin_balance_m: string;
+        admin_balance_s: string;
+        balance_m: string;
+        balance_s: string;
+        fees: {
+          type: string;
+          fields: {
+            fee_in_percent: string;
+            fee_out_percent: string;
+          };
+        };
+        id: {
+          id: string;
+        };
+        launch_balance: string;
+        locked: boolean;
+        meme_cap: {
+          type: string;
+          fields: {
+            id: {
+              id: string;
+            };
+            total_supply: {
+              type: string;
+              fields: {
+                value: string;
+              };
+            };
+          };
+        };
+        params: {
+          type: string;
+          fields: {
+            alpha_abs: string;
+            beta: string;
+            gamma_m: string;
+            gamma_s: string;
+            omega_m: string;
+            price_factor: string;
+            sell_delay_ms: string;
+          };
+        };
+        policy_cap: {
+          type: string;
+          fields: {
+            for: string;
+            id: {
+              id: string;
+            };
+          };
+        };
+      };
+    };
+  };
 }

@@ -6,16 +6,16 @@ import {
   isReadyToLaunch,
   newDefault,
   new_,
+  quoteBuyMeme,
   quoteSellMeme,
   sellMeme,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 
-import { split, join, intoToken } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/functions";
+import { intoToken, join, split } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/functions";
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
-import { StakedLP } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/structs";
 
 import { goLiveDefault } from "@avernikoz/memechan-ts-interface/dist/memechan/go-live/functions";
 import { bcs } from "@mysten/sui.js/bcs";
@@ -28,6 +28,7 @@ import {
   BondingCurveCustomParams,
   CreateBondingCurvePoolParams,
   CreateCoinTransactionParamsWithoutCertainProps,
+  DetailedPoolInfo,
   ExtractedRegistryKeyData,
   GetBondingCurveCustomParams,
   StakedLpObject,
@@ -42,10 +43,9 @@ import { extractRegistryKeyData } from "./utils/extractRegistryKeyData";
 import { getAllDynamicFields } from "./utils/getAllDynamicFields";
 import { getAllObjects } from "./utils/getAllObjects";
 import { getAllOwnedObjects } from "./utils/getAllOwnedObjects";
-import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
+import { isPoolDetailedInfo } from "./utils/isPoolDetailedInfo";
 import { isPoolObjectData } from "./utils/isPoolObjectData";
 import { isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
-import { isTokenPolicyCapObjectData } from "./utils/isTokenPolicyCapObjectData";
 import { normalizeInputCoinAmount } from "./utils/normalizeInputCoinAmount";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
 
@@ -57,16 +57,14 @@ import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypen
 export class BondingPoolSingleton {
   private static _instance: BondingPoolSingleton;
   public static TX_OF_CONTRACT_DEPLOY =
-    "https://suivision.xyz/txblock/7vwqjLH2QZXiDyUYBT8haL1YT5k5PtCiWfpsBiLjw4C9?tab=Changes";
+    "https://suivision.xyz/txblock/4exX4n9sNeTWwCcb9yFzd415E1Zf21CfKRr2eqQRrNgv?tab=Changes";
 
-  public static TX_OF_TICKET_BUY =
-    "https://suivision.xyz/txblock/Gz6vfDgeE9tErU2iUJ9Yh1NitDkKZC2CzM17sgu9PkT7?tab=Changes";
   public static SUI_METADATA_OBJECT_ID = "0x9258181f5ceac8dbffb7030890243caed69a9599d2886d957a9cb7656af3bdb3";
 
-  public static PACKAGE_OBJECT_ID = "0x1a0c65c5850f32caf3b8bc1973837c830e1159b566b3684ace43e37c59868974";
-  public static UPGRADE_CAP_OBJECT_ID = "0x80cad8ae4b6ecf68bb6d699f7710b43b941a7fb0f1ac7c476e2087d188b1448b";
-  public static REGISTRY_OBJECT_ID = "0xdce76690fe5d10fa91c8ad1fa37896c7cdc370c71d27620cb48bc315f4a255af";
-  public static ADMIN_OBJECT_ID = "0xf5399ac8c3ce69f423e841c6b14e3f3c4bcab45405151b1614721e189fda527d";
+  public static PACKAGE_OBJECT_ID = "0xa06a92a380b04366b5bf54587b89c0d04772e48170ea3c3d0647dac85be038d9";
+  public static UPGRADE_CAP_OBJECT_ID = "0xf5c67bd71a1d71e14505860407a8ce9e4bbbe5b879c05c16693c301aae9595c3";
+  public static REGISTRY_OBJECT_ID = "0x71cf42c722f75314c7e9649c89b1a11e9e557242b713a0b619bdda13dfb5ac6b";
+  public static ADMIN_OBJECT_ID = "0x6bb56f9b2d15eb26f1ada8b40136bbef755dc735cbb5b994b566e96db2ec3596";
   // TODO: Move that to StakingPool
   public static STAKING_MODULE_NAME = "staked_lp";
   public static STAKING_LP_STRUCT_TYPE = "StakedLP";
@@ -134,7 +132,7 @@ export class BondingPoolSingleton {
 
   public static createBondingCurvePoolWithDefaultParams(
     args: NewDefaultArgs,
-    typeArgs: [string, string, string],
+    typeArgs: [string, string],
     transaction?: TransactionBlock,
   ) {
     const tx = new TransactionBlock() ?? transaction;
@@ -145,7 +143,7 @@ export class BondingPoolSingleton {
 
   public static createBondingCurvePoolWithCustomParams(
     args: NewArgs,
-    typeArgs: [string, string, string],
+    typeArgs: [string, string],
     transaction?: TransactionBlock,
   ) {
     const tx = new TransactionBlock() ?? transaction;
@@ -175,7 +173,7 @@ export class BondingPoolSingleton {
   }
 
   public static createBondingCurvePool(params: CreateBondingCurvePoolParams) {
-    const { memeCoin, ticketCoin, transaction, bondingCurveCustomParams } = params;
+    const { memeCoin, transaction, bondingCurveCustomParams } = params;
     const tx = transaction ?? new TransactionBlock();
 
     if (bondingCurveCustomParams) {
@@ -183,12 +181,9 @@ export class BondingPoolSingleton {
         {
           registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
           memeCoinCap: memeCoin.treasureCapId,
-          memeCoinMetadata: memeCoin.metadataObjectId,
-          ticketCoinCap: ticketCoin.treasureCapId,
-          ticketCoinMetadata: ticketCoin.metadataObjectId,
           ...bondingCurveCustomParams,
         },
-        [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
+        [LONG_SUI_COIN_TYPE, memeCoin.coinType],
         tx,
       );
 
@@ -198,18 +193,15 @@ export class BondingPoolSingleton {
         {
           registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
           memeCoinCap: memeCoin.treasureCapId,
-          memeCoinMetadata: memeCoin.metadataObjectId,
-          ticketCoinCap: ticketCoin.treasureCapId,
-          ticketCoinMetadata: ticketCoin.metadataObjectId,
         },
-        [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
+        [LONG_SUI_COIN_TYPE, memeCoin.coinType],
         tx,
       );
       return createBondingCurvePoolTx;
     }
   }
 
-  public static async createMemeAndTicketCoins(params: CreateCoinTransactionParamsWithoutCertainProps) {
+  public static async createMemeCoin(params: CreateCoinTransactionParamsWithoutCertainProps) {
     const tx = params.transaction ?? new TransactionBlock();
 
     const coinCreationParams: CreateCoinTransactionParams = {
@@ -223,15 +215,8 @@ export class BondingPoolSingleton {
 
     // Create Coin TransactionBlock
     const coinTx = await CoinManagerSingleton.getCreateCoinTransaction(coinCreationParams);
-    // Transform data for Ticket Coin
-    const ticketFromParams = getTicketDataFromCoinParams(coinCreationParams);
-    // Create Ticket Coin TransactionBlock
-    const memeAndTicketCoinTx = await CoinManagerSingleton.getCreateCoinTransaction({
-      ...ticketFromParams,
-      transaction: coinTx,
-    });
 
-    return memeAndTicketCoinTx;
+    return coinTx;
   }
 
   public async getAllStakedLPObjectsByOwner({ owner }: { owner: string }) {
@@ -262,15 +247,15 @@ export class BondingPoolSingleton {
         .dividedBy(10 ** +BondingPoolSingleton.LP_COIN_DECIMALS)
         .toString(),
       untilTimestamp: +el.data.content.fields.until_timestamp,
-      ticketCoinType: extractCoinType(el.data.type),
+      memeCoinType: extractCoinType(el.data.type),
     }));
 
-    const stakedLpObjectsByTicketCoinTypeMap = stakedLpObjectList.reduce(
+    const stakedLpObjectsByMemeCoinTypeMap = stakedLpObjectList.reduce(
       (acc: { [ticketCoinType: string]: StakedLpObject[] }, el) => {
-        if (acc[el.ticketCoinType]) {
-          acc[el.ticketCoinType] = [...acc[el.ticketCoinType], el];
+        if (acc[el.memeCoinType]) {
+          acc[el.memeCoinType] = [...acc[el.memeCoinType], el];
         } else {
-          acc[el.ticketCoinType] = [el];
+          acc[el.memeCoinType] = [el];
         }
 
         return acc;
@@ -278,7 +263,7 @@ export class BondingPoolSingleton {
       {},
     );
 
-    return { stakedLpObjectList, stakedLpObjectsByTicketCoinTypeMap };
+    return { stakedLpObjectList, stakedLpObjectsByMemeCoinTypeMap };
   }
 
   public async getAvailableStakedLpByOwner({ owner }: { owner: string }) {
@@ -288,12 +273,12 @@ export class BondingPoolSingleton {
       (el) => currentTimestampMs > el.untilTimestamp,
     );
 
-    const availableStakedLpObjectsByTicketCoinTypeMap = availableStakedLps.reduce(
-      (acc: { [ticketCoinType: string]: StakedLpObject[] }, el) => {
-        if (acc[el.ticketCoinType]) {
-          acc[el.ticketCoinType] = [...acc[el.ticketCoinType], el];
+    const availableStakedLpObjectsByMemeCoinTypeMap = availableStakedLps.reduce(
+      (acc: { [memeCoinType: string]: StakedLpObject[] }, el) => {
+        if (acc[el.memeCoinType]) {
+          acc[el.memeCoinType] = [...acc[el.memeCoinType], el];
         } else {
-          acc[el.ticketCoinType] = [el];
+          acc[el.memeCoinType] = [el];
         }
 
         return acc;
@@ -301,20 +286,20 @@ export class BondingPoolSingleton {
       {},
     );
 
-    return { availableStakedLps, availableStakedLpObjectsByTicketCoinTypeMap };
+    return { availableStakedLps, availableStakedLpObjectsByMemeCoinTypeMap };
   }
 
   public async getAvailableAmountOfTicketsToSell({
     owner,
-    ticketCoin,
+    memeCoin,
   }: {
     owner: string;
-    ticketCoin: { coinType: string };
+    memeCoin: { coinType: string };
   }) {
-    const { availableStakedLpObjectsByTicketCoinTypeMap } = await this.getAvailableStakedLpByOwner({
+    const { availableStakedLpObjectsByMemeCoinTypeMap } = await this.getAvailableStakedLpByOwner({
       owner,
     });
-    const availableTickets = availableStakedLpObjectsByTicketCoinTypeMap[ticketCoin.coinType] ?? [];
+    const availableTickets = availableStakedLpObjectsByMemeCoinTypeMap[memeCoin.coinType] ?? [];
 
     const aggregatedAmount = availableTickets.reduce(
       (acc: BigNumber, el) => acc.plus(new BigNumber(el.balance)),
@@ -328,20 +313,16 @@ export class BondingPoolSingleton {
     };
   }
 
-  // TODO ASAP IMPORTANT: Issue? with 950 SUI Magic Number on simulation
   public async getSwapOutputAmountForSuiInput(params: SwapParamsForSuiInput) {
-    const { memeCoin, ticketCoin, transaction, bondingCurvePoolObjectId, inputAmount, slippagePercentage = 0 } = params;
+    const { memeCoin, transaction, bondingCurvePoolObjectId, inputAmount, slippagePercentage = 0 } = params;
     const tx = transaction ?? new TransactionBlock();
 
     const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, SUI_DECIMALS);
-    const suiCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
 
     // Please note, mutation of `tx` happening below
-    buyMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    quoteBuyMeme(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+      coinS: inputAmountWithDecimals,
       pool: bondingCurvePoolObjectId,
-      coinMMinValue: BigInt(1),
-      coinS: suiCoinObject,
-      clock: SUI_CLOCK_OBJECT_ID,
     });
 
     const res = await this.provider.devInspectTransactionBlock({
@@ -353,16 +334,14 @@ export class BondingPoolSingleton {
       throw new Error("No results found for simulation of swap");
     }
 
-    const returnValues = res.results[1].returnValues;
+    const returnValues = res.results[0].returnValues;
     if (!returnValues) {
       throw new Error("Return values are undefined");
     }
-    // console.debug("returnValues");
-    // console.dir(returnValues, { depth: null });
 
     const rawAmountBytes = returnValues[0][0];
-    const decoded = StakedLP.bcs.parse(new Uint8Array(rawAmountBytes));
-    const outputRaw = decoded.balance.value;
+    const decoded = bcs.de("u64", new Uint8Array(rawAmountBytes));
+    const outputRaw = decoded;
     const outputAmount = new BigNumber(outputRaw).div(10 ** parseInt(BondingPoolSingleton.MEMECOIN_DECIMALS));
 
     const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
@@ -378,14 +357,7 @@ export class BondingPoolSingleton {
    * That case should be handled on the client-side
    */
   public async getSwapOutputAmountForTicketInput(params: SwapParamsForTicketInput) {
-    const {
-      bondingCurvePoolObjectId,
-      inputTicketAmount,
-      slippagePercentage = 0,
-      transaction,
-      memeCoin,
-      ticketCoin,
-    } = params;
+    const { bondingCurvePoolObjectId, inputTicketAmount, slippagePercentage = 0, transaction, memeCoin } = params;
     const tx = transaction ?? new TransactionBlock();
 
     const inputAmountWithDecimals = normalizeInputCoinAmount(
@@ -394,7 +366,7 @@ export class BondingPoolSingleton {
     );
 
     // Please note, mutation of `tx` happening below
-    quoteSellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    quoteSellMeme(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       coinM: inputAmountWithDecimals,
       pool: bondingCurvePoolObjectId,
     });
@@ -429,7 +401,6 @@ export class BondingPoolSingleton {
   public static async swapSuiForTicket(params: SwapParamsForSuiInputAndTicketOutput) {
     const {
       memeCoin,
-      ticketCoin,
       transaction,
       bondingCurvePoolObjectId,
       minOutputTicketAmount,
@@ -452,7 +423,7 @@ export class BondingPoolSingleton {
     );
     const minOutputBigInt = BigInt(minOutputNormalized);
 
-    const txResult = buyMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    const txResult = buyMeme(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
       coinMMinValue: minOutputBigInt,
       coinS: suiCoinObject,
@@ -486,13 +457,13 @@ export class BondingPoolSingleton {
     remainingAmountBN,
     availableTickets,
     tokenPolicyObjectId,
-    ticketCoinType,
+    memeCoinType,
     transaction,
   }: {
     remainingAmountBN: BigNumber;
     availableTickets: StakedLpObject[];
     tokenPolicyObjectId: string;
-    ticketCoinType: string;
+    memeCoinType: string;
     transaction?: TransactionBlock;
   }) {
     const tx = transaction ?? new TransactionBlock();
@@ -507,7 +478,7 @@ export class BondingPoolSingleton {
     } else if (firstTicketAmountBN.isGreaterThan(remainingAmountBN)) {
       // if first ticket object can fulfill all remaining amount with split
       const splitAmountBigInt = BigInt(remainingAmountBN.toString());
-      const splitTxResult = split(tx, firstTicket.ticketCoinType, {
+      const splitTxResult = split(tx, firstTicket.memeCoinType, {
         self: firstTicket.objectId,
         splitAmount: splitAmountBigInt,
       });
@@ -533,31 +504,31 @@ export class BondingPoolSingleton {
 
       if (ticketBalanceBN.isEqualTo(remainingAmountBN)) {
         // if current ticket is equal to remainingAmount
-        join(tx, ticket.ticketCoinType, { self: ticketObject, c: ticket.objectId });
+        join(tx, ticket.memeCoinType, { self: ticketObject, c: ticket.objectId });
 
         break;
       } else if (ticketBalanceBN.isGreaterThan(remainingAmountBN)) {
         // if current ticket amount is bigger than the remainingAmount, we need to split, and then exit from the loop
         const splitAmountBigInt = BigInt(remainingAmountBN.toString());
-        const splitTxResult = split(tx, ticket.ticketCoinType, {
+        const splitTxResult = split(tx, ticket.memeCoinType, {
           self: ticket.objectId,
           splitAmount: splitAmountBigInt,
         });
         const [ticketSplittedObject] = splitTxResult;
-        join(tx, ticket.ticketCoinType, { self: ticketObject, c: ticketSplittedObject });
+        join(tx, ticket.memeCoinType, { self: ticketObject, c: ticketSplittedObject });
 
         break;
       } else if (ticketBalanceBN.isLessThan(remainingAmountBN)) {
         // if current ticket amount is less than the remainingAmount, we need to join with existing tickets
         // and continue iterating over cycle
-        join(tx, ticket.ticketCoinType, { self: ticketObject, c: ticket.objectId });
+        join(tx, ticket.memeCoinType, { self: ticketObject, c: ticket.objectId });
       }
 
       remainingAmountBN = remainingAmountBN.minus(ticketBalanceBN);
     }
 
     // converting ticket into token object
-    const ticketTokenObjectTxResult = intoToken(tx, ticketCoinType, {
+    const ticketTokenObjectTxResult = intoToken(tx, memeCoinType, {
       clock: SUI_CLOCK_OBJECT_ID,
       policy: tokenPolicyObjectId,
       stakedLp: ticketObject,
@@ -570,7 +541,6 @@ export class BondingPoolSingleton {
   public async swapTicketForSui(params: SwapParamsForTicketInputAndSuiOutput) {
     const {
       memeCoin,
-      ticketCoin,
       transaction,
       bondingCurvePoolObjectId,
       inputTicketAmount,
@@ -580,9 +550,11 @@ export class BondingPoolSingleton {
     } = params;
     const tx = transaction ?? new TransactionBlock();
 
+    // TODO ASAP IMPORTANT: Replace `ticketCoin` in the params with something else (maybe `memeCoin` would work)
     const { amountWithDecimals, tickets: availableTickets } = await this.getAvailableAmountOfTicketsToSell({
       owner,
-      ticketCoin,
+      // TODO ASAP IMPORTANT: Replace `ticketCoin` in the params with something else (maybe `memeCoin` would work)
+      memeCoin,
     });
 
     const isInputTicketAmountIsLargerThanAvailable = new BigNumber(inputTicketAmount).isGreaterThan(
@@ -603,11 +575,13 @@ export class BondingPoolSingleton {
     );
     const remainingAmountBN = new BigNumber(inputAmountWithDecimals.toString());
 
+    // TODO ASAP IMPORTANT: Replace `ticketCoin` in the params with something else (maybe `memeCoin` would work)
     const ticketObject = await this.getMergedTicketObjectForSwap({
       remainingAmountBN,
       availableTickets,
       tokenPolicyObjectId,
-      ticketCoinType: ticketCoin.coinType,
+      // TODO ASAP IMPORTANT: Replace `ticketCoin` in the params with something else (maybe `memeCoin` would work)
+      memeCoinType: memeCoin.coinType,
       transaction: tx,
     });
 
@@ -617,7 +591,7 @@ export class BondingPoolSingleton {
     const minOutputWithSlippage = deductSlippage(new BigNumber(minOutputSuiAmount), slippagePercentage);
     const minOutputNormalized = normalizeInputCoinAmount(minOutputWithSlippage.toString(), SUI_DECIMALS);
 
-    const txResult = sellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    const txResult = sellMeme(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
       coinSMinValue: minOutputNormalized,
       policy: tokenPolicyObjectId,
@@ -654,6 +628,19 @@ export class BondingPoolSingleton {
     return decodedTableAddress;
   }
 
+  public async getPoolDetailedInfo({ poolId }: { poolId: string }): Promise<DetailedPoolInfo> {
+    const poolObject = await this.provider.getObject({
+      id: poolId,
+      options: { showContent: true, showOwner: true, showType: true },
+    });
+
+    if (!isPoolDetailedInfo(poolObject)) {
+      throw new Error("Wrong shape of detailed pool object info");
+    }
+
+    return poolObject;
+  }
+
   public async getAllPools({ transaction }: { transaction?: TransactionBlock } = {}) {
     const registryTableId = await this.getRegistryTableAddress({ transaction });
 
@@ -686,6 +673,7 @@ export class BondingPoolSingleton {
     if (!isPoolObjectData(objectDataList)) {
       throw new Error("Wrong shape of seed pools of bonding curve pools");
     }
+    // TODO: Might be good to get detailed info for all pools data here as well
 
     const pools = objectDataList.map((el) => ({
       objectId: el.data.content.fields.value,
@@ -694,14 +682,6 @@ export class BondingPoolSingleton {
     }));
 
     const poolIds = pools.map((el) => el.objectId);
-    const poolsByTicketCoinTypeMap = pools.reduce(
-      (acc: { [ticketCoinType: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
-        acc[el.ticketCoinType] = { ...el };
-
-        return acc;
-      },
-      {},
-    );
 
     const poolsByMemeCoinTypeMap = pools.reduce(
       (acc: { [memeCoinType: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
@@ -721,18 +701,7 @@ export class BondingPoolSingleton {
       {},
     );
 
-    return { poolIds, pools, poolsByTicketCoinTypeMap, poolsByMemeCoinTypeMap, poolsByPoolId };
-  }
-
-  public async getPoolByTicket({ ticketCoin }: { ticketCoin: { coinType: string } }) {
-    const allPools = await this.getAllPools();
-    const pool = allPools.poolsByTicketCoinTypeMap[ticketCoin.coinType];
-
-    if (!pool) {
-      throw new Error(`No such pool found for provided ticketCoin coinType ${ticketCoin.coinType}`);
-    }
-
-    return pool;
+    return { poolIds, pools, poolsByMemeCoinTypeMap, poolsByPoolId };
   }
 
   public async getPoolByMeme({ memeCoin }: { memeCoin: { coinType: string } }) {
@@ -749,18 +718,16 @@ export class BondingPoolSingleton {
   public async isMemeCoinReadyToLivePhase({
     transaction,
     memeCoin,
-    ticketCoin,
     poolId,
   }: {
     memeCoin: { coinType: string };
-    ticketCoin: { coinType: string };
     poolId: string;
     transaction?: TransactionBlock;
   }): Promise<boolean> {
     const tx = transaction ?? new TransactionBlock();
 
     // Please note, mutation of `tx` happening below
-    isReadyToLaunch(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], poolId);
+    isReadyToLaunch(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], poolId);
 
     const res = await this.provider.devInspectTransactionBlock({
       sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
@@ -781,41 +748,13 @@ export class BondingPoolSingleton {
     return decodedIsReadyToLivePhase;
   }
 
-  public async getTokenPolicyCapByPoolId({ poolId }: { poolId: string }) {
-    const poolDynamicFields = await getAllDynamicFields({ parentObjectId: poolId, provider: this.provider });
-    const tokenPolicyCapList = poolDynamicFields.filter((el) => el.objectType.includes("0x2::token::TokenPolicyCap"));
-
-    if (tokenPolicyCapList.length === 0) {
-      throw new Error(`[getTokenPolicyCapByPoolId] No token policy cap found for the pool ${poolId}`);
-    }
-
-    if (tokenPolicyCapList.length > 1) {
-      console.warn(
-        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${poolId},
-        ignoring the rest except first`,
-        tokenPolicyCapList,
-      );
-    }
-
-    const [tokenPolicyCapObject] = tokenPolicyCapList;
-    const tokenPolicyCapObjectId = tokenPolicyCapObject.objectId;
-
-    return tokenPolicyCapObjectId;
-  }
-
   public async getTokenPolicyByPoolId({ poolId }: { poolId: string }) {
-    const tokenPolicyCap = await this.getTokenPolicyCapByPoolId({ poolId });
+    const poolDetailedInfo = await this.getPoolDetailedInfo({ poolId });
+    const tokenPolicyObjectId = poolDetailedInfo.data.content.fields.policy_cap.fields.for;
 
-    const tokenPolicyCapObjectData = await this.provider.getObject({
-      id: tokenPolicyCap,
-      options: { showContent: true, showOwner: true, showType: true },
-    });
-
-    if (!isTokenPolicyCapObjectData(tokenPolicyCapObjectData)) {
-      throw new Error(`[getTokenPolicyByPoolId] No token policy cap found for the pool ${poolId}`);
+    if (!tokenPolicyObjectId) {
+      throw new Error(`[getTokenPolicyByPoolId] No token policy found for ${poolId}`);
     }
-
-    const tokenPolicyObjectId = tokenPolicyCapObjectData.data?.content.fields.value.fields.for;
 
     return tokenPolicyObjectId;
   }
@@ -843,17 +782,18 @@ export class BondingPoolSingleton {
     memeCoinType: string;
     lpCoinType: string;
     lpCoinTreasureCapId: string;
+    lpMeta: string;
     suiMetadataObject: string;
-    coinTicketType: string;
   }) {
     const tx = params.transaction ?? new TransactionBlock();
 
-    const txResult = goLiveDefault(tx, [params.coinTicketType, params.memeCoinType, params.lpCoinType], {
+    const txResult = goLiveDefault(tx, [params.memeCoinType, params.lpCoinType], {
       adminCap: params.adminCap,
-      clock: SUI_CLOCK_OBJECT_ID,
-      memeMeta: params.memeMeta,
-      suiMeta: params.suiMetadataObject,
       seedPool: params.seedPool,
+      suiMeta: params.suiMetadataObject,
+      memeMeta: params.memeMeta,
+      lpMeta: params.lpMeta,
+      clock: SUI_CLOCK_OBJECT_ID,
       treasuryCap: params.lpCoinTreasureCapId,
     });
 
@@ -867,27 +807,17 @@ export class BondingPoolSingleton {
 
     const instance = CoinManagerSingleton.getInstance(this.suiProviderUrl);
     const memeMetaDataPromise = instance.fetchCoinMetadata(pool.memeCoinType);
-    const ticketMetaDataPromise = instance.fetchCoinMetadata(pool.ticketCoinType);
 
-    const [memeMetaData, ticketMetaData] = await Promise.all([memeMetaDataPromise, ticketMetaDataPromise]);
+    const [memeMetaData] = await Promise.all([memeMetaDataPromise]);
 
     if (!memeMetaData) {
       throw new Error("Meme metadata is null");
     }
 
-    if (!ticketMetaData) {
-      throw new Error("Ticket metadata is null");
-    }
-
     const memeMetaDataObjectId = memeMetaData.id;
-    const ticketMetaDataObjectId = ticketMetaData.id;
 
     if (!memeMetaDataObjectId) {
       throw new Error("Meme id is empty");
-    }
-
-    if (!ticketMetaDataObjectId) {
-      throw new Error("Ticket id is empty");
     }
 
     return {
@@ -896,7 +826,6 @@ export class BondingPoolSingleton {
       memeMeta: memeMetaDataObjectId,
       memeCoinType: pool.memeCoinType,
       suiMetadataObject: BondingPoolSingleton.SUI_METADATA_OBJECT_ID,
-      coinTicketType: pool.ticketCoinType,
     };
   }
 }
