@@ -11,12 +11,11 @@ import {
   sellMeme,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 
-import { split, join, intoToken } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/functions";
+import { intoToken, join, split } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/functions";
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
-import { StakedLP } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/structs";
 
 import { goLiveDefault } from "@avernikoz/memechan-ts-interface/dist/memechan/go-live/functions";
 import { bcs } from "@mysten/sui.js/bcs";
@@ -44,13 +43,11 @@ import { extractRegistryKeyData } from "./utils/extractRegistryKeyData";
 import { getAllDynamicFields } from "./utils/getAllDynamicFields";
 import { getAllObjects } from "./utils/getAllObjects";
 import { getAllOwnedObjects } from "./utils/getAllOwnedObjects";
-import { getTicketDataFromCoinParams } from "./utils/getTicketDataFromCoinParams";
+import { isPoolDetailedInfo } from "./utils/isPoolDetailedInfo";
 import { isPoolObjectData } from "./utils/isPoolObjectData";
 import { isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
-import { isTokenPolicyCapObjectData } from "./utils/isTokenPolicyCapObjectData";
 import { normalizeInputCoinAmount } from "./utils/normalizeInputCoinAmount";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
-import { isPoolDetailedInfo } from "./utils/isPoolDetailedInfo";
 
 /**
  * @class BondingPoolSingleton
