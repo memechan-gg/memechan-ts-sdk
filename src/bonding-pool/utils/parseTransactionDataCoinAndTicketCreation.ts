@@ -1,8 +1,7 @@
 import { SuiObjectChange } from "@mysten/sui.js/client";
-import { BondingPoolSingleton } from "../BondingPool";
 import { ExtractedCoinDataFromTransaction } from "../types";
-import { validateExtractedCoinDataFromTransaction } from "./validateExtractedCoinDataFromTransaction";
 import { extractCoinType } from "./extractCoinType";
+import { validateExtractedCoinDataFromTransaction } from "./validateExtractedCoinDataFromTransaction";
 
 export const parseTransactionDataCoinAndTicketCreation = (
   objectChanges: SuiObjectChange[] | null | undefined,
