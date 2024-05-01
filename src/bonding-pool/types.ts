@@ -161,3 +161,79 @@ export interface StakedLpObject {
   untilTimestamp: number;
   ticketCoinType: string;
 }
+
+export interface DetailedPoolInfo extends SuiObjectResponse {
+  data: {
+    type: string;
+    version: string;
+    objectId: string;
+    digest: string;
+    content: {
+      dataType: "moveObject";
+      type: string;
+      hasPublicTransfer: boolean;
+      fields: {
+        accounting: {
+          type: string;
+          fields: {
+            id: {
+              id: string;
+            };
+            size: string;
+          };
+        };
+        admin_balance_m: string;
+        admin_balance_s: string;
+        balance_m: string;
+        balance_s: string;
+        fees: {
+          type: string;
+          fields: {
+            fee_in_percent: string;
+            fee_out_percent: string;
+          };
+        };
+        id: {
+          id: string;
+        };
+        launch_balance: string;
+        locked: boolean;
+        meme_cap: {
+          type: string;
+          fields: {
+            id: {
+              id: string;
+            };
+            total_supply: {
+              type: string;
+              fields: {
+                value: string;
+              };
+            };
+          };
+        };
+        params: {
+          type: string;
+          fields: {
+            alpha_abs: string;
+            beta: string;
+            gamma_m: string;
+            gamma_s: string;
+            omega_m: string;
+            price_factor: string;
+            sell_delay_ms: string;
+          };
+        };
+        policy_cap: {
+          type: string;
+          fields: {
+            for: string;
+            id: {
+              id: string;
+            };
+          };
+        };
+      };
+    };
+  };
+}
