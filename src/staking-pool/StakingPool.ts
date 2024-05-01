@@ -1,162 +1,97 @@
 /* eslint-disable require-jsdoc */
-import { SuiClient } from "@mysten/sui.js/client";
+import {
+  collectFees,
+  CollectFeesArgs,
+  unstake,
+  withdrawFees,
+} from "@avernikoz/memechan-ts-interface/dist/memechan/staking-pool/functions";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { addFees, unstake, withdrawFees } from "@avernikoz/memechan-ts-interface/dist/memechan/staking-pool/functions";
-import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
-import { StakingPoolAddFeesArgs, StakingPoolUnstakeArgs, StakingPoolWithdrawArgs } from "./types";
-import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
-import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyCapObjectData";
-import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
-import { LONG_SUI_COIN_TYPE } from "../common/sui";
-import { getCoins } from "./utils/getCoins";
+import { LONG_SUI_COIN_TYPE, SHORT_SUI_COIN_TYPE } from "../common/sui";
+import { StakingPoolUnstakeArgs, StakingPoolWithdrawArgs } from "./types";
+import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
 import { mergeCoins } from "./utils/mergeCoins";
+import { getCoins } from "./utils/getCoins";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
+import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
+import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyCapObjectData";
+import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
+
+type StakingPoolParams = {
+  address: string;
+  memeCoinType: string;
+  lpCoinType: string;
+};
+
 /**
- * @class StakingPoolSingleton
- * @implements {StakingPoolSingleton}
- * @description Singleton class for managing staking curve pool.
+ * Class representing a staking pool.
  */
-export class StakingPoolSingleton {
-  private static _instance: StakingPoolSingleton;
-  public static GAS_BUDGET = 50_000_000;
+export class StakingPool {
   public static SIMULATION_ACCOUNT_ADDRESS = "0xac5bceec1b789ff840d7d4e6ce4ce61c90d190a7f8c4f4ddf0bff6ee2413c33c";
 
   public static TICKETCOIN_DECIMALS = "6";
   public static MEMECOIN_DECIMALS = "6";
-
-  public provider: SuiClient;
-  public suiProviderUrl: string;
+  provider = new SuiClient({ url: getFullnodeUrl("mainnet") });
 
   /**
-   * Constructs a new instance of the SuiProvider class with the provided SUI provider URL.
-   *
-   * @private
-   * @constructor
-   * @param {string} suiProviderUrl - The URL of the SUI provider.
+   * Create a StakingPool.
+   * @param {StakingPoolParams} params - The staking pool parameters.
    */
-  private constructor(suiProviderUrl: string) {
-    this.provider = new SuiClient({ url: suiProviderUrl });
-    this.suiProviderUrl = suiProviderUrl;
+  constructor(private params: StakingPoolParams) {}
+
+  /**
+   * Collects fees from the staking pool.
+   * @param {TransactionBlock} tx - The transaction block to collect fees.
+   * @param {Omit<CollectFeesArgs, "clock" | "staking_pool">} params - Parameters for the collectFees function,
+   * omitting the clock and staking pool properties which are set internally.
+   * @return {TransactionResult} The result of the collectFees function call
+   */
+  collectFees(tx: TransactionBlock, params: Omit<CollectFeesArgs, "clock" | "staking_pool">) {
+    return collectFees(tx, [SHORT_SUI_COIN_TYPE, this.params.memeCoinType, this.params.lpCoinType], {
+      stakingPool: this.params.address,
+      pool: params.pool,
+      clock: "0x6",
+    });
   }
 
   /**
-   * @public
-   * @method getInstance
-   * @description Gets the singleton instance of StakingPoolSingleton.
-   * @param {string} [suiProviderUrl] - Url of SUI provider.
-   * @return {StakingPoolSingleton} The singleton instance of StakingPoolSingleton.
+   * Withdraws fees from the staking pool.
+   * @param {string} signerAddress - the wallet address that you are using to withdraw the fees
+   * @param {TransactionBlock} tx - The transaction block to withdraw fees.
+   * @return {TransactionResult} The result of the withdrawFees function call
    */
-  public static getInstance(suiProviderUrl?: string): StakingPoolSingleton {
-    if (!StakingPoolSingleton._instance) {
-      if (suiProviderUrl === undefined) {
-        throw new Error(
-          "[StakingPoolSingleton] SUI provider url is required in arguments to create BondingPool instance.",
-        );
-      }
-
-      const instance = new StakingPoolSingleton(suiProviderUrl);
-      StakingPoolSingleton._instance = instance;
-    }
-
-    return StakingPoolSingleton._instance;
+  withdrawFees(signerAddress: string, tx: TransactionBlock) {
+    const [memecoin, lpcoin] = withdrawFees(
+      tx,
+      [SHORT_SUI_COIN_TYPE, this.params.memeCoinType, this.params.lpCoinType],
+      this.params.address,
+    );
+    tx.transferObjects([memecoin], tx.pure(signerAddress));
+    tx.transferObjects([lpcoin], tx.pure(signerAddress));
+    return tx;
   }
 
   public async unstakeFromStakingPool(params: StakingPoolUnstakeArgs) {
-    const { stakingPoolObjectId, inputAmount, memeCoin, ticketCoin, signerAddress } = params;
+    const { inputAmount, signerAddress } = params;
     const tx = new TransactionBlock();
 
-    const tokenPolicyObjectId = await StakingPoolSingleton.getInstance().getTokenPolicyByPoolId({
-      poolId: stakingPoolObjectId.toString(),
-    });
+    const tokenPolicyObjectId = await this.getTokenPolicy();
 
-    const inputAmountWithDecimals = normalizeInputCoinAmount(
-      inputAmount,
-      parseInt(StakingPoolSingleton.TICKETCOIN_DECIMALS),
-    );
-
+    const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, parseInt(StakingPool.TICKETCOIN_DECIMALS));
     const ticketCoins = await getCoins({
       address: signerAddress,
       coin: ticketCoin.coinType,
       provider: this.provider,
     });
-
-    if (ticketCoins.length === 0) {
-      throw new Error(`[unstakeFromStakingPool] No ticket coins found for the user ${signerAddress}`);
-    }
-
-    const { mergedCoin } = mergeCoins({
-      coins: ticketCoins,
-      tx,
-    });
-
-    const ticketCoinObject = tx.splitCoins(mergedCoin, [inputAmountWithDecimals]);
-
-    const [memecoin, lpcoin] = unstake(tx, [ticketCoin.coinType, memeCoin.coinType, LONG_SUI_COIN_TYPE], {
+    const [memecoin, lpcoin] = unstake(tx, [LONG_SUI_COIN_TYPE, this.params.memeCoinType, this.params.lpCoinType], {
       clock: SUI_CLOCK_OBJECT_ID,
       coinX: ticketCoinObject,
       policy: tokenPolicyObjectId,
-      stakingPool: stakingPoolObjectId,
+      stakingPool: this.params.address,
     });
 
     tx.transferObjects([memecoin], tx.pure(signerAddress));
     tx.transferObjects([lpcoin], tx.pure(signerAddress));
-    tx.transferObjects([ticketCoinObject], tx.pure(signerAddress));
-    tx.setGasBudget(StakingPoolSingleton.GAS_BUDGET);
 
-    return { tx };
-  }
-
-  public static async withdrawFromStakingPool(params: StakingPoolWithdrawArgs) {
-    const { stakingPoolObjectId, memeCoin, ticketCoin, signerAddress } = params;
-    const tx = new TransactionBlock();
-
-    const [memecoin, lpcoin] = withdrawFees(
-      tx,
-      [ticketCoin.coinType, memeCoin.coinType, LONG_SUI_COIN_TYPE],
-      stakingPoolObjectId,
-    );
-
-    tx.transferObjects([memecoin], tx.pure(signerAddress));
-    tx.transferObjects([lpcoin], tx.pure(signerAddress));
-    tx.setGasBudget(StakingPoolSingleton.GAS_BUDGET);
-
-    return { tx };
-  }
-
-  public async addFeesToStakingPool(params: StakingPoolAddFeesArgs) {
-    const { stakingPoolObjectId, memeCoin, memeCoinInput, suiCoinInput, ticketCoin, signerAddress } = params;
-    const tx = new TransactionBlock();
-
-    const memeCoinSplitAmount = normalizeInputCoinAmount(
-      memeCoinInput,
-      parseInt(StakingPoolSingleton.MEMECOIN_DECIMALS),
-    );
-    const suiCoinSplitAmount = normalizeInputCoinAmount(suiCoinInput, SUI_DECIMALS);
-
-    const memeCoins = await getCoins({
-      address: signerAddress,
-      coin: memeCoin.coinType,
-      provider: this.provider,
-    });
-
-    if (memeCoins.length === 0) {
-      throw new Error(`[addFeesToStakingPool] No meme coins found for the user ${signerAddress}`);
-    }
-
-    const { mergedCoin } = mergeCoins({
-      coins: memeCoins,
-      tx,
-    });
-
-    const memeCoinObject = tx.splitCoins(mergedCoin, [memeCoinSplitAmount]);
-    const suiCoinObject = tx.splitCoins(tx.gas, [suiCoinSplitAmount]);
-
-    addFees(tx, [ticketCoin.coinType, memeCoin.coinType, LONG_SUI_COIN_TYPE], {
-      coinMeme: memeCoinObject,
-      coinSui: suiCoinObject,
-      stakingPool: stakingPoolObjectId,
-    });
-
-    tx.setGasBudget(StakingPoolSingleton.GAS_BUDGET);
     return { tx };
   }
 
@@ -182,8 +117,8 @@ export class StakingPoolSingleton {
     return tokenPolicyCapObjectId;
   }
 
-  public async getTokenPolicyByPoolId({ poolId }: { poolId: string }) {
-    const tokenPolicyCap = await this.getTokenPolicyCapByPoolId({ poolId });
+  public async getTokenPolicy() {
+    const tokenPolicyCap = await this.getTokenPolicyCapByPoolId({ poolId: this.params.address });
 
     const tokenPolicyCapObjectData = await this.provider.getObject({
       id: tokenPolicyCap,
@@ -191,7 +126,7 @@ export class StakingPoolSingleton {
     });
 
     if (!isTokenPolicyCapObjectData(tokenPolicyCapObjectData)) {
-      throw new Error(`[getTokenPolicyByPoolId] No token policy cap found for the pool ${poolId}`);
+      throw new Error(`[getTokenPolicyByPoolId] No token policy cap found for the pool ${this.params.address}`);
     }
 
     const tokenPolicyObjectId = tokenPolicyCapObjectData.data?.content.fields.value.fields.for;

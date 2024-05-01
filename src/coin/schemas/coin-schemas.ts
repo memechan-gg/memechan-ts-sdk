@@ -18,19 +18,47 @@ export const createCoinRequestBodySchema = z.object({
   socialLinks: socialLinks.nullish(),
 });
 
+export const coinStatus = z.literal("LIVE").or(z.literal("PRESALE"));
+
 export const coinSchema = z.object({
   name: z.string(),
   type: z.string(),
+  decimals: z.number(),
+  symbol: z.string(),
+  objectId: z.string(),
+  treasureCapId: z.string(),
+  objectType: z.string(),
   description: z.string(),
   image: z.string(),
+  metadataObjectId: z.string(),
   lastReply: z.number(),
   marketcap: z.number(),
   creator: z.string(),
+  status: coinStatus,
+  socialLinks: socialLinks.nullish(),
+  txDigest: z.string(),
   creationTime: z.number(),
   contractAddress: z.string().nullish(),
 });
 
-export const coinStatus = z.literal("LIVE").or(z.literal("PRESALE"));
+export const ticketSchema = z.object({
+  name: z.string(),
+  type: z.string(),
+  associatedCoin: z.string(),
+  decimals: z.number(),
+  objectId: z.string(),
+  objectType: z.string(),
+  treasureCapId: z.string(),
+  metadataObjectId: z.string(),
+  symbol: z.string(),
+  description: z.string(),
+  image: z.string(),
+  creator: z.string(),
+  socialLinks: socialLinks.nullish(),
+  txDigest: z.string(),
+  creationTime: z.number(),
+  contractAddress: z.string().nullish(),
+});
 
 export const queryCoinsRequestParamsSchema = z.object({
   sortBy: coinsSortableColumns,
@@ -45,3 +73,4 @@ export type SortableColumn = z.infer<typeof coinsSortableColumns>;
 export type QueryCoinsRequestParams = z.infer<typeof queryCoinsRequestParamsSchema>;
 export type CreateCoinRequestBody = z.infer<typeof createCoinRequestBodySchema>;
 export type CoinStatus = z.infer<typeof coinStatus>;
+export type Ticket = z.infer<typeof ticketSchema>;

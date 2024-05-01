@@ -1,13 +1,7 @@
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { SUI_CLOCK_OBJECT_ID, SUI_TYPE_ARG } from "@mysten/sui.js/utils";
-import { keypair, provider, suiProviderUrl, user } from "../common";
-import {
-  initSecondaryMarket,
-  InitSecondaryMarketArgs,
-} from "@avernikoz/memechan-ts-interface/dist/memechan/initialize/functions";
-import { LONG_SUI_COIN_TYPE } from "../../src/common/sui";
 import { BondingPoolSingleton, CoinManagerSingleton } from "../../src";
 import { parseTransactionDataLpCoinCreation } from "../../src/bonding-pool/utils/parseTransactionDataLpCoinCreation";
+import { keypair, provider, suiProviderUrl, user } from "../common";
 import { sleep } from "../utils/sleep";
 
 // yarn tsx examples/admin/init-secondary-market.ts
