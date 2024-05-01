@@ -784,7 +784,6 @@ export class BondingPoolSingleton {
     lpCoinTreasureCapId: string;
     lpMeta: string;
     suiMetadataObject: string;
-    coinTicketType: string;
   }) {
     const tx = params.transaction ?? new TransactionBlock();
 
@@ -808,27 +807,17 @@ export class BondingPoolSingleton {
 
     const instance = CoinManagerSingleton.getInstance(this.suiProviderUrl);
     const memeMetaDataPromise = instance.fetchCoinMetadata(pool.memeCoinType);
-    const ticketMetaDataPromise = instance.fetchCoinMetadata(pool.ticketCoinType);
 
-    const [memeMetaData, ticketMetaData] = await Promise.all([memeMetaDataPromise, ticketMetaDataPromise]);
+    const [memeMetaData] = await Promise.all([memeMetaDataPromise]);
 
     if (!memeMetaData) {
       throw new Error("Meme metadata is null");
     }
 
-    if (!ticketMetaData) {
-      throw new Error("Ticket metadata is null");
-    }
-
     const memeMetaDataObjectId = memeMetaData.id;
-    const ticketMetaDataObjectId = ticketMetaData.id;
 
     if (!memeMetaDataObjectId) {
       throw new Error("Meme id is empty");
-    }
-
-    if (!ticketMetaDataObjectId) {
-      throw new Error("Ticket id is empty");
     }
 
     return {
@@ -837,7 +826,6 @@ export class BondingPoolSingleton {
       memeMeta: memeMetaDataObjectId,
       memeCoinType: pool.memeCoinType,
       suiMetadataObject: BondingPoolSingleton.SUI_METADATA_OBJECT_ID,
-      coinTicketType: pool.ticketCoinType,
     };
   }
 }
