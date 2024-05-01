@@ -57,16 +57,14 @@ import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypen
 export class BondingPoolSingleton {
   private static _instance: BondingPoolSingleton;
   public static TX_OF_CONTRACT_DEPLOY =
-    "https://suivision.xyz/txblock/7vwqjLH2QZXiDyUYBT8haL1YT5k5PtCiWfpsBiLjw4C9?tab=Changes";
+    "https://suivision.xyz/txblock/4exX4n9sNeTWwCcb9yFzd415E1Zf21CfKRr2eqQRrNgv?tab=Changes";
 
-  public static TX_OF_TICKET_BUY =
-    "https://suivision.xyz/txblock/Gz6vfDgeE9tErU2iUJ9Yh1NitDkKZC2CzM17sgu9PkT7?tab=Changes";
   public static SUI_METADATA_OBJECT_ID = "0x9258181f5ceac8dbffb7030890243caed69a9599d2886d957a9cb7656af3bdb3";
 
-  public static PACKAGE_OBJECT_ID = "0x1a0c65c5850f32caf3b8bc1973837c830e1159b566b3684ace43e37c59868974";
-  public static UPGRADE_CAP_OBJECT_ID = "0x80cad8ae4b6ecf68bb6d699f7710b43b941a7fb0f1ac7c476e2087d188b1448b";
-  public static REGISTRY_OBJECT_ID = "0xdce76690fe5d10fa91c8ad1fa37896c7cdc370c71d27620cb48bc315f4a255af";
-  public static ADMIN_OBJECT_ID = "0xf5399ac8c3ce69f423e841c6b14e3f3c4bcab45405151b1614721e189fda527d";
+  public static PACKAGE_OBJECT_ID = "0xa06a92a380b04366b5bf54587b89c0d04772e48170ea3c3d0647dac85be038d9";
+  public static UPGRADE_CAP_OBJECT_ID = "0xf5c67bd71a1d71e14505860407a8ce9e4bbbe5b879c05c16693c301aae9595c3";
+  public static REGISTRY_OBJECT_ID = "0x71cf42c722f75314c7e9649c89b1a11e9e557242b713a0b619bdda13dfb5ac6b";
+  public static ADMIN_OBJECT_ID = "0x6bb56f9b2d15eb26f1ada8b40136bbef755dc735cbb5b994b566e96db2ec3596";
   // TODO: Move that to StakingPool
   public static STAKING_MODULE_NAME = "staked_lp";
   public static STAKING_LP_STRUCT_TYPE = "StakedLP";
@@ -203,7 +201,7 @@ export class BondingPoolSingleton {
     }
   }
 
-  public static async createMemeAndTicketCoins(params: CreateCoinTransactionParamsWithoutCertainProps) {
+  public static async createMemeCoin(params: CreateCoinTransactionParamsWithoutCertainProps) {
     const tx = params.transaction ?? new TransactionBlock();
 
     const coinCreationParams: CreateCoinTransactionParams = {
@@ -217,15 +215,8 @@ export class BondingPoolSingleton {
 
     // Create Coin TransactionBlock
     const coinTx = await CoinManagerSingleton.getCreateCoinTransaction(coinCreationParams);
-    // Transform data for Ticket Coin
-    const ticketFromParams = getTicketDataFromCoinParams(coinCreationParams);
-    // Create Ticket Coin TransactionBlock
-    const memeAndTicketCoinTx = await CoinManagerSingleton.getCreateCoinTransaction({
-      ...ticketFromParams,
-      transaction: coinTx,
-    });
 
-    return memeAndTicketCoinTx;
+    return coinTx;
   }
 
   public async getAllStakedLPObjectsByOwner({ owner }: { owner: string }) {
