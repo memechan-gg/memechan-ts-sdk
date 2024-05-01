@@ -22,7 +22,7 @@ export const parseTransactionDataLpCoinCreation = (objectChanges: SuiObjectChang
   const data = objectChanges.reduce((data, change) => {
     if (change.type === "created" && change.objectId && change.objectType) {
       const objectInfo = { objectId: change.objectId, objectType: change.objectType };
-      if (change.objectType.includes(`${BondingPoolSingleton.LP_COIN_MODULE_PREFIX}`)) {
+      if (change.objectType.includes(`${BondingPoolSingleton.AMM_LP_COIN_MODULE_PREFIX}`)) {
         if (change.objectType.includes("0x2::coin::Coin<")) {
           data.lpCoin.objectId = objectInfo.objectId;
           data.lpCoin.objectType = objectInfo.objectType;
@@ -34,7 +34,7 @@ export const parseTransactionDataLpCoinCreation = (objectChanges: SuiObjectChang
       }
     } else if (change.type === "published") {
       const isPublishedTicket = change.modules?.some((module) =>
-        module.includes(`${BondingPoolSingleton.LP_COIN_MODULE_PREFIX}`),
+        module.includes(`${BondingPoolSingleton.AMM_LP_COIN_MODULE_PREFIX}`),
       );
       if (isPublishedTicket) {
         data.lpCoin.packageId = change.packageId;
