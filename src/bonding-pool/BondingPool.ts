@@ -681,11 +681,7 @@ export class BondingPoolSingleton {
     if (!isPoolObjectData(objectDataList)) {
       throw new Error("Wrong shape of seed pools of bonding curve pools");
     }
-
-    // console.debug("objectDataList: ");
-    // console.dir(objectDataList, { depth: null });
-
-    // TODO: Might be good to get all pools data here as well
+    // TODO: Might be good to get detailed info for all pools data here as well
 
     const pools = objectDataList.map((el) => ({
       objectId: el.data.content.fields.value,
