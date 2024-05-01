@@ -40,6 +40,7 @@ export const initSecondaryMarketExample = async ({ transaction }: { transaction?
     ...initSecondaryMarketData,
     lpCoinTreasureCapId: lpCoinData.lpCoin.treasureCapId,
     lpCoinType: lpCoinData.lpCoin.coinType,
+    lpMeta: lpCoinData.lpCoin.metadataObjectId,
   };
   console.debug("initSecondaryParams: ", initSecondaryParams);
 
