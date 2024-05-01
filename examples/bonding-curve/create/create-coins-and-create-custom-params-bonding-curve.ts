@@ -7,7 +7,7 @@ import { sleep } from "../../utils/sleep";
 
 // yarn tsx examples/bonding-curve/create/create-coins-and-create-custom-params-bonding-curve.ts
 export const createCustomBondingCurveAndCoins = async (params: CreateCoinTransactionParamsWithoutCertainProps) => {
-  const memeAndTicketCoinTx = await BondingPoolSingleton.createMemeAndTicketCoins(params);
+  const memeAndTicketCoinTx = await BondingPoolSingleton.createMemeCoin(params);
 
   const res = await provider.signAndExecuteTransactionBlock({
     transactionBlock: memeAndTicketCoinTx,
@@ -23,7 +23,10 @@ export const createCustomBondingCurveAndCoins = async (params: CreateCoinTransac
   });
   console.debug("create coin tx res: ", res);
 
-  const { memeCoin, ticketCoin } = parseTransactionDataCoinAndTicketCreation(res.objectChanges);
+  const { memeCoin } = parseTransactionDataCoinAndTicketCreation(res.objectChanges);
+
+  console.debug("memeCoin: ", memeCoin);
+
   // 10 sui
   const THRESHOLD_FOR_GOING_LIVE_IN_SUI = BigInt(10);
   // 5 minutes
@@ -37,7 +40,6 @@ export const createCustomBondingCurveAndCoins = async (params: CreateCoinTransac
 
   const createBondingCurvePoolTx = BondingPoolSingleton.createBondingCurvePool({
     memeCoin,
-    ticketCoin,
     bondingCurveCustomParams: bondingCurveCustomParams,
   });
 
@@ -65,9 +67,9 @@ export const createCustomBondingCurveAndCoins = async (params: CreateCoinTransac
 };
 
 createCustomBondingCurveAndCoins({
-  description: "26 April 2024",
-  name: "meme262024",
+  description: "01 May 2024",
+  name: "meme01052024",
   signerAddress: user,
-  symbol: "MEME_26_2024",
+  symbol: "MEME_01_05_2024",
   url: "",
 });
