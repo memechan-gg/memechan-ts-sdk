@@ -9,8 +9,11 @@ export const swapSuiForTicketExample = async () => {
   const { pools, poolsByMemeCoinTypeMap } = await bondingCurveInstance.getAllPools();
 
   // get random pool
-  const pool = pools[0];
-  const inputAmount = "0.2";
+  const pool =
+    poolsByMemeCoinTypeMap[
+      "0xdb838a0becb92dcf9fd66127136f517f8f6d7a9f973b2344d1ebbd7d2cf2c0fa::meme_02_05_2024::MEME_02_05_2024"
+    ];
+  const inputAmount = "0.5";
   //   const inputAmount = "30000";
 
   const outputAmount = await bondingCurveInstance.getSwapOutputAmountForSuiInput({

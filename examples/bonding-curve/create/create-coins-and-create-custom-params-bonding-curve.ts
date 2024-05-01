@@ -28,7 +28,7 @@ export const createCustomBondingCurveAndCoins = async (params: CreateCoinTransac
   console.debug("memeCoin: ", memeCoin);
 
   // 10 sui
-  const THRESHOLD_FOR_GOING_LIVE_IN_SUI = BigInt(10);
+  const THRESHOLD_FOR_GOING_LIVE_IN_SUI = BigInt(1);
   // 5 minutes
   const THRESHOLD_FOR_SELL_TICKET_IN_BONDING_CURVE_MS = BigInt(5 * 60 * 1000);
 
@@ -67,9 +67,9 @@ export const createCustomBondingCurveAndCoins = async (params: CreateCoinTransac
 };
 
 createCustomBondingCurveAndCoins({
-  description: "01 May 2024",
-  name: "meme01052024",
+  description: "02 May 2024",
+  name: "meme02052024",
   signerAddress: user,
-  symbol: "MEME_01_05_2024",
+  symbol: "MEME_02_05_2024",
   url: "",
 });
