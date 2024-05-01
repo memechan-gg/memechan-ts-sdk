@@ -159,7 +159,7 @@ export interface StakedLpObject {
   balance: string;
   balanceWithDecimals: string;
   untilTimestamp: number;
-  ticketCoinType: string;
+  memeCoinType: string;
 }
 
 export interface DetailedPoolInfo extends SuiObjectResponse {
