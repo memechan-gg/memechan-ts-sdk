@@ -134,7 +134,7 @@ export class BondingPoolSingleton {
 
   public static createBondingCurvePoolWithDefaultParams(
     args: NewDefaultArgs,
-    typeArgs: [string, string, string],
+    typeArgs: [string, string],
     transaction?: TransactionBlock,
   ) {
     const tx = new TransactionBlock() ?? transaction;
@@ -145,7 +145,7 @@ export class BondingPoolSingleton {
 
   public static createBondingCurvePoolWithCustomParams(
     args: NewArgs,
-    typeArgs: [string, string, string],
+    typeArgs: [string, string],
     transaction?: TransactionBlock,
   ) {
     const tx = new TransactionBlock() ?? transaction;
@@ -175,7 +175,7 @@ export class BondingPoolSingleton {
   }
 
   public static createBondingCurvePool(params: CreateBondingCurvePoolParams) {
-    const { memeCoin, ticketCoin, transaction, bondingCurveCustomParams } = params;
+    const { memeCoin, transaction, bondingCurveCustomParams } = params;
     const tx = transaction ?? new TransactionBlock();
 
     if (bondingCurveCustomParams) {
@@ -183,12 +183,9 @@ export class BondingPoolSingleton {
         {
           registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
           memeCoinCap: memeCoin.treasureCapId,
-          memeCoinMetadata: memeCoin.metadataObjectId,
-          ticketCoinCap: ticketCoin.treasureCapId,
-          ticketCoinMetadata: ticketCoin.metadataObjectId,
           ...bondingCurveCustomParams,
         },
-        [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
+        [LONG_SUI_COIN_TYPE, memeCoin.coinType],
         tx,
       );
 
@@ -198,11 +195,8 @@ export class BondingPoolSingleton {
         {
           registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
           memeCoinCap: memeCoin.treasureCapId,
-          memeCoinMetadata: memeCoin.metadataObjectId,
-          ticketCoinCap: ticketCoin.treasureCapId,
-          ticketCoinMetadata: ticketCoin.metadataObjectId,
         },
-        [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType],
+        [LONG_SUI_COIN_TYPE, memeCoin.coinType],
         tx,
       );
       return createBondingCurvePoolTx;
@@ -330,14 +324,14 @@ export class BondingPoolSingleton {
 
   // TODO ASAP IMPORTANT: Issue? with 950 SUI Magic Number on simulation
   public async getSwapOutputAmountForSuiInput(params: SwapParamsForSuiInput) {
-    const { memeCoin, ticketCoin, transaction, bondingCurvePoolObjectId, inputAmount, slippagePercentage = 0 } = params;
+    const { memeCoin, transaction, bondingCurvePoolObjectId, inputAmount, slippagePercentage = 0 } = params;
     const tx = transaction ?? new TransactionBlock();
 
     const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, SUI_DECIMALS);
     const suiCoinObject = tx.splitCoins(tx.gas, [inputAmountWithDecimals]);
 
     // Please note, mutation of `tx` happening below
-    buyMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    buyMeme(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
       coinMMinValue: BigInt(1),
       coinS: suiCoinObject,
@@ -378,14 +372,7 @@ export class BondingPoolSingleton {
    * That case should be handled on the client-side
    */
   public async getSwapOutputAmountForTicketInput(params: SwapParamsForTicketInput) {
-    const {
-      bondingCurvePoolObjectId,
-      inputTicketAmount,
-      slippagePercentage = 0,
-      transaction,
-      memeCoin,
-      ticketCoin,
-    } = params;
+    const { bondingCurvePoolObjectId, inputTicketAmount, slippagePercentage = 0, transaction, memeCoin } = params;
     const tx = transaction ?? new TransactionBlock();
 
     const inputAmountWithDecimals = normalizeInputCoinAmount(
@@ -394,7 +381,7 @@ export class BondingPoolSingleton {
     );
 
     // Please note, mutation of `tx` happening below
-    quoteSellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    quoteSellMeme(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       coinM: inputAmountWithDecimals,
       pool: bondingCurvePoolObjectId,
     });
@@ -429,7 +416,6 @@ export class BondingPoolSingleton {
   public static async swapSuiForTicket(params: SwapParamsForSuiInputAndTicketOutput) {
     const {
       memeCoin,
-      ticketCoin,
       transaction,
       bondingCurvePoolObjectId,
       minOutputTicketAmount,
@@ -452,7 +438,7 @@ export class BondingPoolSingleton {
     );
     const minOutputBigInt = BigInt(minOutputNormalized);
 
-    const txResult = buyMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    const txResult = buyMeme(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
       coinMMinValue: minOutputBigInt,
       coinS: suiCoinObject,
@@ -570,7 +556,6 @@ export class BondingPoolSingleton {
   public async swapTicketForSui(params: SwapParamsForTicketInputAndSuiOutput) {
     const {
       memeCoin,
-      ticketCoin,
       transaction,
       bondingCurvePoolObjectId,
       inputTicketAmount,
@@ -580,9 +565,11 @@ export class BondingPoolSingleton {
     } = params;
     const tx = transaction ?? new TransactionBlock();
 
+    // TODO ASAP IMPORTANT: Replace `ticketCoin` in the params with something else (maybe `memeCoin` would work)
     const { amountWithDecimals, tickets: availableTickets } = await this.getAvailableAmountOfTicketsToSell({
       owner,
-      ticketCoin,
+      // TODO ASAP IMPORTANT: Replace `ticketCoin` in the params with something else (maybe `memeCoin` would work)
+      ticketCoin: { coinType: "" },
     });
 
     const isInputTicketAmountIsLargerThanAvailable = new BigNumber(inputTicketAmount).isGreaterThan(
@@ -603,11 +590,13 @@ export class BondingPoolSingleton {
     );
     const remainingAmountBN = new BigNumber(inputAmountWithDecimals.toString());
 
+    // TODO ASAP IMPORTANT: Replace `ticketCoin` in the params with something else (maybe `memeCoin` would work)
     const ticketObject = await this.getMergedTicketObjectForSwap({
       remainingAmountBN,
       availableTickets,
       tokenPolicyObjectId,
-      ticketCoinType: ticketCoin.coinType,
+      // TODO ASAP IMPORTANT: Replace `ticketCoin` in the params with something else (maybe `memeCoin` would work)
+      ticketCoinType: "",
       transaction: tx,
     });
 
@@ -617,7 +606,7 @@ export class BondingPoolSingleton {
     const minOutputWithSlippage = deductSlippage(new BigNumber(minOutputSuiAmount), slippagePercentage);
     const minOutputNormalized = normalizeInputCoinAmount(minOutputWithSlippage.toString(), SUI_DECIMALS);
 
-    const txResult = sellMeme(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], {
+    const txResult = sellMeme(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], {
       pool: bondingCurvePoolObjectId,
       coinSMinValue: minOutputNormalized,
       policy: tokenPolicyObjectId,
@@ -749,18 +738,16 @@ export class BondingPoolSingleton {
   public async isMemeCoinReadyToLivePhase({
     transaction,
     memeCoin,
-    ticketCoin,
     poolId,
   }: {
     memeCoin: { coinType: string };
-    ticketCoin: { coinType: string };
     poolId: string;
     transaction?: TransactionBlock;
   }): Promise<boolean> {
     const tx = transaction ?? new TransactionBlock();
 
     // Please note, mutation of `tx` happening below
-    isReadyToLaunch(tx, [ticketCoin.coinType, LONG_SUI_COIN_TYPE, memeCoin.coinType], poolId);
+    isReadyToLaunch(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], poolId);
 
     const res = await this.provider.devInspectTransactionBlock({
       sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
@@ -843,17 +830,19 @@ export class BondingPoolSingleton {
     memeCoinType: string;
     lpCoinType: string;
     lpCoinTreasureCapId: string;
+    lpMeta: string;
     suiMetadataObject: string;
     coinTicketType: string;
   }) {
     const tx = params.transaction ?? new TransactionBlock();
 
-    const txResult = goLiveDefault(tx, [params.coinTicketType, params.memeCoinType, params.lpCoinType], {
+    const txResult = goLiveDefault(tx, [params.memeCoinType, params.lpCoinType], {
       adminCap: params.adminCap,
-      clock: SUI_CLOCK_OBJECT_ID,
-      memeMeta: params.memeMeta,
-      suiMeta: params.suiMetadataObject,
       seedPool: params.seedPool,
+      suiMeta: params.suiMetadataObject,
+      memeMeta: params.memeMeta,
+      lpMeta: params.lpMeta,
+      clock: SUI_CLOCK_OBJECT_ID,
       treasuryCap: params.lpCoinTreasureCapId,
     });
 

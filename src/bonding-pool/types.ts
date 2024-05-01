@@ -35,7 +35,6 @@ export type GetBondingCurveCustomParams = Optional<BondingCurveCustomParams>;
 
 export type CreateBondingCurvePoolParams = {
   memeCoin: { treasureCapId: string; metadataObjectId: string; coinType: string };
-  ticketCoin: { treasureCapId: string; metadataObjectId: string; coinType: string };
   transaction?: TransactionBlock;
   bondingCurveCustomParams?: BondingCurveCustomParams;
 };
@@ -47,7 +46,6 @@ export type CreateCoinTransactionParamsWithoutCertainProps = Omit<
 
 export type SwapParamsForSuiInput = {
   memeCoin: { coinType: string };
-  ticketCoin: { coinType: string };
   transaction?: TransactionBlock;
 
   // swap params
@@ -64,7 +62,6 @@ export type SwapParamsForSuiInputAndTicketOutput = SwapParamsForSuiInput & {
 
 export type SwapParamsForTicketInput = {
   memeCoin: { coinType: string };
-  ticketCoin: { coinType: string };
   transaction?: TransactionBlock;
 
   bondingCurvePoolObjectId: string;
