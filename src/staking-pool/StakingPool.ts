@@ -72,12 +72,12 @@ export class StakingPool {
 
   /**
    * Unstakes assets from the staking pool.
+   * @param {TransactionBlock} tx - The tx parameter
    * @param {StakingPoolUnstakeArgs} params - The parameters required for unstaking.
    * @return {Promise<{tx: TransactionBlock}>} The transaction block object with the results of the unstake operation.
    */
-  public async unstakeFromStakingPool(params: StakingPoolUnstakeArgs) {
+  public async unstake(tx: TransactionBlock, params: StakingPoolUnstakeArgs) {
     const { inputAmount, signerAddress } = params;
-    const tx = new TransactionBlock();
 
     const tokenPolicyObjectId = await this.getTokenPolicy();
 
