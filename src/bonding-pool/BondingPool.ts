@@ -28,6 +28,7 @@ import {
   BondingCurveCustomParams,
   CreateBondingCurvePoolParams,
   CreateCoinTransactionParamsWithoutCertainProps,
+  DetailedPoolInfo,
   ExtractedRegistryKeyData,
   GetBondingCurveCustomParams,
   StakedLpObject,
@@ -48,6 +49,7 @@ import { isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
 import { isTokenPolicyCapObjectData } from "./utils/isTokenPolicyCapObjectData";
 import { normalizeInputCoinAmount } from "./utils/normalizeInputCoinAmount";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
+import { isPoolDetailedInfo } from "./utils/isPoolDetailedInfo";
 
 /**
  * @class BondingPoolSingleton
@@ -634,6 +636,19 @@ export class BondingPoolSingleton {
     return decodedTableAddress;
   }
 
+  public async getPoolDetailedInfo({ poolId }: { poolId: string }): Promise<DetailedPoolInfo> {
+    const poolObject = await this.provider.getObject({
+      id: poolId,
+      options: { showContent: true, showOwner: true, showType: true },
+    });
+
+    if (!isPoolDetailedInfo(poolObject)) {
+      throw new Error("Wrong shape of detailed pool object info");
+    }
+
+    return poolObject;
+  }
+
   public async getAllPools({ transaction }: { transaction?: TransactionBlock } = {}) {
     const registryTableId = await this.getRegistryTableAddress({ transaction });
 
@@ -666,6 +681,11 @@ export class BondingPoolSingleton {
     if (!isPoolObjectData(objectDataList)) {
       throw new Error("Wrong shape of seed pools of bonding curve pools");
     }
+
+    // console.debug("objectDataList: ");
+    // console.dir(objectDataList, { depth: null });
+
+    // TODO: Might be good to get all pools data here as well
 
     const pools = objectDataList.map((el) => ({
       objectId: el.data.content.fields.value,
@@ -740,41 +760,13 @@ export class BondingPoolSingleton {
     return decodedIsReadyToLivePhase;
   }
 
-  public async getTokenPolicyCapByPoolId({ poolId }: { poolId: string }) {
-    const poolDynamicFields = await getAllDynamicFields({ parentObjectId: poolId, provider: this.provider });
-    const tokenPolicyCapList = poolDynamicFields.filter((el) => el.objectType.includes("0x2::token::TokenPolicyCap"));
-
-    if (tokenPolicyCapList.length === 0) {
-      throw new Error(`[getTokenPolicyCapByPoolId] No token policy cap found for the pool ${poolId}`);
-    }
-
-    if (tokenPolicyCapList.length > 1) {
-      console.warn(
-        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${poolId},
-        ignoring the rest except first`,
-        tokenPolicyCapList,
-      );
-    }
-
-    const [tokenPolicyCapObject] = tokenPolicyCapList;
-    const tokenPolicyCapObjectId = tokenPolicyCapObject.objectId;
-
-    return tokenPolicyCapObjectId;
-  }
-
   public async getTokenPolicyByPoolId({ poolId }: { poolId: string }) {
-    const tokenPolicyCap = await this.getTokenPolicyCapByPoolId({ poolId });
+    const poolDetailedInfo = await this.getPoolDetailedInfo({ poolId });
+    const tokenPolicyObjectId = poolDetailedInfo.data.content.fields.policy_cap.fields.for;
 
-    const tokenPolicyCapObjectData = await this.provider.getObject({
-      id: tokenPolicyCap,
-      options: { showContent: true, showOwner: true, showType: true },
-    });
-
-    if (!isTokenPolicyCapObjectData(tokenPolicyCapObjectData)) {
-      throw new Error(`[getTokenPolicyByPoolId] No token policy cap found for the pool ${poolId}`);
+    if (!tokenPolicyObjectId) {
+      throw new Error(`[getTokenPolicyByPoolId] No token policy found for ${poolId}`);
     }
-
-    const tokenPolicyObjectId = tokenPolicyCapObjectData.data?.content.fields.value.fields.for;
 
     return tokenPolicyObjectId;
   }
