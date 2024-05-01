@@ -7,14 +7,14 @@ import {
 } from "@avernikoz/memechan-ts-interface/dist/memechan/staking-pool/functions";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { LONG_SUI_COIN_TYPE, SHORT_SUI_COIN_TYPE } from "../common/sui";
-import { StakingPoolUnstakeArgs, StakingPoolWithdrawArgs } from "./types";
+import { StakingPoolUnstakeArgs } from "./types";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
-import { mergeCoins } from "./utils/mergeCoins";
-import { getCoins } from "./utils/getCoins";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
 import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyCapObjectData";
 import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
+import BigNumber from "bignumber.js";
+import { getAllTokens, getMergedToken } from "../common/tokens";
 
 type StakingPoolParams = {
   address: string;
@@ -55,11 +55,11 @@ export class StakingPool {
 
   /**
    * Withdraws fees from the staking pool.
-   * @param {string} signerAddress - the wallet address that you are using to withdraw the fees
    * @param {TransactionBlock} tx - The transaction block to withdraw fees.
+   * @param {string} signerAddress - the wallet address that you are using to withdraw the fees
    * @return {TransactionResult} The result of the withdrawFees function call
    */
-  withdrawFees(signerAddress: string, tx: TransactionBlock) {
+  withdrawFees(tx: TransactionBlock, signerAddress: string) {
     const [memecoin, lpcoin] = withdrawFees(
       tx,
       [SHORT_SUI_COIN_TYPE, this.params.memeCoinType, this.params.lpCoinType],
@@ -70,6 +70,11 @@ export class StakingPool {
     return tx;
   }
 
+  /**
+   * Unstakes assets from the staking pool.
+   * @param {StakingPoolUnstakeArgs} params - The parameters required for unstaking.
+   * @return {Promise<{tx: TransactionBlock}>} The transaction block object with the results of the unstake operation.
+   */
   public async unstakeFromStakingPool(params: StakingPoolUnstakeArgs) {
     const { inputAmount, signerAddress } = params;
     const tx = new TransactionBlock();
@@ -77,14 +82,24 @@ export class StakingPool {
     const tokenPolicyObjectId = await this.getTokenPolicy();
 
     const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, parseInt(StakingPool.TICKETCOIN_DECIMALS));
-    const ticketCoins = await getCoins({
-      address: signerAddress,
-      coin: ticketCoin.coinType,
+
+    const remainingAmountBN = new BigNumber(inputAmountWithDecimals.toString());
+    const ownedTokens = await getAllTokens({
+      walletAddress: signerAddress,
+      coinType: this.params.memeCoinType,
       provider: this.provider,
     });
+    const tokenObject = getMergedToken({
+      remainingAmountBN,
+      availableTokens: ownedTokens,
+      tokenPolicyObjectId,
+      memeCoinType: this.params.memeCoinType,
+      transaction: tx,
+    });
+
     const [memecoin, lpcoin] = unstake(tx, [LONG_SUI_COIN_TYPE, this.params.memeCoinType, this.params.lpCoinType], {
       clock: SUI_CLOCK_OBJECT_ID,
-      coinX: ticketCoinObject,
+      coinX: tokenObject,
       policy: tokenPolicyObjectId,
       stakingPool: this.params.address,
     });
@@ -95,17 +110,27 @@ export class StakingPool {
     return { tx };
   }
 
-  public async getTokenPolicyCapByPoolId({ poolId }: { poolId: string }) {
-    const poolDynamicFields = await getAllDynamicFields({ parentObjectId: poolId, provider: this.provider });
+  /**
+   * Retrieves the Token Policy Cap Object ID by the pool ID.
+   * @param {{ poolId: string }} param0 - Object containing the pool ID.
+   * @return {Promise<string>} The Token Policy Cap Object ID associated with the pool.
+   * @throws Will throw an error if no token policy cap object is found or if
+   * there are multiple with no clear resolution.
+   */
+  public async getTokenPolicyCap() {
+    const poolDynamicFields = await getAllDynamicFields({
+      parentObjectId: this.params.address,
+      provider: this.provider,
+    });
     const tokenPolicyCapList = poolDynamicFields.filter((el) => el.objectType.includes("0x2::token::TokenPolicyCap"));
 
     if (tokenPolicyCapList.length === 0) {
-      throw new Error(`[getTokenPolicyCapByPoolId] No token policy cap found for the pool ${poolId}`);
+      throw new Error(`[getTokenPolicyCapByPoolId] No token policy cap found for the pool ${this.params.address}`);
     }
 
     if (tokenPolicyCapList.length > 1) {
       console.warn(
-        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${poolId},
+        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${this.params.address},
         ignoring the rest except first`,
         tokenPolicyCapList,
       );
@@ -118,7 +143,7 @@ export class StakingPool {
   }
 
   public async getTokenPolicy() {
-    const tokenPolicyCap = await this.getTokenPolicyCapByPoolId({ poolId: this.params.address });
+    const tokenPolicyCap = await this.getTokenPolicyCap();
 
     const tokenPolicyCapObjectData = await this.provider.getObject({
       id: tokenPolicyCap,

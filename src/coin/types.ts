@@ -1,7 +1,7 @@
 import { CoinMetadata } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { z } from "zod";
-import { Coin, coinSchema, paginatedResultSchema, Ticket } from "./schemas/coin-schemas";
+import { Coin, coinSchema, paginatedResultSchema } from "./schemas/coin-schemas";
 import { SeedPool, seedPool } from "./schemas/pools-schema";
 
 export type CreateCoinTransactionParams = {
@@ -28,7 +28,6 @@ export interface ICoinManager {
 
 export type CreateCoinResponse = {
   coin: Coin;
-  ticket: Ticket;
 };
 
 export const paginatedCoinResultSchema = () => paginatedResultSchema(coinSchema);
