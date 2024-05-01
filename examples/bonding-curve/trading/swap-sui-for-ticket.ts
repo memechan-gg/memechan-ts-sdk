@@ -10,7 +10,7 @@ export const swapSuiForTicketExample = async () => {
 
   // get random pool
   const pool = pools[0];
-  const inputAmount = "1.3";
+  const inputAmount = "0.2";
   //   const inputAmount = "30000";
 
   const outputAmount = await bondingCurveInstance.getSwapOutputAmountForSuiInput({

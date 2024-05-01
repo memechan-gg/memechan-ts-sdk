@@ -20,7 +20,7 @@ export const swapTicketForSuiExample = async () => {
     bondingCurvePoolObjectId: pool.objectId,
     inputTicketAmount,
     memeCoin: { coinType: pool.memeCoinType },
-    slippagePercentage: 10,
+    slippagePercentage: 0,
   });
 
   console.debug("outputAmount: ", outputAmount);
@@ -31,7 +31,7 @@ export const swapTicketForSuiExample = async () => {
     memeCoin: { coinType: pool.memeCoinType },
     minOutputSuiAmount: outputAmount,
     signerAddress: user,
-    slippagePercentage: 10,
+    slippagePercentage: 0,
   });
 
   // console.debug("swapTxData.tx: ", swapTxData.tx);
