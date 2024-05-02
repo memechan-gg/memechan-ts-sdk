@@ -211,6 +211,10 @@ export class LiveCLMMSingleton {
     return coinOut.txb;
   }
 
+  public async getLpCoinType(): Promise<string> {
+    return (await this.getPool()).lpCoinType;
+  }
+
   public async quoteAddLiquidity(params: QuoteAddLiquidityArgs) {
     const { memeCoinInput, suiCoinInput, slippagePercentage } = params;
     const pool = await this.getPool();
