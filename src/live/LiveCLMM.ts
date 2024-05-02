@@ -17,6 +17,7 @@ import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCo
 import { LONG_SUI_COIN_TYPE } from "../common/sui";
 import { deductSlippage } from "../bonding-pool/utils/deductSlippage";
 import BigNumber from "bignumber.js";
+import { interestPoolCreatedSchema } from "./schemas";
 
 export type LiveCLMMData = {
   poolId: string;
@@ -34,7 +35,7 @@ export type LiveCLMMParams = {
  */
 export class LiveCLMM {
   private static SUI_TEARS_ADDRESS = "0xf7334947a5037552a94cee15fc471dbda71bf24d46c97ee24e1fdac38e26644c";
-  private static CLMM_ADDRESS = "0xc9751e2b4dca6a2b1a0b4879f8add562573830dc91cb8e42f121e168602e9ac9";
+  private static CLMM_ADDRESS = "0x9641311c4442a1464941ed2898b8466820a6313082f271906fb1d0cb3be18c65";
   // TODO: We need to move it outside and store it somewhere across different classes (CLMM, Bonding, Staking)
   // Somewhere in config
   public static MEMECOIN_DECIMALS = "6";
@@ -61,7 +62,7 @@ export class LiveCLMM {
     });
   }
 
-  private async getPool(): Promise<InterestPool> {
+  public async getPool(): Promise<InterestPool> {
     if (this._pool === undefined) {
       this._pool = await this.clamm.getPool(this.data.poolId);
     }
@@ -70,7 +71,9 @@ export class LiveCLMM {
 
   static async fromGoLiveDefaultTx({ txDigest, provider }: { txDigest: string; provider: SuiClient }) {
     const txResult = await provider.getTransactionBlock({ digest: txDigest, options: { showObjectChanges: true } });
-    console.log(txResult.objectChanges);
+    const schema = interestPoolCreatedSchema(LiveCLMM.CLMM_ADDRESS);
+    const createdLivePool = schema.parse(txResult.objectChanges?.find((oc) => schema.safeParse(oc).success));
+    return new LiveCLMM({ data: { poolId: createdLivePool.objectId }, provider });
   }
 
   public async addLiquidity(params: AddLiquidityArgs) {
