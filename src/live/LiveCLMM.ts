@@ -68,7 +68,10 @@ export class LiveCLMM {
     return this._pool;
   }
 
-  static async fromGoLiveDefaultTx({ txDigest, provider }: { txDigest: string; provider: SuiClient }) {}
+  static async fromGoLiveDefaultTx({ txDigest, provider }: { txDigest: string; provider: SuiClient }) {
+    const txResult = await provider.getTransactionBlock({ digest: txDigest, options: { showObjectChanges: true } });
+    console.log(txResult.objectChanges);
+  }
 
   public async addLiquidity(params: AddLiquidityArgs) {
     const tx = new TransactionBlock();
