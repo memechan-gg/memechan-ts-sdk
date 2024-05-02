@@ -211,6 +211,10 @@ export class LiveCLMMSingleton {
     return coinOut.txb;
   }
 
+  public async getLpCoinType(): Promise<string> {
+    return (await this.getPool()).lpCoinType;
+  }
+
   public async quoteAddLiquidity(params: QuoteAddLiquidityArgs) {
     const { memeCoinInput, suiCoinInput, slippagePercentage } = params;
     const pool = await this.getPool();
@@ -234,14 +238,19 @@ export class LiveCLMMSingleton {
 
     const lpCoinSplitAmount = normalizeInputCoinAmount(lpCoinInput, SUI_DECIMALS);
 
-    const coinOut = await this.clamm.quoteRemoveLiquidity({
+    const coinsOut = await this.clamm.quoteRemoveLiquidity({
       amount: lpCoinSplitAmount,
       pool,
     });
 
-    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
-    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
-    return outputAmountRespectingSlippage.toString();
+    const outputAmounts = coinsOut.map((coinOut) => {
+      return new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    });
+
+    const outputAmountsRespectingSlippage = outputAmounts.map((outputAmount) =>
+      deductSlippage(outputAmount, slippagePercentage),
+    );
+    return outputAmountsRespectingSlippage.map((outputAmount) => outputAmount.toString());
   }
 
   public async quoteSwap(params: QuoteSwapArgs) {
