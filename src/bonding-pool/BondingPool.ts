@@ -254,7 +254,7 @@ export class BondingPoolSingleton {
     }));
 
     const stakedLpObjectsByMemeCoinTypeMap = stakedLpObjectList.reduce(
-      (acc: { [ticketCoinType: string]: StakedLpObject[] }, el) => {
+      (acc: { [memeCoinType: string]: StakedLpObject[] }, el) => {
         if (acc[el.memeCoinType]) {
           acc[el.memeCoinType] = [...acc[el.memeCoinType], el];
         } else {
