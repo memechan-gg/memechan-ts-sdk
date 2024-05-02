@@ -25,8 +25,8 @@ import BigNumber from "bignumber.js";
  */
 export class LiveCLMMSingleton {
   private static _instance: LiveCLMMSingleton;
-  private static SUI_TEARS_ADDRESS = "0xf7334947a5037552a94cee15fc471dbda71bf24d46c97ee24e1fdac38e26644c";
-  private static CLMM_ADDRESS = "0xc9751e2b4dca6a2b1a0b4879f8add562573830dc91cb8e42f121e168602e9ac9";
+  private static SUI_TEARS_ADDRESS = "0x7ba65fa88ed4026304b7f95ee86f96f8169170efe84b56d465b4fe305e2486cb";
+  private static CLMM_ADDRESS = "0xb2617585850e4d3d90a92ed20dd58ab49aeb57f08f8cca06b6221dba000eeae3";
   // TODO: We need to move it outside and store it somewhere across different classes (CLMM, Bonding, Staking)
   // Somewhere in config
   public static MEMECOIN_DECIMALS = "6";
