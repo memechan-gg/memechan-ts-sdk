@@ -18,13 +18,21 @@ import { LONG_SUI_COIN_TYPE } from "../common/sui";
 import { deductSlippage } from "../bonding-pool/utils/deductSlippage";
 import BigNumber from "bignumber.js";
 
+export type LiveCLMMData = {
+  poolId: string;
+};
+
+export type LiveCLMMParams = {
+  provider: SuiClient;
+  data: LiveCLMMData;
+};
+
 /**
  * @class LiveCLMMSingleton
  * @implements {LiveCLMMSingleton}
  * @description Singleton class for managing live clmm pool.
  */
-export class LiveCLMMSingleton {
-  private static _instance: LiveCLMMSingleton;
+export class LiveCLMM {
   private static SUI_TEARS_ADDRESS = "0xf7334947a5037552a94cee15fc471dbda71bf24d46c97ee24e1fdac38e26644c";
   private static CLMM_ADDRESS = "0xc9751e2b4dca6a2b1a0b4879f8add562573830dc91cb8e42f121e168602e9ac9";
   // TODO: We need to move it outside and store it somewhere across different classes (CLMM, Bonding, Staking)
@@ -32,10 +40,8 @@ export class LiveCLMMSingleton {
   public static MEMECOIN_DECIMALS = "6";
 
   public clamm: CLAMM;
-  public provider: SuiClient;
-  public suiProviderUrl: string;
-  private _poolId: string;
   private _pool: InterestPool | undefined;
+  public data: LiveCLMMData;
 
   /**
    * Constructs a new instance of the SuiProvider class with the provided SUI provider URL.
@@ -45,39 +51,19 @@ export class LiveCLMMSingleton {
    * @param {string} suiProviderUrl - The URL of the SUI provider.
    * @param {string} poolId - The ID of the pool.
    */
-  private constructor(suiProviderUrl: string, poolId: string) {
-    this.provider = new SuiClient({ url: suiProviderUrl });
-    this.suiProviderUrl = suiProviderUrl;
+  private constructor(private params: LiveCLMMParams) {
+    this.data = params.data;
     this.clamm = new CLAMM({
       network: "mainnet",
-      packageAddress: LiveCLMMSingleton.CLMM_ADDRESS,
-      suiClient: this.provider,
-      suiTearsAddress: LiveCLMMSingleton.SUI_TEARS_ADDRESS,
+      packageAddress: LiveCLMM.CLMM_ADDRESS,
+      suiClient: params.provider,
+      suiTearsAddress: LiveCLMM.SUI_TEARS_ADDRESS,
     });
-    this._poolId = poolId;
-  }
-
-  public static getInstance(suiProviderUrl?: string, poolId?: string): LiveCLMMSingleton {
-    if (!LiveCLMMSingleton._instance) {
-      if (suiProviderUrl === undefined) {
-        throw new Error(
-          "[LiveCLMMSingleton] SUI provider url is required in arguments to create LiveCLMMSingleton instance.",
-        );
-      }
-      if (poolId === undefined) {
-        throw new Error("[LiveCLMMSingleton] Pool id is required in arguments to create LiveCLMMSingleton instance.");
-      }
-
-      const instance = new LiveCLMMSingleton(suiProviderUrl, poolId);
-      LiveCLMMSingleton._instance = instance;
-    }
-
-    return LiveCLMMSingleton._instance;
   }
 
   private async getPool(): Promise<InterestPool> {
     if (this._pool === undefined) {
-      this._pool = await this.clamm.getPool(this._poolId);
+      this._pool = await this.clamm.getPool(this.data.poolId);
     }
 
     return this._pool;
@@ -91,7 +77,7 @@ export class LiveCLMMSingleton {
     const memeCoins = await getCoins({
       address: signerAddress,
       coin: memeCoin.coinType,
-      provider: this.provider,
+      provider: this.params.provider,
     });
 
     const mergedMemeCoin = mergeCoins({
@@ -100,7 +86,7 @@ export class LiveCLMMSingleton {
     }).mergeCoin;
 
     const suiCoinSplitAmount = normalizeInputCoinAmount(suiCoinInput, SUI_DECIMALS);
-    const memeCoinSplitAmount = normalizeInputCoinAmount(memeCoinInput, parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const memeCoinSplitAmount = normalizeInputCoinAmount(memeCoinInput, parseInt(LiveCLMM.MEMECOIN_DECIMALS));
 
     const suiCoinSplitted = tx.splitCoins(tx.gas, [suiCoinSplitAmount]);
     const memeCoinSplitted = tx.splitCoins(mergedMemeCoin, [memeCoinSplitAmount]);
@@ -130,7 +116,7 @@ export class LiveCLMMSingleton {
     const lpCoins = await getCoins({
       address: signerAddress,
       coin: lpCoin.coinType,
-      provider: this.provider,
+      provider: this.params.provider,
     });
 
     const mergedLpCoin = mergeCoins({
@@ -148,7 +134,7 @@ export class LiveCLMMSingleton {
     const minSuiAmountNormalized = normalizeInputCoinAmount(minSuiAmountWithSlippage.toString(), SUI_DECIMALS);
     const minMemeAmountNormalized = normalizeInputCoinAmount(
       minMemeAmountWithSlippage.toString(),
-      +LiveCLMMSingleton.MEMECOIN_DECIMALS,
+      +LiveCLMM.MEMECOIN_DECIMALS,
     );
 
     const minSuiAmount = BigInt(minSuiAmountNormalized);
@@ -173,7 +159,7 @@ export class LiveCLMMSingleton {
 
     const splitAmount = SuiToMeme
       ? normalizeInputCoinAmount(inputAmount, SUI_DECIMALS)
-      : normalizeInputCoinAmount(inputAmount, parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+      : normalizeInputCoinAmount(inputAmount, parseInt(LiveCLMM.MEMECOIN_DECIMALS));
 
     const coinIn = SuiToMeme
       ? tx.splitCoins(tx.gas, [splitAmount])
@@ -182,7 +168,7 @@ export class LiveCLMMSingleton {
             coins: await getCoins({
               address: signerAddress,
               coin: memeCoin.coinType,
-              provider: this.provider,
+              provider: this.params.provider,
             }),
             tx,
           }).mergeCoin,
@@ -192,7 +178,7 @@ export class LiveCLMMSingleton {
     const minOutputWithSlippage = deductSlippage(new BigNumber(minOutputAmount), slippagePercentage);
     const minOutputNormalized = normalizeInputCoinAmount(
       minOutputWithSlippage.toString(),
-      SuiToMeme ? +LiveCLMMSingleton.MEMECOIN_DECIMALS : SUI_DECIMALS,
+      SuiToMeme ? +LiveCLMM.MEMECOIN_DECIMALS : SUI_DECIMALS,
     );
 
     const minOutputBigInt = BigInt(minOutputNormalized);
@@ -216,14 +202,14 @@ export class LiveCLMMSingleton {
     const pool = await this.getPool();
 
     const suiCoinSplitAmount = normalizeInputCoinAmount(suiCoinInput, SUI_DECIMALS);
-    const memeCoinSplitAmount = normalizeInputCoinAmount(memeCoinInput, parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const memeCoinSplitAmount = normalizeInputCoinAmount(memeCoinInput, parseInt(LiveCLMM.MEMECOIN_DECIMALS));
 
     const coinOut = await this.clamm.quoteAddLiquidity({
       amounts: [suiCoinSplitAmount, memeCoinSplitAmount],
       pool,
     });
 
-    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMM.MEMECOIN_DECIMALS));
     const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
     return outputAmountRespectingSlippage.toString();
   }
@@ -239,7 +225,7 @@ export class LiveCLMMSingleton {
       pool,
     });
 
-    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMM.MEMECOIN_DECIMALS));
     const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
     return outputAmountRespectingSlippage.toString();
   }
@@ -250,7 +236,7 @@ export class LiveCLMMSingleton {
 
     const splitAmount = SuiToMeme
       ? normalizeInputCoinAmount(inputAmount, SUI_DECIMALS)
-      : normalizeInputCoinAmount(inputAmount, parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+      : normalizeInputCoinAmount(inputAmount, parseInt(LiveCLMM.MEMECOIN_DECIMALS));
 
     const coinOut = await this.clamm.quoteSwap({
       amount: splitAmount,
@@ -259,7 +245,7 @@ export class LiveCLMMSingleton {
       coinOutType: SuiToMeme ? memeCoin.coinType : LONG_SUI_COIN_TYPE,
     });
 
-    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMM.MEMECOIN_DECIMALS));
     const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
     return outputAmountRespectingSlippage.toString();
   }
