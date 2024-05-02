@@ -65,9 +65,10 @@ export class LiveCLMM {
     if (this._pool === undefined) {
       this._pool = await this.clamm.getPool(this.data.poolId);
     }
-
     return this._pool;
   }
+
+  static async fromGoLiveDefaultTx({ txDigest, provider }: { txDigest: string; provider: SuiClient }) {}
 
   public async addLiquidity(params: AddLiquidityArgs) {
     const tx = new TransactionBlock();
