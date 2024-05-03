@@ -52,7 +52,7 @@ export class LiveCLMM {
    * @param {string} suiProviderUrl - The URL of the SUI provider.
    * @param {string} poolId - The ID of the pool.
    */
-  private constructor(private params: LiveCLMMParams) {
+  constructor(private params: LiveCLMMParams) {
     this.data = params.data;
     this.clamm = new CLAMM({
       network: "mainnet",
