@@ -34,7 +34,6 @@ export const seedPoolRpcResult = z.object({
   objectId: z.string(),
   typename: z.string(),
   boundingCurvePackageId: z.string(),
-  boundingCurvePoolType: z.string(),
   ticketPackageId: z.string(),
   ticketCoinType: z.string(),
   quotePackageId: z.string(),

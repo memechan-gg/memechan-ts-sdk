@@ -41,25 +41,6 @@ export const coinSchema = z.object({
   contractAddress: z.string().nullish(),
 });
 
-export const ticketSchema = z.object({
-  name: z.string(),
-  type: z.string(),
-  associatedCoin: z.string(),
-  decimals: z.number(),
-  objectId: z.string(),
-  objectType: z.string(),
-  treasureCapId: z.string(),
-  metadataObjectId: z.string(),
-  symbol: z.string(),
-  description: z.string(),
-  image: z.string(),
-  creator: z.string(),
-  socialLinks: socialLinks.nullish(),
-  txDigest: z.string(),
-  creationTime: z.number(),
-  contractAddress: z.string().nullish(),
-});
-
 export const queryCoinsRequestParamsSchema = z.object({
   sortBy: coinsSortableColumns,
   status: coinStatus,
@@ -73,4 +54,3 @@ export type SortableColumn = z.infer<typeof coinsSortableColumns>;
 export type QueryCoinsRequestParams = z.infer<typeof queryCoinsRequestParamsSchema>;
 export type CreateCoinRequestBody = z.infer<typeof createCoinRequestBodySchema>;
 export type CoinStatus = z.infer<typeof coinStatus>;
-export type Ticket = z.infer<typeof ticketSchema>;
