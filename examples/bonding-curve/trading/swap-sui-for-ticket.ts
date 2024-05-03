@@ -6,16 +6,13 @@ export const swapSuiForTicketExample = async () => {
   const bondingCurveInstance = BondingPoolSingleton.getInstance(suiProviderUrl);
 
   // get all pools
-  const { pools, poolsByMemeCoinTypeMap } = await bondingCurveInstance.getAllPools();
+  const { pools } = await bondingCurveInstance.getAllPools();
 
   // get random pool
-  const pool =
-    poolsByMemeCoinTypeMap[
-      "0xdb838a0becb92dcf9fd66127136f517f8f6d7a9f973b2344d1ebbd7d2cf2c0fa::meme_02_05_2024::MEME_02_05_2024"
-    ];
-  const inputAmount = "0.5";
+  const pool = pools.find((p) => p.objectId === "0x4b35392bf2f9fdcf44f4a54fcabf7447795a0eb86315806fb7388840cbe8703c");
+  const inputAmount = "1";
   //   const inputAmount = "30000";
-
+  if (!pool) throw new Error("Pool doesn't exists");
   const outputAmount = await bondingCurveInstance.getSwapOutputAmountForSuiInput({
     bondingCurvePoolObjectId: pool.objectId,
     inputAmount,

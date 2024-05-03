@@ -9,17 +9,34 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { LONG_SUI_COIN_TYPE, SHORT_SUI_COIN_TYPE } from "../common/sui";
 import { StakingPoolUnstakeArgs } from "./types";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
-import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
 import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyCapObjectData";
 import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
 import BigNumber from "bignumber.js";
 import { getAllTokens, getMergedToken } from "../common/tokens";
+import { SuiClient } from "@mysten/sui.js/client";
+import { stakingPoolCreatedSchema, stakingPoolDescribeObjectResponse } from "./schemas";
+import { BondingPoolSingleton } from "../bonding-pool/BondingPool";
+import { VestingConfig } from "./VestingConfig";
+import { UserWithdrawals } from "./UserWithdrawals";
+import { FeeState } from "./FeeState";
 
-type StakingPoolParams = {
+type StakingPoolData = {
   address: string;
   memeCoinType: string;
   lpCoinType: string;
+  totalSupply: string;
+  ammPool: string;
+  balanceLp: string;
+  balanceMeme: string;
+  feeState: FeeState;
+  poolAdmin: string;
+  vesting: VestingConfig;
+};
+
+type StakingPoolParams = {
+  data: StakingPoolData;
+  provider: SuiClient;
 };
 
 /**
@@ -30,13 +47,15 @@ export class StakingPool {
 
   public static TICKETCOIN_DECIMALS = "6";
   public static MEMECOIN_DECIMALS = "6";
-  provider = new SuiClient({ url: getFullnodeUrl("mainnet") });
+  public data: StakingPoolData;
 
   /**
    * Create a StakingPool.
    * @param {StakingPoolParams} params - The staking pool parameters.
    */
-  constructor(private params: StakingPoolParams) {}
+  constructor(private params: StakingPoolParams) {
+    this.data = params.data;
+  }
 
   /**
    * Collects fees from the staking pool.
@@ -46,8 +65,8 @@ export class StakingPool {
    * @return {TransactionResult} The result of the collectFees function call
    */
   collectFees(tx: TransactionBlock, params: Omit<CollectFeesArgs, "clock" | "staking_pool">) {
-    return collectFees(tx, [SHORT_SUI_COIN_TYPE, this.params.memeCoinType, this.params.lpCoinType], {
-      stakingPool: this.params.address,
+    return collectFees(tx, [SHORT_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
+      stakingPool: this.data.address,
       pool: params.pool,
       clock: "0x6",
     });
@@ -62,8 +81,8 @@ export class StakingPool {
   withdrawFees(tx: TransactionBlock, signerAddress: string) {
     const [memecoin, lpcoin] = withdrawFees(
       tx,
-      [SHORT_SUI_COIN_TYPE, this.params.memeCoinType, this.params.lpCoinType],
-      this.params.address,
+      [SHORT_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType],
+      this.data.address,
     );
     tx.transferObjects([memecoin], tx.pure(signerAddress));
     tx.transferObjects([lpcoin], tx.pure(signerAddress));
@@ -86,22 +105,22 @@ export class StakingPool {
     const remainingAmountBN = new BigNumber(inputAmountWithDecimals.toString());
     const ownedTokens = await getAllTokens({
       walletAddress: signerAddress,
-      coinType: this.params.memeCoinType,
-      provider: this.provider,
+      coinType: this.data.memeCoinType,
+      provider: this.params.provider,
     });
     const tokenObject = getMergedToken({
       remainingAmountBN,
       availableTokens: ownedTokens,
       tokenPolicyObjectId,
-      memeCoinType: this.params.memeCoinType,
+      memeCoinType: this.data.memeCoinType,
       transaction: tx,
     });
 
-    const [memecoin, lpcoin] = unstake(tx, [LONG_SUI_COIN_TYPE, this.params.memeCoinType, this.params.lpCoinType], {
+    const [memecoin, lpcoin] = unstake(tx, [LONG_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
       clock: SUI_CLOCK_OBJECT_ID,
       coinX: tokenObject,
       policy: tokenPolicyObjectId,
-      stakingPool: this.params.address,
+      stakingPool: this.data.address,
     });
 
     tx.transferObjects([memecoin], tx.pure(signerAddress));
@@ -119,18 +138,18 @@ export class StakingPool {
    */
   public async getTokenPolicyCap() {
     const poolDynamicFields = await getAllDynamicFields({
-      parentObjectId: this.params.address,
-      provider: this.provider,
+      parentObjectId: this.data.address,
+      provider: this.params.provider,
     });
     const tokenPolicyCapList = poolDynamicFields.filter((el) => el.objectType.includes("0x2::token::TokenPolicyCap"));
 
     if (tokenPolicyCapList.length === 0) {
-      throw new Error(`[getTokenPolicyCapByPoolId] No token policy cap found for the pool ${this.params.address}`);
+      throw new Error(`[getTokenPolicyCapByPoolId] No token policy cap found for the pool ${this.data.address}`);
     }
 
     if (tokenPolicyCapList.length > 1) {
       console.warn(
-        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${this.params.address},
+        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${this.data.address},
         ignoring the rest except first`,
         tokenPolicyCapList,
       );
@@ -145,17 +164,84 @@ export class StakingPool {
   public async getTokenPolicy() {
     const tokenPolicyCap = await this.getTokenPolicyCap();
 
-    const tokenPolicyCapObjectData = await this.provider.getObject({
+    const tokenPolicyCapObjectData = await this.params.provider.getObject({
       id: tokenPolicyCap,
       options: { showContent: true, showOwner: true, showType: true },
     });
 
     if (!isTokenPolicyCapObjectData(tokenPolicyCapObjectData)) {
-      throw new Error(`[getTokenPolicyByPoolId] No token policy cap found for the pool ${this.params.address}`);
+      throw new Error(`[getTokenPolicyByPoolId] No token policy cap found for the pool ${this.data.address}`);
     }
 
     const tokenPolicyObjectId = tokenPolicyCapObjectData.data?.content.fields.value.fields.for;
 
     return tokenPolicyObjectId;
+  }
+
+  static async fromObjectId({ objectId, provider }: { objectId: string; provider: SuiClient }) {
+    const object = await provider.getObject({
+      id: objectId,
+      options: {
+        showContent: true,
+        showType: true,
+      },
+    });
+    const matches = object.data?.type?.match(/<[^>]*,\s*([^,>]+),\s*([^,>]+)>/);
+    if (!matches || matches.length < 2) {
+      throw new Error("Invalid object type format.");
+    }
+    const [_, memeCoinType, lpCoinType] = matches;
+    const stakingPoolResponse = stakingPoolDescribeObjectResponse.parse(object.data?.content).fields;
+    const vestingFields = stakingPoolResponse.vesting_config.fields;
+    const vestingConfig = await VestingConfig.fromTableId({
+      id: stakingPoolResponse.vesting_table.fields.id.id,
+      provider,
+      data: {
+        cliffTs: vestingFields.cliff_ts,
+        endTs: vestingFields.end_ts,
+        startTs: vestingFields.start_ts,
+      },
+    });
+    const feeStateFields = stakingPoolResponse.fee_state.fields;
+    const feeState = new FeeState({
+      provider,
+      data: {
+        stakesTotal: feeStateFields.stakes_total,
+        feesSTotal: feeStateFields.fees_s_total,
+        feesMeme: feeStateFields.fees_meme,
+        feesMemeTotal: feeStateFields.fees_meme_total,
+        feesS: feeStateFields.fees_s,
+        userWithdrawalsX: await UserWithdrawals.fromTableId({
+          id: feeStateFields.user_withdrawals_x.fields.id.id,
+          provider,
+        }),
+        userWithdrawalsY: await UserWithdrawals.fromTableId({
+          id: feeStateFields.user_withdrawals_y.fields.id.id,
+          provider,
+        }),
+      },
+    });
+    return new StakingPool({
+      data: {
+        feeState,
+        vesting: vestingConfig,
+        address: object.data!.objectId,
+        ammPool: stakingPoolResponse.amm_pool,
+        poolAdmin: stakingPoolResponse.pool_admin.fields.id.id,
+        totalSupply: stakingPoolResponse.meme_cap.fields.total_supply.fields.value,
+        lpCoinType,
+        memeCoinType,
+        balanceLp: stakingPoolResponse.balance_lp,
+        balanceMeme: stakingPoolResponse.balance_meme,
+      },
+      provider,
+    });
+  }
+
+  static async fromGoLiveDefaultTx({ txDigest, provider }: { txDigest: string; provider: SuiClient }) {
+    const txResult = await provider.getTransactionBlock({ digest: txDigest, options: { showObjectChanges: true } });
+    const schema = stakingPoolCreatedSchema(BondingPoolSingleton.PACKAGE_OBJECT_ID);
+    const createdStakedPool = schema.parse(txResult.objectChanges?.find((oc) => schema.safeParse(oc).success));
+    return StakingPool.fromObjectId({ objectId: createdStakedPool.objectId, provider });
   }
 }
