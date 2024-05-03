@@ -15,9 +15,9 @@ export const CreateCoin: React.FC = () => {
       url: "https://i.seadn.io/gae/2hDpuTi-0AMKvoZJGd-yKWvK4tKdQr_kLIpB_qSeMau2TNGCNidAosMEvrEXFO9G6tmlFlPQplpwiqirgrIPWnCKMvElaYgI-HiVvXc?auto=format&dpr=1&w=1000",
     };
 
-    const memeAndTicketCoinTx = await BondingPoolSingleton.createMemeAndTicketCoins(params);
+    const memeCoinTx = await BondingPoolSingleton.createMemeCoin(params);
     const { digest, objectChanges } = await wallet.signAndExecuteTransactionBlock({
-      transactionBlock: memeAndTicketCoinTx,
+      transactionBlock: memeCoinTx,
       requestType: "WaitForLocalExecution",
       options: {
         showBalanceChanges: true,
@@ -29,9 +29,19 @@ export const CreateCoin: React.FC = () => {
     });
     console.log("Coin&Ticket creation success");
 
-    const { memeCoin, ticketCoin } = parseTransactionDataCoinAndTicketCreation(objectChanges);
-    console.log(memeCoin, ticketCoin);
-    const createBondingCurvePoolTx = BondingPoolSingleton.createBondingCurvePool({ memeCoin, ticketCoin });
+    const { memeCoin } = parseTransactionDataCoinAndTicketCreation(objectChanges);
+    console.log(memeCoin);
+    const THRESHOLD_FOR_GOING_LIVE_IN_SUI = BigInt(1);
+    const THRESHOLD_FOR_SELL_TICKET_IN_BONDING_CURVE_MS = BigInt(1 * 60 * 1000);
+
+    const bondingCurveCustomParams = BondingPoolSingleton.getBondingCurveCustomParams({
+      gammaS: THRESHOLD_FOR_GOING_LIVE_IN_SUI,
+      sellDelayMs: THRESHOLD_FOR_SELL_TICKET_IN_BONDING_CURVE_MS,
+    });
+    const createBondingCurvePoolTx = BondingPoolSingleton.createBondingCurvePool({
+      memeCoin,
+      bondingCurveCustomParams,
+    });
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
