@@ -9,14 +9,14 @@ importers:
   .:
     dependencies:
       '@avernikoz/memechan-ts-interface':
-        specifier: ^1.0.9
-        version: 1.0.9(svelte@4.2.15)(typescript@5.4.5)
+        specifier: ^1.0.18
+        version: 1.0.18(svelte@4.2.15)(typescript@5.4.5)
       '@aws-crypto/sha256-browser':
         specifier: ^5.2.0
         version: 5.2.0
       '@interest-protocol/clamm-sdk':
-        specifier: 3.2.0-alpha
-        version: 3.2.0-alpha(svelte@4.2.15)(typescript@5.4.5)
+        specifier: 4.1.0-alpha
+        version: 4.1.0-alpha(svelte@4.2.15)(typescript@5.4.5)
       '@mysten/sui.js':
         specifier: ^0.51.2
         version: 0.51.2(svelte@4.2.15)(typescript@5.4.5)
@@ -116,8 +116,8 @@ packages:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
 
-  '@avernikoz/memechan-ts-interface@1.0.9':
-    resolution: {integrity: sha512-PqjdmFD/dDHD7lnNXbi3mb1TVoBBsDkcJUNcU2UarzBXMLT2uvk54NMIodM3N77SkJ+CuNK/X6jLukD7PLMmUw==}
+  '@avernikoz/memechan-ts-interface@1.0.18':
+    resolution: {integrity: sha512-J6GIEc+X52VufefcCKNneE7Fb2m9NbCMD0rOJx63+Cl2aT5C8AVfISYSpba+7QvKsR6TvLoaB3IOXQ1uHolcWA==}
 
   '@aws-crypto/sha256-browser@5.2.0':
     resolution: {integrity: sha512-AXfN/lGotSQwu6HNcEsIASo7kWXZ5HYWvfOmSNKDsEqC4OashTp8alTmaz+F7TC2L083SFv5RdB+qU3Vs1kZqw==}
@@ -490,8 +490,8 @@ packages:
   '@humanwhocodes/object-schema@2.0.3':
     resolution: {integrity: sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==}
 
-  '@interest-protocol/clamm-sdk@3.2.0-alpha':
-    resolution: {integrity: sha512-jMdEOPsYz/qtGZyuM7cLsybpShCSP4J/nlSVkMHhrBp1GYax5T7oXXst8rOW6RMb50xmJLDYBXTo4SzE1bE4rg==}
+  '@interest-protocol/clamm-sdk@4.1.0-alpha':
+    resolution: {integrity: sha512-rUxJMxJM5y6D0TuG74NJ70ejxV9KmldTHvdlZQ1FvCttQwEvo6G4UncjueGkNBO8Ons6b5VDrlcJn/j44hyDMw==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -2525,7 +2525,7 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
 
-  '@avernikoz/memechan-ts-interface@1.0.9(svelte@4.2.15)(typescript@5.4.5)':
+  '@avernikoz/memechan-ts-interface@1.0.18(svelte@4.2.15)(typescript@5.4.5)':
     dependencies:
       '@mysten/bcs': 0.11.1
       '@mysten/sui.js': 0.51.2(svelte@4.2.15)(typescript@5.4.5)
@@ -2795,7 +2795,7 @@ snapshots:
 
   '@humanwhocodes/object-schema@2.0.3': {}
 
-  '@interest-protocol/clamm-sdk@3.2.0-alpha(svelte@4.2.15)(typescript@5.4.5)':
+  '@interest-protocol/clamm-sdk@4.1.0-alpha(svelte@4.2.15)(typescript@5.4.5)':
     dependencies:
       '@mysten/sui.js': 0.51.2(svelte@4.2.15)(typescript@5.4.5)
       ramda: 0.29.1

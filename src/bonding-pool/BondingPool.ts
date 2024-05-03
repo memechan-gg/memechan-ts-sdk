@@ -82,11 +82,14 @@ export class BondingPoolSingleton {
   public static TICKET_COIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
 
   // TODO: Change these values
-  public static LP_COIN_MODULE_PREFIX = "lp_coin";
-  public static LP_COIN_NAME_PREFIX = "LpCoin";
-  public static LP_COIN_DESCRIPTION_PREFIX = "Lp coin for CLMM pool";
+  public static AMM_LP_COIN_DECIMALS = "9";
+  public static AMM_LP_COIN_MODULE_PREFIX = "lp_coin";
+  public static AMM_LP_COIN_NAME_PREFIX = "LpCoin";
+  public static AMM_LP_COIN_DESCRIPTION_PREFIX = "Lp coin for CLMM pool";
+  public static AMM_LP_COIN_MINT_AMOUNT = "0";
+
   // TODO: Re-visit this
-  public static LP_COIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
+  public static STAKED_LP_COIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
 
   public static SWAP_GAS_BUDGET = 50_000_000;
 
@@ -244,14 +247,14 @@ export class BondingPoolSingleton {
       // Note: we relay that memecoin decimals and ticket coin decimals are always equal,
       // otherwise we'll need to fetch meta to get decimals for each ticket
       balanceWithDecimals: new BigNumber(el.data.content.fields.balance)
-        .dividedBy(10 ** +BondingPoolSingleton.LP_COIN_DECIMALS)
+        .dividedBy(10 ** +BondingPoolSingleton.STAKED_LP_COIN_DECIMALS)
         .toString(),
       untilTimestamp: +el.data.content.fields.until_timestamp,
       memeCoinType: extractCoinType(el.data.type),
     }));
 
     const stakedLpObjectsByMemeCoinTypeMap = stakedLpObjectList.reduce(
-      (acc: { [ticketCoinType: string]: StakedLpObject[] }, el) => {
+      (acc: { [memeCoinType: string]: StakedLpObject[] }, el) => {
         if (acc[el.memeCoinType]) {
           acc[el.memeCoinType] = [...acc[el.memeCoinType], el];
         } else {
@@ -308,7 +311,7 @@ export class BondingPoolSingleton {
 
     return {
       amount: aggregatedAmount.toString(),
-      amountWithDecimals: aggregatedAmount.div(10 ** +BondingPoolSingleton.LP_COIN_DECIMALS),
+      amountWithDecimals: aggregatedAmount.div(10 ** +BondingPoolSingleton.STAKED_LP_COIN_DECIMALS),
       tickets: availableTickets,
     };
   }
@@ -661,13 +664,13 @@ export class BondingPoolSingleton {
   public static getLpCoinCreateParams({ signer }: { signer: string }): CreateCoinTransactionParams {
     return {
       // TODO: Change all these values to make it look as a lp coin
-      decimals: BondingPoolSingleton.LP_COIN_DECIMALS,
-      description: BondingPoolSingleton.LP_COIN_DESCRIPTION_PREFIX,
+      decimals: BondingPoolSingleton.AMM_LP_COIN_DECIMALS,
+      description: BondingPoolSingleton.AMM_LP_COIN_DESCRIPTION_PREFIX,
       fixedSupply: false,
-      mintAmount: "900000000",
-      name: BondingPoolSingleton.LP_COIN_NAME_PREFIX,
+      mintAmount: BondingPoolSingleton.AMM_LP_COIN_MINT_AMOUNT,
+      name: BondingPoolSingleton.AMM_LP_COIN_NAME_PREFIX,
       signerAddress: signer,
-      symbol: BondingPoolSingleton.LP_COIN_MODULE_PREFIX,
+      symbol: BondingPoolSingleton.AMM_LP_COIN_MODULE_PREFIX,
       // TODO: Add LP COIN URL
       url: "",
     };

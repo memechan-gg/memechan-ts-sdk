@@ -25,8 +25,8 @@ import BigNumber from "bignumber.js";
  */
 export class LiveCLMMSingleton {
   private static _instance: LiveCLMMSingleton;
-  private static SUI_TEARS_ADDRESS = "0xf7334947a5037552a94cee15fc471dbda71bf24d46c97ee24e1fdac38e26644c";
-  private static CLMM_ADDRESS = "0xc9751e2b4dca6a2b1a0b4879f8add562573830dc91cb8e42f121e168602e9ac9";
+  private static SUI_TEARS_ADDRESS = "0x7ba65fa88ed4026304b7f95ee86f96f8169170efe84b56d465b4fe305e2486cb";
+  private static CLMM_ADDRESS = "0x9641311c4442a1464941ed2898b8466820a6313082f271906fb1d0cb3be18c65";
   // TODO: We need to move it outside and store it somewhere across different classes (CLMM, Bonding, Staking)
   // Somewhere in config
   public static MEMECOIN_DECIMALS = "6";
@@ -211,6 +211,10 @@ export class LiveCLMMSingleton {
     return coinOut.txb;
   }
 
+  public async getLpCoinType(): Promise<string> {
+    return (await this.getPool()).lpCoinType;
+  }
+
   public async quoteAddLiquidity(params: QuoteAddLiquidityArgs) {
     const { memeCoinInput, suiCoinInput, slippagePercentage } = params;
     const pool = await this.getPool();
@@ -234,14 +238,19 @@ export class LiveCLMMSingleton {
 
     const lpCoinSplitAmount = normalizeInputCoinAmount(lpCoinInput, SUI_DECIMALS);
 
-    const coinOut = await this.clamm.quoteRemoveLiquidity({
+    const coinsOut = await this.clamm.quoteRemoveLiquidity({
       amount: lpCoinSplitAmount,
       pool,
     });
 
-    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
-    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
-    return outputAmountRespectingSlippage.toString();
+    const outputAmounts = coinsOut.map((coinOut) => {
+      return new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMMSingleton.MEMECOIN_DECIMALS));
+    });
+
+    const outputAmountsRespectingSlippage = outputAmounts.map((outputAmount) =>
+      deductSlippage(outputAmount, slippagePercentage),
+    );
+    return outputAmountsRespectingSlippage.map((outputAmount) => outputAmount.toString());
   }
 
   public async quoteSwap(params: QuoteSwapArgs) {

@@ -9,8 +9,14 @@ export const initSecondaryMarketExample = async ({ transaction }: { transaction?
   const tx = transaction ?? new TransactionBlock();
 
   const bondingCurveInstance = BondingPoolSingleton.getInstance(suiProviderUrl);
-  const { pools } = await bondingCurveInstance.getAllPools();
-  const [pool] = pools;
+  // get all pools
+  const { pools, poolsByMemeCoinTypeMap } = await bondingCurveInstance.getAllPools();
+
+  // get random pool
+  const pool =
+    poolsByMemeCoinTypeMap[
+      "0xdb838a0becb92dcf9fd66127136f517f8f6d7a9f973b2344d1ebbd7d2cf2c0fa::meme_02_05_2024::MEME_02_05_2024"
+    ];
   const initSecondaryMarketData = await bondingCurveInstance.getInitSecondaryMarketData({ poolId: pool.objectId });
 
   const lpCoinParams = BondingPoolSingleton.getLpCoinCreateParams({ signer: user });
@@ -45,7 +51,9 @@ export const initSecondaryMarketExample = async ({ transaction }: { transaction?
   console.debug("initSecondaryParams: ", initSecondaryParams);
 
   const initSecondaryMarketTx = BondingPoolSingleton.initSecondaryMarket(initSecondaryParams);
-  console.debug("tx.serialize: ", JSON.stringify(JSON.parse(tx.serialize()), null, 2));
+  console.debug("tx.serialize: ", JSON.stringify(JSON.parse(initSecondaryMarketTx.tx.serialize()), null, 2));
+
+  // const res = await provider.devInspectTransactionBlock({ sender: user, transactionBlock: initSecondaryMarketTx.tx });
 
   const res = await provider.signAndExecuteTransactionBlock({
     transactionBlock: initSecondaryMarketTx.tx,
