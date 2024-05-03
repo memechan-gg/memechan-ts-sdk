@@ -1,13 +1,13 @@
-import { keypair, provider, suiProviderUrl, user } from "../common";
+import { keypair, provider, user } from "../common";
 import { StakingPool } from "../../src";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 
 // yarn tsx examples/staking-pool/unstake-from-pool.ts
 export const unstakeFromPool = async () => {
-  const stakingPool = new StakingPool({
-    memeCoinType: "0x5a63a58787c6ebc1faf9741a6ef9292020b2a02278a8d23b15c03938aadb8237::test_token_4am::TEST_TOKEN_4AM",
-    lpCoinType: "",
-    address: "0xa867022657c563d23e34b5d4557605f8347e4a214053e98268411e297efdd1e9",
+  const stakingPool = await StakingPool.fromGoLiveDefaultTx({
+    txDigest: "9nC4RG4ma6mLf9GciXSn2fHi4SPuKrGsieGyqvAc6EY3",
+    provider: new SuiClient({ url: getFullnodeUrl("mainnet") }),
   });
 
   // Input amount that user wants to unstake from the staking pool, ticket coin
