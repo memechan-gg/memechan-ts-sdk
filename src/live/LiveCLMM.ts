@@ -20,10 +20,7 @@ import BigNumber from "bignumber.js";
 import { interestPoolCreatedSchema } from "./schemas";
 
 export type LiveCLMMData = {
-  poolId?: string;
-  memeCoin?: {
-    coinType: string;
-  };
+  poolId: string;
 };
 
 export type LiveCLMMParams = {
@@ -67,23 +64,8 @@ export class LiveCLMM {
 
   public async getPool(): Promise<InterestPool> {
     if (this._pool === undefined) {
-      if (this.data.poolId) {
-        this._pool = await this.clamm.getPool(this.data.poolId);
-      } else if (this.data.memeCoin) {
-        const pools = await this.clamm.getPools({
-          coinTypes: [this.data.memeCoin.coinType],
-        });
-
-        if (pools.pools.length === 0) {
-          throw new Error("No pool found for the meme coin");
-        }
-
-        this._pool = await this.clamm.getPool(pools.pools[0].poolObjectId);
-      } else {
-        throw new Error("No pool found, please provide poolId or memeCoin");
-      }
+      this._pool = await this.clamm.getPool(this.data.poolId);
     }
-
     return this._pool;
   }
 
@@ -254,9 +236,15 @@ export class LiveCLMM {
       pool,
     });
 
-    const outputAmount = new BigNumber(coinsOut.toString()).div(10 ** parseInt(LiveCLMM.MEMECOIN_DECIMALS));
-    const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
-    return outputAmountRespectingSlippage.toString();
+    const outputAmounts = coinsOut.map((coinOut) => {
+      return new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMM.MEMECOIN_DECIMALS));
+    });
+
+    const outputAmountsRespectingSlippage = outputAmounts.map((outputAmount) =>
+      deductSlippage(outputAmount, slippagePercentage),
+    );
+
+    outputAmountsRespectingSlippage.map((outputAmount) => outputAmount.toString());
   }
 
   public async quoteSwap(params: QuoteSwapArgs) {
