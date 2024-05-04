@@ -20,7 +20,10 @@ import BigNumber from "bignumber.js";
 import { interestPoolCreatedSchema } from "./schemas";
 
 export type LiveCLMMData = {
-  poolId: string;
+  poolId?: string;
+  memeCoin?: {
+    coinType: string;
+  };
 };
 
 export type LiveCLMMParams = {
@@ -64,8 +67,23 @@ export class LiveCLMM {
 
   public async getPool(): Promise<InterestPool> {
     if (this._pool === undefined) {
-      this._pool = await this.clamm.getPool(this.data.poolId);
+      if (this.data.poolId) {
+        this._pool = await this.clamm.getPool(this.data.poolId);
+      } else if (this.data.memeCoin) {
+        const pools = await this.clamm.getPools({
+          coinTypes: [this.data.memeCoin.coinType],
+        });
+
+        if (pools.pools.length === 0) {
+          throw new Error("No pool found for the meme coin");
+        }
+
+        this._pool = await this.clamm.getPool(pools.pools[0].poolObjectId);
+      } else {
+        throw new Error("No pool found, please provide poolId or memeCoin");
+      }
     }
+
     return this._pool;
   }
 
