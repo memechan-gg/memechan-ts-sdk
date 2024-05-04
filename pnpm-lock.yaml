@@ -15,8 +15,8 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0
       '@interest-protocol/clamm-sdk':
-        specifier: 4.1.0-alpha
-        version: 4.1.0-alpha(svelte@4.2.15)(typescript@5.4.5)
+        specifier: 4.3.1-alpha
+        version: 4.3.1-alpha(svelte@4.2.15)(typescript@5.4.5)
       '@mysten/sui.js':
         specifier: ^0.51.2
         version: 0.51.2(svelte@4.2.15)(typescript@5.4.5)
@@ -490,8 +490,8 @@ packages:
   '@humanwhocodes/object-schema@2.0.3':
     resolution: {integrity: sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==}
 
-  '@interest-protocol/clamm-sdk@4.1.0-alpha':
-    resolution: {integrity: sha512-rUxJMxJM5y6D0TuG74NJ70ejxV9KmldTHvdlZQ1FvCttQwEvo6G4UncjueGkNBO8Ons6b5VDrlcJn/j44hyDMw==}
+  '@interest-protocol/clamm-sdk@4.3.1-alpha':
+    resolution: {integrity: sha512-XgAO2Cjz7FzzMDq+tB6bn+0eHD6KtE231Fk42xDJibN7G1C7PaRmfWJaWCb+p6hECLbxEAWHa1WjCuV52+g/Tg==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -2795,7 +2795,7 @@ snapshots:
 
   '@humanwhocodes/object-schema@2.0.3': {}
 
-  '@interest-protocol/clamm-sdk@4.1.0-alpha(svelte@4.2.15)(typescript@5.4.5)':
+  '@interest-protocol/clamm-sdk@4.3.1-alpha(svelte@4.2.15)(typescript@5.4.5)':
     dependencies:
       '@mysten/sui.js': 0.51.2(svelte@4.2.15)(typescript@5.4.5)
       ramda: 0.29.1
