@@ -34,7 +34,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
-    "@avernikoz/memechan-ts-interface": "^1.0.18",
+    "@avernikoz/memechan-ts-interface": "^1.0.21",
     "@aws-crypto/sha256-browser": "^5.2.0",
     "@interest-protocol/clamm-sdk": "4.3.1-alpha",
     "@mysten/sui.js": "^0.51.2",
