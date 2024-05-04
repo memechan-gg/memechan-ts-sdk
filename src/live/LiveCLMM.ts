@@ -244,7 +244,7 @@ export class LiveCLMM {
       deductSlippage(outputAmount, slippagePercentage),
     );
 
-    outputAmountsRespectingSlippage.map((outputAmount) => outputAmount.toString());
+    return outputAmountsRespectingSlippage.map((outputAmount) => outputAmount.toString());
   }
 
   public async quoteSwap(params: QuoteSwapArgs) {
