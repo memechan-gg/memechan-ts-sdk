@@ -23,11 +23,4 @@ describe("PoolService", () => {
       seedPool.parse(pool);
     }
   });
-
-  test("Get a pool for a specific ticket", async () => {
-    if (sp) {
-      const pool = await api.getSeedPoolByTicketType(sp.ticketCoinType);
-      seedPool.parse(pool);
-    }
-  });
 });

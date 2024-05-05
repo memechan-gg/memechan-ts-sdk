@@ -21,8 +21,11 @@ interface VestingConfigParams {
 
 export class VestingConfig {
   public data: VestingData;
+  public table: VestingTable;
+
   constructor(private config: VestingConfigParams) {
     this.data = config.data;
+    this.table = config.table;
   }
 
   static async fromTableId(params: { id: string } & Omit<VestingConfigParams, "table">) {
