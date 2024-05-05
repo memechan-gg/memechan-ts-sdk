@@ -9,6 +9,7 @@ import {
   quoteBuyMeme,
   quoteSellMeme,
   sellMeme,
+  accountingLen,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 
 import { SuiClient } from "@mysten/sui.js/client";
@@ -729,5 +730,39 @@ export class BondingPoolSingleton {
       memeCoinType: pool.memeCoinType,
       suiMetadataObject: BondingPoolSingleton.SUI_METADATA_OBJECT_ID,
     };
+  }
+
+  public async getUniqHoldersOfStakedLp({
+    transaction,
+    memeCoin,
+    bondingCurvePoolObjectId,
+  }: {
+    transaction?: TransactionBlock;
+    memeCoin: { coinType: string };
+    bondingCurvePoolObjectId: string;
+  }) {
+    const tx = transaction ?? new TransactionBlock();
+
+    // Please note, mutation of `tx` happening below
+    accountingLen(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], bondingCurvePoolObjectId);
+
+    const res = await this.provider.devInspectTransactionBlock({
+      sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
+      transactionBlock: tx,
+    });
+
+    if (!res.results) {
+      throw new Error("No results found for simulation of getUniqHoldersOfStakedLp");
+    }
+
+    const returnValues = res.results[0].returnValues;
+    if (!returnValues) {
+      throw new Error("Return values are undefined");
+    }
+
+    const rawAmountBytes = returnValues[0][0];
+    const decoded = bcs.de("u64", new Uint8Array(rawAmountBytes));
+
+    return decoded.toString();
   }
 }
