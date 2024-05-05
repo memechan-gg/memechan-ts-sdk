@@ -3,6 +3,7 @@ import { IAMCredentials } from "../auth/types";
 import { BE_REGION } from "../constants";
 import { HttpRequest } from "@smithy/protocol-http";
 import { SignatureV4 } from "@smithy/signature-v4";
+import { createSignedFetcher } from "aws-sigv4-fetch";
 
 export const jsonFetch = async (
   input: string | URL | globalThis.Request,
@@ -14,8 +15,12 @@ export const jsonFetch = async (
   }
   const r = await fetch(input, { ...init, body });
   if (!r.ok) {
-    const body = await r.json();
-    throw new Error(JSON.stringify({ body, status: r.statusText }));
+    const body = await r.text();
+    try {
+      throw new Error(JSON.stringify({ body, status: r.statusText }));
+    } catch (e) {
+      throw new Error(body);
+    }
   }
   return r.json();
 };
@@ -27,39 +32,22 @@ export const signedJsonFetch = async (
     body?: unknown;
   },
 ) => {
-  const service = "execute-api";
   const { method, body } = init || {};
-  const parsedUrl = new URL(input);
-  const query: Record<string, string> = {};
-  for (const [key, value] of parsedUrl.searchParams.entries()) {
-    query[key] = value;
+  const signedFetch = createSignedFetcher({ service: "execute-api", region: BE_REGION, credentials });
+  const r = await signedFetch(input, {
+    method,
+    body: body ? JSON.stringify(body) : undefined,
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!r.ok) {
+    const body = await r.text();
+    try {
+      throw new Error(JSON.stringify({ body, status: r.statusText }));
+    } catch (e) {
+      throw new Error(body);
+    }
   }
-  const request = new HttpRequest({
-    method: method?.toUpperCase(),
-    query,
-    headers: {
-      "Content-Type": "application/json",
-      Host: parsedUrl.hostname,
-    },
-    hostname: parsedUrl.hostname,
-    path: parsedUrl.pathname,
-    body,
-  });
-
-  const signer = new SignatureV4({
-    region: BE_REGION,
-    credentials,
-    service,
-    sha256: Sha256,
-  });
-
-  const signedRequest = await signer.sign(request);
-  const queryParams = Object.keys(query).length > 0 ? "?" + parsedUrl.searchParams.toString() : "";
-  return jsonFetch(`https://${signedRequest.hostname}${signedRequest.path}${queryParams}`, {
-    method: signedRequest.method,
-    headers: signedRequest.headers,
-    body: signedRequest.body,
-  });
+  return r.json();
 };
 
 export const unsignedMultipartRequest = async (input: string, file: File) => {
