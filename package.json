@@ -36,7 +36,7 @@
   "dependencies": {
     "@avernikoz/memechan-ts-interface": "^1.0.24",
     "@aws-crypto/sha256-browser": "^5.2.0",
-    "@interest-protocol/clamm-sdk": "4.3.1-alpha",
+    "@interest-protocol/clamm-sdk": "5.1.0-alpha",
     "@mysten/sui.js": "^0.51.2",
     "aws-sigv4-fetch": "^3.1.0",
     "bignumber.js": "^9.1.2",
