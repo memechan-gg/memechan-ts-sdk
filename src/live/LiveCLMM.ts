@@ -217,7 +217,7 @@ export class LiveCLMM {
 
     const minOutputBigInt = BigInt(minOutputNormalized);
 
-    const coinOut = await this.clamm.swap({
+    const { coinOut, txb } = await this.clamm.swap({
       coinIn,
       pool,
       txb: tx,
@@ -226,9 +226,9 @@ export class LiveCLMM {
       minAmount: minOutputBigInt,
     });
 
-    tx.transferObjects(coinOut.coinOut, signerAddress);
+    txb.transferObjects([coinOut], txb.pure(signerAddress));
 
-    return coinOut.txb;
+    return txb;
   }
 
   public async getLpCoinType(): Promise<string> {
@@ -289,7 +289,9 @@ export class LiveCLMM {
       coinOutType: SuiToMeme ? memeCoin.coinType : LONG_SUI_COIN_TYPE,
     });
 
-    const outputAmount = new BigNumber(amount.toString()).div(10 ** parseInt(LiveCLMM.MEMECOIN_DECIMALS));
+    const outputAmount = new BigNumber(amount.toString()).div(
+      10 ** parseInt(SuiToMeme ? LiveCLMM.MEMECOIN_DECIMALS : SUI_DECIMALS.toString()),
+    );
     const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
     return outputAmountRespectingSlippage.toString();
   }
@@ -380,7 +382,7 @@ export class LiveCLMM {
 
     const suiPrice = await CoinManagerSingleton.getCoinPrice(LONG_SUI_COIN_TYPE);
 
-    const memePriceInSui = new BigNumber(1).div(memeAmount).toFixed(SUI_DECIMALS);
+    const memePriceInSui = new BigNumber(1).div(memeAmount).toString();
     const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
 
     return { priceInSui: memePriceInSui, priceInUsd: memePriceInUsd };
