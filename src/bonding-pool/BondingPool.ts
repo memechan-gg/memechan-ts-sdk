@@ -81,6 +81,7 @@ export class BondingPoolSingleton {
   public static MEMECOIN_DECIMALS = "6";
   public static MEMECOIN_MINT_AMOUNT = "0";
   public static MEMECOIN_FIXED_SUPPLY = false;
+  public static MEMECOIN_MINT_AMOUNT_FROM_CONTRACT = 900_000_000;
 
   public static TICKET_COIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
 
