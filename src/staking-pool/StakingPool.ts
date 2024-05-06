@@ -1,4 +1,5 @@
 import {
+  availableAmountToUnstake,
   collectFees,
   CollectFeesArgs,
   getFees,
@@ -49,7 +50,7 @@ type StakingPoolParams = {
  * Class representing a staking pool.
  */
 export class StakingPool {
-  public static SIMULATION_ACCOUNT_ADDRESS = "0xac5bceec1b789ff840d7d4e6ce4ce61c90d190a7f8c4f4ddf0bff6ee2413c33c";
+  public static SIMULATION_ACCOUNT_ADDRESS = BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS;
 
   public static TICKETCOIN_DECIMALS = BondingPoolSingleton.TICKET_COIN_DECIMALS;
   public static MEMECOIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
@@ -98,8 +99,10 @@ export class StakingPool {
   // eslint-disable-next-line require-jsdoc
   public async getAvailableFeesToWithdraw({
     transaction,
+    owner,
   }: {
     transaction?: TransactionBlock;
+    owner: string;
   }): Promise<{ availableFees: { memeAmount: string; suiAmount: string } }> {
     const tx = transaction ?? new TransactionBlock();
 
@@ -111,7 +114,7 @@ export class StakingPool {
     );
 
     const res = await this.params.provider.devInspectTransactionBlock({
-      sender: StakingPool.SIMULATION_ACCOUNT_ADDRESS,
+      sender: owner,
       transactionBlock: tx,
     });
 
@@ -144,12 +147,49 @@ export class StakingPool {
   }
 
   // eslint-disable-next-line require-jsdoc
-  public async getAvailableAmountToClaim({
+  public async getAvailableAmountToUnstake({
     transaction,
+    owner,
   }: {
     transaction?: TransactionBlock;
-  }): Promise<{ availableFees: { memeAmount: string; suiAmount: string } }> {
-    return { availableFees: { memeAmount: "0", suiAmount: "0" } };
+    owner: string;
+  }): Promise<{ availableMemeAmountToUnstake: string }> {
+    const tx = transaction ?? new TransactionBlock();
+
+    console.debug("this.params.data.address: ", this.params.data.address);
+
+    // Please note, mutation of `tx` happening below
+    availableAmountToUnstake(tx, [LONG_SUI_COIN_TYPE, this.params.data.memeCoinType, this.params.data.lpCoinType], {
+      stakingPool: this.params.data.address,
+      clock: SUI_CLOCK_OBJECT_ID,
+    });
+
+    const res = await this.params.provider.devInspectTransactionBlock({
+      sender: owner,
+      transactionBlock: tx,
+    });
+
+    console.debug("res:", res);
+
+    if (!res.results) {
+      throw new Error("[getAvailableAmountToUnstake] No results found for simulation");
+    }
+
+    const returnValues = res.results[0].returnValues;
+    if (!returnValues) {
+      throw new Error("[getAvailableAmountToUnstake] Return values are undefined");
+    }
+
+    const memeRawAmountBytes = returnValues[0][0];
+
+    // Meme
+    const decodedMeme = bcs.de("u64", new Uint8Array(memeRawAmountBytes));
+    const outputRawMeme = decodedMeme;
+    const outputAmountMeme = new BigNumber(outputRawMeme).div(10 ** +StakingPool.MEMECOIN_DECIMALS);
+
+    const availableMemeAmountToUnstake = outputAmountMeme.toString();
+
+    return { availableMemeAmountToUnstake };
   }
 
   // TODO: 1. add the same sing for available tickets to unclaim during the period of live phase
@@ -161,7 +201,7 @@ export class StakingPool {
    * @param {StakingPoolUnstakeArgs} params - The parameters required for unstaking.
    * @return {Promise<{tx: TransactionBlock}>} The transaction block object with the results of the unstake operation.
    */
-  public async unstake(params: StakingPoolUnstakeArgs) {
+  public async getUnstakeTransaction(params: StakingPoolUnstakeArgs) {
     const { inputAmount, signerAddress, transaction } = params;
     const tx = transaction ?? new TransactionBlock();
 
@@ -183,7 +223,7 @@ export class StakingPool {
       transaction: tx,
     });
 
-    const [memecoin, lpcoin] = unstake(tx, [LONG_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
+    const [memecoin, suiCoin] = unstake(tx, [LONG_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
       clock: SUI_CLOCK_OBJECT_ID,
       coinX: tokenObject,
       policy: tokenPolicyObjectId,
@@ -191,7 +231,7 @@ export class StakingPool {
     });
 
     tx.transferObjects([memecoin], tx.pure(signerAddress));
-    tx.transferObjects([lpcoin], tx.pure(signerAddress));
+    tx.transferObjects([suiCoin], tx.pure(signerAddress));
 
     return { tx };
   }

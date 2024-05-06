@@ -49,7 +49,7 @@ export class LiveCLMM {
   private static CLMM_ADDRESS = "0x429dbf2fc849c0b4146db09af38c104ae7a3ed746baf835fa57fee27fa5ff382";
   // TODO: We need to move it outside and store it somewhere across different classes (CLMM, Bonding, Staking)
   // Somewhere in config
-  public static MEMECOIN_DECIMALS = "6";
+  public static MEMECOIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
 
   public clamm: CLAMM;
   private _pool: InterestPool | undefined;
