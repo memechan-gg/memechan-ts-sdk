@@ -11,9 +11,9 @@ export const swapSuiForTicketExample = async () => {
   // get random pool
   const pool =
     poolsByMemeCoinTypeMap[
-      "0xd7436c4c051caf789cc80901a22a97bb59c44fbd0f7f55e2470ac3dec375e8b0::meme_06_05_2024_02::MEME_06_05_2024_02"
+      "0xb09db619ab3cd89355c259660ef4c686b416cd6319332ef41be4dcfd5f4bfe4d::meme_07_05_2024_01::MEME_07_05_2024_01"
     ];
-  const inputAmount = "1.1";
+  const inputAmount = "0.05";
   //   const inputAmount = "30000";
   if (!pool) {
     throw new Error("Pool doesn't exists");
