@@ -70,7 +70,7 @@ export class StakingPool {
    * omitting the clock and staking pool properties which are set internally.
    * @return {TransactionResult} The result of the collectFees function call
    */
-  collectFees(tx: TransactionBlock, params: Omit<CollectFeesArgs, "clock" | "staking_pool">) {
+  public collectFees(tx: TransactionBlock, params: Omit<CollectFeesArgs, "clock" | "staking_pool">) {
     return collectFees(tx, [SHORT_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
       stakingPool: this.data.address,
       pool: params.pool,
@@ -84,7 +84,7 @@ export class StakingPool {
    * @param {string} signerAddress - the wallet address that you are using to withdraw the fees
    * @return {TransactionResult} The result of the withdrawFees function call
    */
-  withdrawFees(tx: TransactionBlock, signerAddress: string) {
+  public withdrawFees(tx: TransactionBlock, signerAddress: string) {
     const [memecoin, lpcoin] = withdrawFees(
       tx,
       [SHORT_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType],
@@ -152,14 +152,18 @@ export class StakingPool {
     return { availableFees: { memeAmount: "0", suiAmount: "0" } };
   }
 
+  // TODO: 1. add the same sing for available tickets to unclaim during the period of live phase
+  // TODO: 2. extend `getAvailableAmountToClaim` in such a way, that it would be based on the input of staked lps coins,
+  // not for the whole amount as it currently is
+
   /**
    * Unstakes assets from the staking pool.
-   * @param {TransactionBlock} tx - The tx parameter
    * @param {StakingPoolUnstakeArgs} params - The parameters required for unstaking.
    * @return {Promise<{tx: TransactionBlock}>} The transaction block object with the results of the unstake operation.
    */
-  public async unstake(tx: TransactionBlock, params: StakingPoolUnstakeArgs) {
-    const { inputAmount, signerAddress } = params;
+  public async unstake(params: StakingPoolUnstakeArgs) {
+    const { inputAmount, signerAddress, transaction } = params;
+    const tx = transaction ?? new TransactionBlock();
 
     const tokenPolicyObjectId = await this.getTokenPolicy();
 
