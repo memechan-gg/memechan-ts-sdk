@@ -1,4 +1,5 @@
 import {
+  availableAmountToUnstake,
   collectFees,
   CollectFeesArgs,
   getFees,
@@ -144,12 +145,43 @@ export class StakingPool {
   }
 
   // eslint-disable-next-line require-jsdoc
-  public async getAvailableAmountToClaim({
+  public async getAvailableAmountToUnstake({
     transaction,
   }: {
     transaction?: TransactionBlock;
-  }): Promise<{ availableFees: { memeAmount: string; suiAmount: string } }> {
-    return { availableFees: { memeAmount: "0", suiAmount: "0" } };
+  }): Promise<{ availableMemeAmountToUnstake: string }> {
+    const tx = transaction ?? new TransactionBlock();
+
+    // Please note, mutation of `tx` happening below
+    availableAmountToUnstake(tx, [LONG_SUI_COIN_TYPE, this.params.data.memeCoinType, this.params.data.lpCoinType], {
+      stakingPool: this.params.data.address,
+      clock: SUI_CLOCK_OBJECT_ID,
+    });
+
+    const res = await this.params.provider.devInspectTransactionBlock({
+      sender: StakingPool.SIMULATION_ACCOUNT_ADDRESS,
+      transactionBlock: tx,
+    });
+
+    if (!res.results) {
+      throw new Error("[getAvailableFeesToWithdraw] No results found for simulation");
+    }
+
+    const returnValues = res.results[0].returnValues;
+    if (!returnValues) {
+      throw new Error("[getAvailableFeesToWithdraw] Return values are undefined");
+    }
+
+    const memeRawAmountBytes = returnValues[0][0];
+
+    // Meme
+    const decodedMeme = bcs.de("u64", new Uint8Array(memeRawAmountBytes));
+    const outputRawMeme = decodedMeme;
+    const outputAmountMeme = new BigNumber(outputRawMeme).div(10 ** +StakingPool.MEMECOIN_DECIMALS);
+
+    const availableMemeAmountToUnstake = outputAmountMeme.toString();
+
+    return { availableMemeAmountToUnstake };
   }
 
   // TODO: 1. add the same sing for available tickets to unclaim during the period of live phase
@@ -183,7 +215,7 @@ export class StakingPool {
       transaction: tx,
     });
 
-    const [memecoin, lpcoin] = unstake(tx, [LONG_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
+    const [memecoin, suiCoin] = unstake(tx, [LONG_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
       clock: SUI_CLOCK_OBJECT_ID,
       coinX: tokenObject,
       policy: tokenPolicyObjectId,
@@ -191,7 +223,7 @@ export class StakingPool {
     });
 
     tx.transferObjects([memecoin], tx.pure(signerAddress));
-    tx.transferObjects([lpcoin], tx.pure(signerAddress));
+    tx.transferObjects([suiCoin], tx.pure(signerAddress));
 
     return { tx };
   }
