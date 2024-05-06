@@ -1,7 +1,7 @@
 import { PoolAPI } from "../../src/coin/PoolApi";
-import { SeedPool, seedPool } from "../../src/coin/schemas/pools-schema";
+import { livePool, SeedPool, seedPool, stakingPool } from "../../src/coin/schemas/pools-schema";
 
-const BE_URL = "https://14r6b4r6kf.execute-api.us-east-1.amazonaws.com/prod";
+const BE_URL = undefined; // "https://14r6b4r6kf.execute-api.us-east-1.amazonaws.com/prod";
 
 const api = new PoolAPI(BE_URL);
 
@@ -21,6 +21,31 @@ describe("PoolService", () => {
     if (sp) {
       const pool = await api.getSeedPoolByCoinType(sp.associatedCoin);
       seedPool.parse(pool);
+    }
+  });
+
+  test("Ensure that the staking pools is returning the staking pools stored into BE", async () => {
+    const poolApi = new PoolAPI(BE_URL);
+    const { result: stakingPools } = await poolApi.getStakingPools();
+    expect(Array.isArray(stakingPools)).toBe(true);
+    for (const parsedResult of stakingPools) {
+      stakingPool.parse(parsedResult);
+    }
+  });
+
+  test("Get a pool for a specific coin", async () => {
+    if (sp) {
+      const pool = await api.getSeedPoolByCoinType(sp.associatedCoin);
+      seedPool.parse(pool);
+    }
+  });
+
+  test("Ensure that the live pools is returning the live pools stored into BE", async () => {
+    const poolApi = new PoolAPI(BE_URL);
+    const { result: livePools } = await poolApi.getLivePools();
+    expect(Array.isArray(livePools)).toBe(true);
+    for (const parsedResult of livePools) {
+      livePool.parse(parsedResult);
     }
   });
 });
