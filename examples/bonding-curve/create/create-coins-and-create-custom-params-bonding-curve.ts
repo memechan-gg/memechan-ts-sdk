@@ -43,7 +43,7 @@ export const createCustomBondingCurveAndCoins = async (params: CreateCoinTransac
     bondingCurveCustomParams: bondingCurveCustomParams,
   });
 
-  await sleep(30000);
+  await sleep(10000);
 
   console.debug(
     " createBondingCurvePoolTx tx.serialize: ",
@@ -67,9 +67,9 @@ export const createCustomBondingCurveAndCoins = async (params: CreateCoinTransac
 };
 
 createCustomBondingCurveAndCoins({
-  description: "04 May 2024",
-  name: "meme04052024",
+  description: "06 May 2024 second",
+  name: "meme0605202402",
   signerAddress: user,
-  symbol: "MEME_04_05_2024",
+  symbol: "MEME_06_05_2024_02",
   url: "",
 });

@@ -9,9 +9,17 @@ export const swapTicketForSuiExample = async () => {
   const { pools, poolsByMemeCoinTypeMap } = await bondingCurveInstance.getAllPools();
 
   // get random pool
-  const pool = pools.find((p) => p.objectId === "0x016240f772a157ba5c1156f1cf282660da1c3e1c22489e770a2292a7a4ab8551");
-  if (!pool) throw new Error("Pool doesn't exists");
-  const inputTicketAmount = "46201166666";
+  const pool =
+    poolsByMemeCoinTypeMap[
+      "0xbbd380a1ac2e03b7b56f429c1abd660a2db16ef019fc6366c1b43dc6b5450979::meme_04_05_2024_01::MEME_04_05_2024_01"
+    ];
+
+  if (!pool) {
+    throw new Error("Pool doesn't exists");
+  }
+
+  // const inputTicketAmount = "848476175.625";
+  const inputTicketAmount = "1";
 
   console.debug("pool: ", pool);
 

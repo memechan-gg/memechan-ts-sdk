@@ -4,7 +4,7 @@ import { parseTransactionDataLpCoinCreation } from "../../src/bonding-pool/utils
 import { keypair, provider, suiProviderUrl, user } from "../common";
 import { sleep } from "../utils/sleep";
 
-// yarn tsx examples/admin/init-secondary-market.ts
+// yarn tsx examples/admin/init-secondary-market-with-custom-params.ts
 export const initSecondaryMarketExample = async ({ transaction }: { transaction?: TransactionBlock } = {}) => {
   const tx = transaction ?? new TransactionBlock();
 
@@ -15,7 +15,7 @@ export const initSecondaryMarketExample = async ({ transaction }: { transaction?
   // get random pool
   const pool =
     poolsByMemeCoinTypeMap[
-      "0x3ae377c0ba6ea223582b693aa9fe283c24ba1feedba7dd308741d223888c53d5::meme_04_05_2024::MEME_04_05_2024"
+      "0xd7436c4c051caf789cc80901a22a97bb59c44fbd0f7f55e2470ac3dec375e8b0::meme_06_05_2024_02::MEME_06_05_2024_02"
     ];
 
   if (!pool) {

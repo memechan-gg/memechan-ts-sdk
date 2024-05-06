@@ -9,8 +9,12 @@ export const isMemecoinReadyToLivePhase = async () => {
   // get random pool
   const pool =
     poolsByMemeCoinTypeMap[
-      "0xdb838a0becb92dcf9fd66127136f517f8f6d7a9f973b2344d1ebbd7d2cf2c0fa::meme_02_05_2024::MEME_02_05_2024"
+      "0xd7436c4c051caf789cc80901a22a97bb59c44fbd0f7f55e2470ac3dec375e8b0::meme_06_05_2024_02::MEME_06_05_2024_02"
     ];
+
+  if (!pool) {
+    throw new Error("Pool doesn't exists");
+  }
 
   console.debug("allPools: ", pools);
   console.debug("poolId: ", pool.objectId);
