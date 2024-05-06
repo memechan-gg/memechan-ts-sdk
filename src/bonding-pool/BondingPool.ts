@@ -2,6 +2,7 @@
 import {
   NewArgs,
   NewDefaultArgs,
+  accounting,
   accountingLen,
   buyMeme,
   isReadyToLaunch,
@@ -34,11 +35,14 @@ import {
   GetBondingCurveCustomParams,
   InitSecondaryMarketCustomParams,
   InitSecondaryMarketParams,
+  ObjectIdsByAddressMapType,
   StakedLpObject,
   SwapParamsForSuiInput,
   SwapParamsForSuiInputAndTicketOutput,
   SwapParamsForTicketInput,
   SwapParamsForTicketInputAndSuiOutput,
+  VestingDataInfo,
+  objectIdsByAddressMapType,
 } from "./types";
 import { deductSlippage } from "./utils/deductSlippage";
 import { extractCoinType } from "./utils/extractCoinType";
@@ -51,6 +55,7 @@ import { isPoolObjectData } from "./utils/isPoolObjectData";
 import { isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
 import { normalizeInputCoinAmount } from "./utils/normalizeInputCoinAmount";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
+import { isVestingDataInfoList } from "./utils/isVestingData";
 
 /**
  * @class BondingPoolSingleton
@@ -754,7 +759,7 @@ export class BondingPoolSingleton {
     };
   }
 
-  public async getUniqHoldersOfStakedLp({
+  public async getUniqHoldersOfStakedLpCount({
     transaction,
     memeCoin,
     bondingCurvePoolObjectId,
@@ -774,18 +779,55 @@ export class BondingPoolSingleton {
     });
 
     if (!res.results) {
-      throw new Error("No results found for simulation of getUniqHoldersOfStakedLp");
+      throw new Error("[getUniqHoldersOfStakedLpCount] No results found for simulation of");
     }
 
     const returnValues = res.results[0].returnValues;
     if (!returnValues) {
-      throw new Error("Return values are undefined");
+      throw new Error("[getUniqHoldersOfStakedLpCount] Return values are undefined");
     }
 
     const rawAmountBytes = returnValues[0][0];
     const decoded: number = bcs.de("u64", new Uint8Array(rawAmountBytes));
 
     return decoded.toString();
+  }
+
+  // TODO: Candidate to move to the BE
+  public async getUniqHoldersOfStakedLp({
+    accountingTableAddress,
+    transaction,
+  }: {
+    transaction?: TransactionBlock;
+    accountingTableAddress: string;
+  }): Promise<VestingDataInfo[]> {
+    const dfs = await getAllDynamicFields({
+      parentObjectId: accountingTableAddress,
+      provider: this.provider,
+    });
+
+    const objectIdsByAddressMap: ObjectIdsByAddressMapType = dfs.reduce((acc: ObjectIdsByAddressMapType, el) => {
+      const address = el.name.value as string;
+      acc[address] = el.objectId;
+
+      return acc;
+    }, {});
+
+    const objectIds = Object.values(objectIdsByAddressMap);
+
+    const objectDataList = await getAllObjects({
+      objectIds: objectIds,
+      provider: this.provider,
+      options: { showContent: true, showDisplay: true },
+    });
+
+    if (!isVestingDataInfoList(objectDataList)) {
+      throw new Error("Wrong shape of vesting data info of bonding curve pools");
+    }
+
+    // TODO: Maybe we should process it a bit, but not now
+
+    return objectDataList;
   }
 
   public async getMemeCoinPrice(memeCoinType: string): Promise<{ priceInSui: string; priceInUsd: string }> {
