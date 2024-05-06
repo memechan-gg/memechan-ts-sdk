@@ -99,8 +99,10 @@ export class StakingPool {
   // eslint-disable-next-line require-jsdoc
   public async getAvailableFeesToWithdraw({
     transaction,
+    owner,
   }: {
     transaction?: TransactionBlock;
+    owner: string;
   }): Promise<{ availableFees: { memeAmount: string; suiAmount: string } }> {
     const tx = transaction ?? new TransactionBlock();
 
@@ -112,7 +114,7 @@ export class StakingPool {
     );
 
     const res = await this.params.provider.devInspectTransactionBlock({
-      sender: StakingPool.SIMULATION_ACCOUNT_ADDRESS,
+      sender: owner,
       transactionBlock: tx,
     });
 
@@ -147,10 +149,14 @@ export class StakingPool {
   // eslint-disable-next-line require-jsdoc
   public async getAvailableAmountToUnstake({
     transaction,
+    owner,
   }: {
     transaction?: TransactionBlock;
+    owner: string;
   }): Promise<{ availableMemeAmountToUnstake: string }> {
     const tx = transaction ?? new TransactionBlock();
+
+    console.debug("this.params.data.address: ", this.params.data.address);
 
     // Please note, mutation of `tx` happening below
     availableAmountToUnstake(tx, [LONG_SUI_COIN_TYPE, this.params.data.memeCoinType, this.params.data.lpCoinType], {
@@ -159,17 +165,19 @@ export class StakingPool {
     });
 
     const res = await this.params.provider.devInspectTransactionBlock({
-      sender: StakingPool.SIMULATION_ACCOUNT_ADDRESS,
+      sender: owner,
       transactionBlock: tx,
     });
 
+    console.debug("res:", res);
+
     if (!res.results) {
-      throw new Error("[getAvailableFeesToWithdraw] No results found for simulation");
+      throw new Error("[getAvailableAmountToUnstake] No results found for simulation");
     }
 
     const returnValues = res.results[0].returnValues;
     if (!returnValues) {
-      throw new Error("[getAvailableFeesToWithdraw] Return values are undefined");
+      throw new Error("[getAvailableAmountToUnstake] Return values are undefined");
     }
 
     const memeRawAmountBytes = returnValues[0][0];
@@ -193,7 +201,7 @@ export class StakingPool {
    * @param {StakingPoolUnstakeArgs} params - The parameters required for unstaking.
    * @return {Promise<{tx: TransactionBlock}>} The transaction block object with the results of the unstake operation.
    */
-  public async unstake(params: StakingPoolUnstakeArgs) {
+  public async getUnstakeTransaction(params: StakingPoolUnstakeArgs) {
     const { inputAmount, signerAddress, transaction } = params;
     const tx = transaction ?? new TransactionBlock();
 
