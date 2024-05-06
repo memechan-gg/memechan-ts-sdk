@@ -38,7 +38,7 @@ export type LiveCLMMParams = {
  */
 export class LiveCLMM {
   private static SUI_TEARS_ADDRESS = "0x7ba65fa88ed4026304b7f95ee86f96f8169170efe84b56d465b4fe305e2486cb";
-  private static CLMM_ADDRESS = "0x9641311c4442a1464941ed2898b8466820a6313082f271906fb1d0cb3be18c65";
+  private static CLMM_ADDRESS = "0x429dbf2fc849c0b4146db09af38c104ae7a3ed746baf835fa57fee27fa5ff382";
   // TODO: We need to move it outside and store it somewhere across different classes (CLMM, Bonding, Staking)
   // Somewhere in config
   public static MEMECOIN_DECIMALS = "6";
@@ -90,6 +90,7 @@ export class LiveCLMM {
   static async fromGoLiveDefaultTx({ txDigest, provider }: { txDigest: string; provider: SuiClient }) {
     const txResult = await provider.getTransactionBlock({ digest: txDigest, options: { showObjectChanges: true } });
     const schema = interestPoolCreatedSchema(LiveCLMM.CLMM_ADDRESS);
+    console.log(LiveCLMM.CLMM_ADDRESS, txResult.objectChanges);
     const createdLivePool = schema.parse(txResult.objectChanges?.find((oc) => schema.safeParse(oc).success));
     return new LiveCLMM({ data: { poolId: createdLivePool.objectId }, provider });
   }
