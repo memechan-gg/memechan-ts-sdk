@@ -27,6 +27,7 @@ import { stakingPoolCreatedSchema, stakingPoolDescribeObjectResponse } from "./s
 import { StakingPoolUnstakeArgs } from "./types";
 import { UserWithdrawals } from "./UserWithdrawals";
 import { VestingConfig } from "./VestingConfig";
+import { isStakingPoolTokenPolicyCap } from "../bonding-pool/utils/isStakingPoolTokenCap";
 
 type StakingPoolData = {
   address: string;
@@ -243,29 +244,21 @@ export class StakingPool {
    * @throws Will throw an error if no token policy cap object is found or if
    * there are multiple with no clear resolution.
    */
-  public async getTokenPolicyCap() {
-    const poolDynamicFields = await getAllDynamicFields({
-      parentObjectId: this.data.address,
-      provider: this.params.provider,
-    });
-    const tokenPolicyCapList = poolDynamicFields.filter((el) => el.objectType.includes("0x2::token::TokenPolicyCap"));
+  public async getStakingPoolTokenPolicyCap() {
+    const object = await this.params.provider.getObject({ id: this.data.address, options: { showContent: true } });
+    console.debug("object:", JSON.stringify(object, null, 2));
 
-    if (tokenPolicyCapList.length === 0) {
-      throw new Error(`[getTokenPolicyCapByPoolId] No token policy cap found for the pool ${this.data.address}`);
+    if (!isStakingPoolTokenPolicyCap(object)) {
+      throw new Error(`[getStakingPoolTokenPolicyCap] Wrong shape of token policy cap for ${this.data.address}`);
     }
 
-    if (tokenPolicyCapList.length > 1) {
-      console.warn(
-        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${this.data.address},
-        ignoring the rest except first`,
-        tokenPolicyCapList,
-      );
+    const tokenPolicyCapId = object.data.content.fields.policy_cap.fields.id.id;
+
+    if (!tokenPolicyCapId) {
+      throw new Error(`[getStakingPoolTokenPolicyCap] No found token policy cap for ${this.data.address}`);
     }
 
-    const [tokenPolicyCapObject] = tokenPolicyCapList;
-    const tokenPolicyCapObjectId = tokenPolicyCapObject.objectId;
-
-    return tokenPolicyCapObjectId;
+    return tokenPolicyCapId;
   }
 
   /**
@@ -276,7 +269,7 @@ export class StakingPool {
    * @return {Promise<string>} The token policy object ID.
    */
   public async getTokenPolicy() {
-    const tokenPolicyCap = await this.getTokenPolicyCap();
+    const tokenPolicyCap = await this.getStakingPoolTokenPolicyCap();
 
     const tokenPolicyCapObjectData = await this.params.provider.getObject({
       id: tokenPolicyCap,

@@ -257,3 +257,57 @@ export type InitSecondaryMarketCustomParams = {
 
   transaction?: TransactionBlock;
 } & Omit<GoLiveArgs, "suiMeta" | "treasuryCap" | "clock">;
+
+export type ObjectIdsByAddressMapType = { [address: string]: string };
+
+export interface VestingDataInfo extends SuiObjectResponse {
+  data: {
+    type: string;
+    version: string;
+    objectId: string;
+    digest: string;
+    content: {
+      dataType: "moveObject";
+      type: string;
+      hasPublicTransfer: boolean;
+      fields: {
+        id: {
+          id: string;
+        };
+        name: string;
+        value: {
+          type: string;
+          fields: {
+            notional: string;
+            released: string;
+          };
+        };
+      };
+    };
+  };
+}
+
+export interface StakingPoolTokenPolicyCap extends SuiObjectResponse {
+  data: {
+    version: string;
+    objectId: string;
+    digest: string;
+    content: {
+      dataType: "moveObject";
+      type: string;
+      hasPublicTransfer: boolean;
+      fields: {
+        id: {
+          id: string;
+        };
+        policy_cap: {
+          fields: {
+            id: {
+              id: string;
+            };
+          };
+        };
+      };
+    };
+  };
+}
