@@ -50,7 +50,7 @@ type StakingPoolParams = {
  * Class representing a staking pool.
  */
 export class StakingPool {
-  public static SIMULATION_ACCOUNT_ADDRESS = "0xac5bceec1b789ff840d7d4e6ce4ce61c90d190a7f8c4f4ddf0bff6ee2413c33c";
+  public static SIMULATION_ACCOUNT_ADDRESS = BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS;
 
   public static TICKETCOIN_DECIMALS = BondingPoolSingleton.TICKET_COIN_DECIMALS;
   public static MEMECOIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
