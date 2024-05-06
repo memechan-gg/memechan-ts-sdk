@@ -90,6 +90,24 @@ export class StakingPool {
     return tx;
   }
 
+  // eslint-disable-next-line require-jsdoc
+  public async getAvailableFeesToWithdraw({
+    transaction,
+  }: {
+    transaction?: TransactionBlock;
+  }): Promise<{ availableFees: { memeAmount: string; suiAmount: string } }> {
+    return { availableFees: { memeAmount: "0", suiAmount: "0" } };
+  }
+
+  // eslint-disable-next-line require-jsdoc
+  public async getAvailableAmountToClaim({
+    transaction,
+  }: {
+    transaction?: TransactionBlock;
+  }): Promise<{ availableFees: { memeAmount: string; suiAmount: string } }> {
+    return { availableFees: { memeAmount: "0", suiAmount: "0" } };
+  }
+
   /**
    * Unstakes assets from the staking pool.
    * @param {TransactionBlock} tx - The tx parameter
