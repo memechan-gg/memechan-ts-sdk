@@ -17,12 +17,7 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
 
-import {
-  GoLiveArgs,
-  GoLiveDefaultArgs,
-  goLive,
-  goLiveDefault,
-} from "@avernikoz/memechan-ts-interface/dist/memechan/go-live/functions";
+import { goLive, goLiveDefault } from "@avernikoz/memechan-ts-interface/dist/memechan/go-live/functions";
 import { bcs } from "@mysten/sui.js/bcs";
 import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
 import BigNumber from "bignumber.js";

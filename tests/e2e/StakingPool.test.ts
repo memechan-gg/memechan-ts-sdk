@@ -8,7 +8,7 @@ const BE_URL = undefined; // "https://14r6b4r6kf.execute-api.us-east-1.amazonaws
 describe("Staking Pool", () => {
   test("Ensuring that the staking pool is instanciated properly starting from TX digest", async () => {
     const stakingPool = await StakingPool.fromGoLiveDefaultTx({
-      txDigest: "Au9BYYmaaVqrC9uAXBX2zvzDdNwHt8xBcHy9oNM2qJ3a",
+      txDigest: "3Rd7GgszEpoEHbEtmQwSZmPDEvBKuYu4Pe5xrweRhFbo",
       provider: new SuiClient({ url: getFullnodeUrl("mainnet") }),
     });
     expect(stakingPool.data).toEqual({

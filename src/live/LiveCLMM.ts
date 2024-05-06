@@ -90,7 +90,6 @@ export class LiveCLMM {
   static async fromGoLiveDefaultTx({ txDigest, provider }: { txDigest: string; provider: SuiClient }) {
     const txResult = await provider.getTransactionBlock({ digest: txDigest, options: { showObjectChanges: true } });
     const schema = interestPoolCreatedSchema(LiveCLMM.CLMM_ADDRESS);
-    console.log(LiveCLMM.CLMM_ADDRESS, txResult.objectChanges);
     const createdLivePool = schema.parse(txResult.objectChanges?.find((oc) => schema.safeParse(oc).success));
     return new LiveCLMM({ data: { poolId: createdLivePool.objectId }, provider });
   }
