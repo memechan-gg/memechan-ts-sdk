@@ -1,13 +1,14 @@
 import {
   collectFees,
   CollectFeesArgs,
+  getFees,
   unstake,
   withdrawFees,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/staking-pool/functions";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { LONG_SUI_COIN_TYPE, SHORT_SUI_COIN_TYPE } from "../common/sui";
 import { StakingPoolUnstakeArgs } from "./types";
-import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
+import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
 import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
 import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyCapObjectData";
 import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
@@ -21,6 +22,7 @@ import { UserWithdrawals } from "./UserWithdrawals";
 import { FeeState } from "./FeeState";
 import { chunkedRequests } from "../utils/chunking";
 import { registrySchemaContent } from "../utils/schema";
+import { bcs } from "@mysten/sui.js/bcs";
 
 type StakingPoolData = {
   address: string;
@@ -96,7 +98,46 @@ export class StakingPool {
   }: {
     transaction?: TransactionBlock;
   }): Promise<{ availableFees: { memeAmount: string; suiAmount: string } }> {
-    return { availableFees: { memeAmount: "0", suiAmount: "0" } };
+    const tx = transaction ?? new TransactionBlock();
+
+    // Please note, mutation of `tx` happening below
+    getFees(
+      tx,
+      [LONG_SUI_COIN_TYPE, this.params.data.memeCoinType, this.params.data.lpCoinType],
+      this.params.data.address,
+    );
+
+    const res = await this.params.provider.devInspectTransactionBlock({
+      sender: StakingPool.SIMULATION_ACCOUNT_ADDRESS,
+      transactionBlock: tx,
+    });
+
+    if (!res.results) {
+      throw new Error("[getAvailableFeesToWithdraw] No results found for simulation");
+    }
+
+    const returnValues = res.results[0].returnValues;
+    if (!returnValues) {
+      throw new Error("[getAvailableFeesToWithdraw] Return values are undefined");
+    }
+
+    // console.debug("returnValues");
+    // console.dir(returnValues, { depth: null });
+
+    const memeRawAmountBytes = returnValues[0][0];
+    const suiRawAmountBytes = returnValues[1][0];
+
+    // Meme
+    const decodedMeme = bcs.de("u64", new Uint8Array(memeRawAmountBytes));
+    const outputRawMeme = decodedMeme;
+    const outputAmountMeme = new BigNumber(outputRawMeme).div(10 ** +StakingPool.MEMECOIN_DECIMALS);
+
+    // Sui
+    const decodedSui = bcs.de("u64", new Uint8Array(suiRawAmountBytes));
+    const outputRawSui = decodedSui;
+    const outputAmountSui = new BigNumber(outputRawSui).div(10 ** SUI_DECIMALS);
+
+    return { availableFees: { memeAmount: outputAmountMeme.toString(), suiAmount: outputAmountSui.toString() } };
   }
 
   // eslint-disable-next-line require-jsdoc
