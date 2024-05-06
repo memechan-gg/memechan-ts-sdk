@@ -58,6 +58,7 @@ export const initSecondaryMarketExample = async ({ transaction }: { transaction?
   const initSecondaryMarketTx = BondingPoolSingleton.initSecondaryMarket(initSecondaryParams);
   console.debug("tx.serialize: ", JSON.stringify(JSON.parse(initSecondaryMarketTx.tx.serialize()), null, 2));
 
+  // eslint-disable-next-line max-len
   // const res = await provider.devInspectTransactionBlock({ sender: user, transactionBlock: initSecondaryMarketTx.tx });
 
   const res = await provider.signAndExecuteTransactionBlock({
