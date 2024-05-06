@@ -18,6 +18,13 @@ import { LONG_SUI_COIN_TYPE } from "../common/sui";
 import { deductSlippage } from "../bonding-pool/utils/deductSlippage";
 import BigNumber from "bignumber.js";
 import { interestPoolCreatedSchema } from "./schemas";
+import { BondingPoolSingleton } from "../bonding-pool/BondingPool";
+import { registrySchemaContent } from "../utils/schema";
+import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
+import { isRegistryTableTypenameDynamicFields } from "../bonding-pool/utils/registryTableTypenameUtils";
+import { getAllObjects } from "../bonding-pool/utils/getAllObjects";
+import { isPoolObjectData } from "../bonding-pool/utils/isPoolObjectData";
+import { chunkedRequests } from "../utils/chunking";
 
 export type LiveCLMMData = {
   poolId?: string;
@@ -284,5 +291,79 @@ export class LiveCLMM {
     const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMM.MEMECOIN_DECIMALS));
     const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
     return outputAmountRespectingSlippage.toString();
+  }
+
+  static async fromObjectIds({ objectIds, provider }: { objectIds: string[]; provider: SuiClient }) {
+    const objects = await chunkedRequests(objectIds, (ids) =>
+      provider.multiGetObjects({
+        ids,
+        options: {
+          showContent: true,
+          showType: true,
+        },
+      }),
+    );
+    const results: LiveCLMM[] = [];
+    for (const obj of objects) {
+      results.push(
+        new LiveCLMM({
+          data: {
+            poolId: obj.data?.objectId,
+          },
+          provider,
+        }),
+      );
+    }
+    return results;
+  }
+
+  /**
+   * Queries a registry to retrieve an array of LivePool instances.
+   * @param {SuiClient} provider - The blockchain client provider.
+   * @return {Promise<LiveCLMM[]>} An array of LivePool instances.
+   */
+  static async fromRegistry({ provider }: { provider: SuiClient }): Promise<LiveCLMM[]> {
+    const registry = await provider.getObject({
+      id: BondingPoolSingleton.REGISTRY_OBJECT_ID,
+      options: {
+        showContent: true,
+      },
+    });
+    const registryContent = registrySchemaContent.parse(registry.data?.content);
+    const dfs = await getAllDynamicFields({
+      parentObjectId: registryContent.fields.staking_pools.fields.id.id,
+      provider,
+    });
+
+    if (!isRegistryTableTypenameDynamicFields(dfs)) {
+      throw new Error("Wrong shape of typename dynamic fields of bonding curve registry table");
+    }
+
+    const typenameObjectIdsMap = dfs.reduce(
+      (acc: { [objectId: string]: { objectId: string; registryKeyType: string } }, el) => {
+        acc[el.objectId] = { objectId: el.objectId, registryKeyType: el.name.value.name };
+
+        return acc;
+      },
+      {},
+    );
+
+    const tableTypenameObjectIds = Object.keys(typenameObjectIdsMap);
+
+    const objectDataList = await getAllObjects({
+      objectIds: tableTypenameObjectIds,
+      provider: provider,
+      options: { showContent: true, showDisplay: true },
+    });
+
+    if (!isPoolObjectData(objectDataList)) {
+      throw new Error("Wrong shape of seed pools of bonding curve pools");
+    }
+
+    const poolIds = objectDataList.map((el) => el.data.content.fields.value);
+
+    const livePools = await LiveCLMM.fromObjectIds({ objectIds: poolIds, provider });
+
+    return livePools;
   }
 }
