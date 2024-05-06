@@ -5,24 +5,27 @@ import {
   unstake,
   withdrawFees,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/staking-pool/functions";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { LONG_SUI_COIN_TYPE, SHORT_SUI_COIN_TYPE } from "../common/sui";
-import { StakingPoolUnstakeArgs } from "./types";
-import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
-import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
-import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyCapObjectData";
-import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
-import BigNumber from "bignumber.js";
-import { getAllTokens, getMergedToken } from "../common/tokens";
+import { bcs } from "@mysten/sui.js/bcs";
 import { SuiClient, SuiObjectResponse } from "@mysten/sui.js/client";
-import { stakingPoolCreatedSchema, stakingPoolDescribeObjectResponse } from "./schemas";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
+import BigNumber from "bignumber.js";
 import { BondingPoolSingleton } from "../bonding-pool/BondingPool";
-import { VestingConfig } from "./VestingConfig";
-import { UserWithdrawals } from "./UserWithdrawals";
-import { FeeState } from "./FeeState";
+import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
+import { getAllObjects } from "../bonding-pool/utils/getAllObjects";
+import { isPoolObjectData } from "../bonding-pool/utils/isPoolObjectData";
+import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyCapObjectData";
+import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
+import { isRegistryTableTypenameDynamicFields } from "../bonding-pool/utils/registryTableTypenameUtils";
+import { LONG_SUI_COIN_TYPE, SHORT_SUI_COIN_TYPE } from "../common/sui";
+import { getAllTokens, getMergedToken } from "../common/tokens";
 import { chunkedRequests } from "../utils/chunking";
 import { registrySchemaContent } from "../utils/schema";
-import { bcs } from "@mysten/sui.js/bcs";
+import { FeeState } from "./FeeState";
+import { stakingPoolCreatedSchema, stakingPoolDescribeObjectResponse } from "./schemas";
+import { StakingPoolUnstakeArgs } from "./types";
+import { UserWithdrawals } from "./UserWithdrawals";
+import { VestingConfig } from "./VestingConfig";
 
 type StakingPoolData = {
   address: string;
@@ -350,9 +353,8 @@ export class StakingPool {
 
   /**
    * Queries a registry to retrieve an array of StakingPool instances.
-   * Currently this method is not fully implemented and returns an empty array.
    * @param {SuiClient} provider - The blockchain client provider.
-   * @return {Promise<StakingPool[]>} An array of StakingPool instances (currently empty).
+   * @return {Promise<StakingPool[]>} An array of StakingPool instances.
    */
   static async fromRegistry({ provider }: { provider: SuiClient }): Promise<StakingPool[]> {
     const registry = await provider.getObject({
@@ -367,10 +369,35 @@ export class StakingPool {
       provider,
     });
 
-    // TODO finish when the issue on contract will be solved and some
-    // live and staking pools will be present into registry
-    console.log("dfs", dfs);
+    if (!isRegistryTableTypenameDynamicFields(dfs)) {
+      throw new Error("Wrong shape of typename dynamic fields of bonding curve registry table");
+    }
 
-    return [];
+    const typenameObjectIdsMap = dfs.reduce(
+      (acc: { [objectId: string]: { objectId: string; registryKeyType: string } }, el) => {
+        acc[el.objectId] = { objectId: el.objectId, registryKeyType: el.name.value.name };
+
+        return acc;
+      },
+      {},
+    );
+
+    const tableTypenameObjectIds = Object.keys(typenameObjectIdsMap);
+
+    const objectDataList = await getAllObjects({
+      objectIds: tableTypenameObjectIds,
+      provider: provider,
+      options: { showContent: true, showDisplay: true },
+    });
+
+    if (!isPoolObjectData(objectDataList)) {
+      throw new Error("Wrong shape of seed pools of bonding curve pools");
+    }
+
+    const poolIds = objectDataList.map((el) => el.data.content.fields.value);
+
+    const stakingPools = await StakingPool.fromObjectIds({ objectIds: poolIds, provider });
+
+    return stakingPools;
   }
 }
