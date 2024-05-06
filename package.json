@@ -1,6 +1,6 @@
 {
   "name": "@avernikoz/memechan-ts-sdk",
-  "version": "1.1.35",
+  "version": "1.1.36",
   "description": "Typescript SDK for Memechan.gg",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
