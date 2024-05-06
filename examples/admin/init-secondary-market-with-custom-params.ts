@@ -52,10 +52,21 @@ export const initSecondaryMarketExample = async ({ transaction }: { transaction?
     lpCoinTreasureCapId: lpCoinData.lpCoin.treasureCapId,
     lpCoinType: lpCoinData.lpCoin.coinType,
     lpMeta: lpCoinData.lpCoin.metadataObjectId,
+
+    // Custom params:
   };
   console.debug("initSecondaryParams: ", initSecondaryParams);
 
-  const initSecondaryMarketTx = BondingPoolSingleton.initSecondaryMarket(initSecondaryParams);
+  // 5 minutes
+  const CLIFF_DELTA = BigInt(5 * 60 * 1000);
+  // 1 hour
+  const END_VESING_DELTA = BigInt(60 * 60 * 1000);
+
+  const initSecondaryMarketTx = BondingPoolSingleton.initSecondaryMarketWithCustomParams({
+    ...initSecondaryParams,
+    cliffDelta: CLIFF_DELTA,
+    endVestingDelta: END_VESING_DELTA,
+  });
   console.debug("tx.serialize: ", JSON.stringify(JSON.parse(initSecondaryMarketTx.tx.serialize()), null, 2));
 
   // const res = await provider.devInspectTransactionBlock({ sender: user, transactionBlock: initSecondaryMarketTx.tx });

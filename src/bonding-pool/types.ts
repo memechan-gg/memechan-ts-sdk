@@ -2,6 +2,8 @@ import { DynamicFieldInfo, SuiObjectResponse } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { CreateCoinTransactionParams } from "../coin/types";
 import { NewArgs } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
+import { GoLiveArgs, GoLiveDefaultArgs } from "@avernikoz/memechan-ts-interface/dist/memechan/go-live/functions";
+import { ObjectArg } from "@avernikoz/memechan-ts-interface/dist/_framework/util";
 
 export type Optional<T> = {
   [K in keyof T]?: T[K];
@@ -237,3 +239,21 @@ export interface DetailedPoolInfo extends SuiObjectResponse {
     };
   };
 }
+
+export type InitSecondaryMarketParams = {
+  suiMetadataObject: ObjectArg;
+  lpCoinTreasureCapId: ObjectArg;
+  memeCoinType: string;
+  lpCoinType: string;
+
+  transaction?: TransactionBlock;
+} & Omit<GoLiveDefaultArgs, "suiMeta" | "treasuryCap" | "clock">;
+
+export type InitSecondaryMarketCustomParams = {
+  suiMetadataObject: ObjectArg;
+  lpCoinTreasureCapId: ObjectArg;
+  memeCoinType: string;
+  lpCoinType: string;
+
+  transaction?: TransactionBlock;
+} & Omit<GoLiveArgs, "suiMeta" | "treasuryCap" | "clock">;

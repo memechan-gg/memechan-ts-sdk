@@ -17,7 +17,12 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
 
-import { goLiveDefault } from "@avernikoz/memechan-ts-interface/dist/memechan/go-live/functions";
+import {
+  GoLiveArgs,
+  GoLiveDefaultArgs,
+  goLive,
+  goLiveDefault,
+} from "@avernikoz/memechan-ts-interface/dist/memechan/go-live/functions";
 import { bcs } from "@mysten/sui.js/bcs";
 import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
 import BigNumber from "bignumber.js";
@@ -31,6 +36,8 @@ import {
   DetailedPoolInfo,
   ExtractedRegistryKeyData,
   GetBondingCurveCustomParams,
+  InitSecondaryMarketCustomParams,
+  InitSecondaryMarketParams,
   StakedLpObject,
   SwapParamsForSuiInput,
   SwapParamsForSuiInputAndTicketOutput,
@@ -58,14 +65,14 @@ import { getMergedToken } from "../common/tokens";
 export class BondingPoolSingleton {
   private static _instance: BondingPoolSingleton;
   public static TX_OF_CONTRACT_DEPLOY =
-    "https://suivision.xyz/txblock/4exX4n9sNeTWwCcb9yFzd415E1Zf21CfKRr2eqQRrNgv?tab=Changes";
+    "https://suivision.xyz/txblock/2ss9DXpVZnM4otiL3Jg4rCFwApcTKvz2mocuNoLAaWkR?tab=Changes";
 
   public static SUI_METADATA_OBJECT_ID = "0x9258181f5ceac8dbffb7030890243caed69a9599d2886d957a9cb7656af3bdb3";
 
-  public static PACKAGE_OBJECT_ID = "0x0b531bba8d504febba31a7dd448bd51b5588faf72bfd6594b0046cd5584c65e3";
-  public static UPGRADE_CAP_OBJECT_ID = "0x6ed7bdcef134b8011f188ea22e911f98217311be39f570047cc29ba8c2a7e71f";
-  public static REGISTRY_OBJECT_ID = "0x6196dfec69025c72964c82f6ea30cba38afcb74260bd2ae52f731d67d7488d5d";
-  public static ADMIN_OBJECT_ID = "0x1d53d610ed4ea9f2df9daf1fefaf29c593bce6232dbbaa8d97c262eecbdf8aa0";
+  public static PACKAGE_OBJECT_ID = "0x57ddc7eca0c73af80ae01507f489845ff284ae103e8d7264b09f61550fd41574";
+  public static UPGRADE_CAP_OBJECT_ID = "0x44bde662f690a50a2136fae45ef7682eca62fa80d6d7a46d566277f5db8e46b6";
+  public static REGISTRY_OBJECT_ID = "0xd92ef2650283a704e6f1d2ae74ba9f754c7624336584d8fa6386892bd69a119b";
+  public static ADMIN_OBJECT_ID = "0x389b134e693c704023cb84f63c2f309623601ca29d96ceb9b3612cb5702e9ace";
   // TODO: Move that to StakingPool
   public static STAKING_MODULE_NAME = "staked_lp";
   public static STAKING_LP_STRUCT_TYPE = "StakedLP";
@@ -677,17 +684,7 @@ export class BondingPoolSingleton {
     };
   }
 
-  public static initSecondaryMarket(params: {
-    transaction?: TransactionBlock;
-    adminCap: string;
-    seedPool: string;
-    memeMeta: string;
-    memeCoinType: string;
-    lpCoinType: string;
-    lpCoinTreasureCapId: string;
-    lpMeta: string;
-    suiMetadataObject: string;
-  }) {
+  public static initSecondaryMarket(params: InitSecondaryMarketParams) {
     const tx = params.transaction ?? new TransactionBlock();
 
     const txResult = goLiveDefault(tx, [params.memeCoinType, params.lpCoinType], {
@@ -698,6 +695,24 @@ export class BondingPoolSingleton {
       lpMeta: params.lpMeta,
       clock: SUI_CLOCK_OBJECT_ID,
       treasuryCap: params.lpCoinTreasureCapId,
+    });
+
+    return { tx, txResult };
+  }
+
+  public static initSecondaryMarketWithCustomParams(params: InitSecondaryMarketCustomParams) {
+    const tx = params.transaction ?? new TransactionBlock();
+
+    const txResult = goLive(tx, [params.memeCoinType, params.lpCoinType], {
+      adminCap: params.adminCap,
+      seedPool: params.seedPool,
+      suiMeta: params.suiMetadataObject,
+      memeMeta: params.memeMeta,
+      lpMeta: params.lpMeta,
+      clock: SUI_CLOCK_OBJECT_ID,
+      treasuryCap: params.lpCoinTreasureCapId,
+      cliffDelta: params.cliffDelta,
+      endVestingDelta: params.endVestingDelta,
     });
 
     return { tx, txResult };
