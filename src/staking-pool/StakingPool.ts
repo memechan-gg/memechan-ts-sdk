@@ -1,4 +1,3 @@
-/* eslint-disable require-jsdoc */
 import {
   collectFees,
   CollectFeesArgs,
@@ -14,12 +13,14 @@ import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyC
 import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
 import BigNumber from "bignumber.js";
 import { getAllTokens, getMergedToken } from "../common/tokens";
-import { SuiClient } from "@mysten/sui.js/client";
+import { SuiClient, SuiObjectResponse } from "@mysten/sui.js/client";
 import { stakingPoolCreatedSchema, stakingPoolDescribeObjectResponse } from "./schemas";
 import { BondingPoolSingleton } from "../bonding-pool/BondingPool";
 import { VestingConfig } from "./VestingConfig";
 import { UserWithdrawals } from "./UserWithdrawals";
 import { FeeState } from "./FeeState";
+import { chunkedRequests } from "../utils/chunking";
+import { registrySchemaContent } from "../utils/schema";
 
 type StakingPoolData = {
   address: string;
@@ -161,6 +162,13 @@ export class StakingPool {
     return tokenPolicyCapObjectId;
   }
 
+  /**
+   * Retrieves the token policy ID associated with the staking pool.
+   * This method queries a provider for a token policy cap object, validates the response,
+   * and extracts the token policy object ID from it.
+   * @throws {Error} If no token policy cap data is found.
+   * @return {Promise<string>} The token policy object ID.
+   */
   public async getTokenPolicy() {
     const tokenPolicyCap = await this.getTokenPolicyCap();
 
@@ -178,14 +186,15 @@ export class StakingPool {
     return tokenPolicyObjectId;
   }
 
-  static async fromObjectId({ objectId, provider }: { objectId: string; provider: SuiClient }) {
-    const object = await provider.getObject({
-      id: objectId,
-      options: {
-        showContent: true,
-        showType: true,
-      },
-    });
+  /**
+   * Factory method to create a StakingPool instance from a SuiObjectResponse.
+   * Parses the object, checks the type format, and constructs the StakingPool with its detailed configurations.
+   * @param {SuiObjectResponse} object - The blockchain object response to parse.
+   * @param {SuiClient} provider - The blockchain client provider.
+   * @throws {Error} If the object type format is invalid.
+   * @return {Promise<StakingPool>} A new instance of StakingPool.
+   */
+  static async fromObjectResponse(object: SuiObjectResponse, provider: SuiClient): Promise<StakingPool> {
     const matches = object.data?.type?.match(/<[^>]*,\s*([^,>]+),\s*([^,>]+)>/);
     if (!matches || matches.length < 2) {
       throw new Error("Invalid object type format.");
@@ -238,10 +247,71 @@ export class StakingPool {
     });
   }
 
+  /**
+   * Asynchronously retrieves an array of StakingPool instances corresponding to the provided object IDs.
+   * @param {string[]} objectIds - An array of blockchain object IDs.
+   * @param {SuiClient} provider - The blockchain client provider.
+   * @return {Promise<StakingPool[]>} An array of StakingPool instances.
+   */
+  static async fromObjectIds({
+    objectIds,
+    provider,
+  }: {
+    objectIds: string[];
+    provider: SuiClient;
+  }): Promise<StakingPool[]> {
+    const objects = await chunkedRequests(objectIds, (ids) =>
+      provider.multiGetObjects({
+        ids,
+        options: {
+          showContent: true,
+          showType: true,
+        },
+      }),
+    );
+    const results: StakingPool[] = [];
+    for (const obj of objects) {
+      results.push(await StakingPool.fromObjectResponse(obj, provider));
+    }
+    return results;
+  }
+  /**
+   * Retrieves a StakingPool instance corresponding to a 'go-live' transaction digest.
+   * @param {string} txDigest - The transaction digest to query.
+   * @param {SuiClient} provider - The blockchain client provider.
+   * @return {Promise<StakingPool>} A StakingPool instance.
+   */
   static async fromGoLiveDefaultTx({ txDigest, provider }: { txDigest: string; provider: SuiClient }) {
     const txResult = await provider.getTransactionBlock({ digest: txDigest, options: { showObjectChanges: true } });
     const schema = stakingPoolCreatedSchema(BondingPoolSingleton.PACKAGE_OBJECT_ID);
     const createdStakedPool = schema.parse(txResult.objectChanges?.find((oc) => schema.safeParse(oc).success));
-    return StakingPool.fromObjectId({ objectId: createdStakedPool.objectId, provider });
+    const [stakingPool] = await StakingPool.fromObjectIds({ objectIds: [createdStakedPool.objectId], provider });
+    return stakingPool;
+  }
+
+  /**
+   * Queries a registry to retrieve an array of StakingPool instances.
+   * Currently this method is not fully implemented and returns an empty array.
+   * @param {SuiClient} provider - The blockchain client provider.
+   * @return {Promise<StakingPool[]>} An array of StakingPool instances (currently empty).
+   */
+  static async fromRegistry({ provider }: { provider: SuiClient }): Promise<StakingPool[]> {
+    const registry = await provider.getObject({
+      id: BondingPoolSingleton.REGISTRY_OBJECT_ID,
+      options: {
+        showContent: true,
+      },
+    });
+    const registryContent = registrySchemaContent.parse(registry.data?.content);
+    const dfs = await getAllDynamicFields({
+      parentObjectId: registryContent.fields.staking_pools.fields.id.id,
+      provider,
+    });
+
+    // TODO finish when the issue on contract will be solved and some
+    // live and staking pools will be present into registry
+    console.log("dfs", dfs);
+
+    return [];
   }
 }
