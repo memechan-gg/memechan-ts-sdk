@@ -688,6 +688,7 @@ export class BondingPoolSingleton {
     const tx = params.transaction ?? new TransactionBlock();
 
     const txResult = goLiveDefault(tx, [params.memeCoinType, params.lpCoinType], {
+      registry: params.registry,
       adminCap: params.adminCap,
       seedPool: params.seedPool,
       suiMeta: params.suiMetadataObject,
@@ -704,6 +705,7 @@ export class BondingPoolSingleton {
     const tx = params.transaction ?? new TransactionBlock();
 
     const txResult = goLive(tx, [params.memeCoinType, params.lpCoinType], {
+      registry: params.registry,
       adminCap: params.adminCap,
       seedPool: params.seedPool,
       suiMeta: params.suiMetadataObject,
@@ -739,6 +741,7 @@ export class BondingPoolSingleton {
     }
 
     return {
+      registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
       adminCap: BondingPoolSingleton.ADMIN_OBJECT_ID,
       seedPool: pool.objectId,
       memeMeta: memeMetaDataObjectId,
