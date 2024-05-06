@@ -9,6 +9,7 @@ import {
   quoteBuyMeme,
   quoteSellMeme,
   sellMeme,
+  accountingLen,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 
 import { SuiClient } from "@mysten/sui.js/client";
@@ -61,10 +62,10 @@ export class BondingPoolSingleton {
 
   public static SUI_METADATA_OBJECT_ID = "0x9258181f5ceac8dbffb7030890243caed69a9599d2886d957a9cb7656af3bdb3";
 
-  public static PACKAGE_OBJECT_ID = "0x01b0ce8c624d17de61440d13a263527b2fd5b5a5d4b6aac286d88755125b1b32";
-  public static UPGRADE_CAP_OBJECT_ID = "0xddf12f4462fdba0a5c895e1a0335f840efad584c2451ad12b04307a0161d0e7d";
-  public static REGISTRY_OBJECT_ID = "0x263bfe025543a56e9baebe83143ef50ff43e2324d688a78e852150d105df3dd2";
-  public static ADMIN_OBJECT_ID = "0xf792ca964a38d6e17054f5b2fed1ddb2b6154fbba73cd00d2a23b066fd8ff1ba";
+  public static PACKAGE_OBJECT_ID = "0x0b531bba8d504febba31a7dd448bd51b5588faf72bfd6594b0046cd5584c65e3";
+  public static UPGRADE_CAP_OBJECT_ID = "0x6ed7bdcef134b8011f188ea22e911f98217311be39f570047cc29ba8c2a7e71f";
+  public static REGISTRY_OBJECT_ID = "0x6196dfec69025c72964c82f6ea30cba38afcb74260bd2ae52f731d67d7488d5d";
+  public static ADMIN_OBJECT_ID = "0x1d53d610ed4ea9f2df9daf1fefaf29c593bce6232dbbaa8d97c262eecbdf8aa0";
   // TODO: Move that to StakingPool
   public static STAKING_MODULE_NAME = "staked_lp";
   public static STAKING_LP_STRUCT_TYPE = "StakedLP";
@@ -729,5 +730,39 @@ export class BondingPoolSingleton {
       memeCoinType: pool.memeCoinType,
       suiMetadataObject: BondingPoolSingleton.SUI_METADATA_OBJECT_ID,
     };
+  }
+
+  public async getUniqHoldersOfStakedLp({
+    transaction,
+    memeCoin,
+    bondingCurvePoolObjectId,
+  }: {
+    transaction?: TransactionBlock;
+    memeCoin: { coinType: string };
+    bondingCurvePoolObjectId: string;
+  }) {
+    const tx = transaction ?? new TransactionBlock();
+
+    // Please note, mutation of `tx` happening below
+    accountingLen(tx, [LONG_SUI_COIN_TYPE, memeCoin.coinType], bondingCurvePoolObjectId);
+
+    const res = await this.provider.devInspectTransactionBlock({
+      sender: BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS,
+      transactionBlock: tx,
+    });
+
+    if (!res.results) {
+      throw new Error("No results found for simulation of getUniqHoldersOfStakedLp");
+    }
+
+    const returnValues = res.results[0].returnValues;
+    if (!returnValues) {
+      throw new Error("Return values are undefined");
+    }
+
+    const rawAmountBytes = returnValues[0][0];
+    const decoded = bcs.de("u64", new Uint8Array(rawAmountBytes));
+
+    return decoded.toString();
   }
 }
