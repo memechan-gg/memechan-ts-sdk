@@ -65,14 +65,14 @@ import { getMergedToken } from "../common/tokens";
 export class BondingPoolSingleton {
   private static _instance: BondingPoolSingleton;
   public static TX_OF_CONTRACT_DEPLOY =
-    "https://suivision.xyz/txblock/2ss9DXpVZnM4otiL3Jg4rCFwApcTKvz2mocuNoLAaWkR?tab=Changes";
+    "https://suivision.xyz/txblock/2sGGvkn4ZNeaNQBKPrgwN6GDATVeBgmBpLncRnWZpyPV?tab=Changes";
 
   public static SUI_METADATA_OBJECT_ID = "0x9258181f5ceac8dbffb7030890243caed69a9599d2886d957a9cb7656af3bdb3";
 
-  public static PACKAGE_OBJECT_ID = "0x57ddc7eca0c73af80ae01507f489845ff284ae103e8d7264b09f61550fd41574";
-  public static UPGRADE_CAP_OBJECT_ID = "0x44bde662f690a50a2136fae45ef7682eca62fa80d6d7a46d566277f5db8e46b6";
-  public static REGISTRY_OBJECT_ID = "0xd92ef2650283a704e6f1d2ae74ba9f754c7624336584d8fa6386892bd69a119b";
-  public static ADMIN_OBJECT_ID = "0x389b134e693c704023cb84f63c2f309623601ca29d96ceb9b3612cb5702e9ace";
+  public static PACKAGE_OBJECT_ID = "0x860b1b7e891a69c34bbbfd95d4df984de38642ac3b5f18ba7b84f516055b5703";
+  public static UPGRADE_CAP_OBJECT_ID = "0xeffb4c0c98473005b1f95024616fda6ddcf717dae02cd284496f36fafdb2b4e5";
+  public static REGISTRY_OBJECT_ID = "0x8e5542ae6a084c29ef25c1e78c7397bd634ba9495c06e164aaf8cd555ab03de6";
+  public static ADMIN_OBJECT_ID = "0xfd042a23ea4b8a400778f07ca8e7b4adcd4bbdac7c6804c38a2a8e7fbed49ce7";
   // TODO: Move that to StakingPool
   public static STAKING_MODULE_NAME = "staked_lp";
   public static STAKING_LP_STRUCT_TYPE = "StakedLP";
