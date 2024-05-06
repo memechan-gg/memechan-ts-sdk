@@ -762,7 +762,7 @@ export class BondingPoolSingleton {
     transaction?: TransactionBlock;
     memeCoin: { coinType: string };
     bondingCurvePoolObjectId: string;
-  }) {
+  }): Promise<string> {
     const tx = transaction ?? new TransactionBlock();
 
     // Please note, mutation of `tx` happening below
@@ -783,7 +783,7 @@ export class BondingPoolSingleton {
     }
 
     const rawAmountBytes = returnValues[0][0];
-    const decoded = bcs.de("u64", new Uint8Array(rawAmountBytes));
+    const decoded: number = bcs.de("u64", new Uint8Array(rawAmountBytes));
 
     return decoded.toString();
   }
