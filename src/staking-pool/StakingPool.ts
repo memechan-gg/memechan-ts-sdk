@@ -69,7 +69,7 @@ export class StakingPool {
     return collectFees(tx, [SHORT_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
       stakingPool: this.data.address,
       pool: params.pool,
-      clock: "0x6",
+      clock: SUI_CLOCK_OBJECT_ID,
     });
   }
 
