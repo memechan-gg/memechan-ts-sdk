@@ -1,27 +1,29 @@
 import { CoinMetadata, SuiClient } from "@mysten/sui.js/client";
-import { CommonCoinData, CreateCoinTransactionParams, ICoinManager } from "./types";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { getBytecode } from "./utils/template";
 import { isValidSuiAddress, normalizeSuiAddress } from "@mysten/sui.js/utils";
+import { PRICE_API_CHAIN_ID, PRICE_API_URL } from "../constants";
+import { CommonCoinData, CreateCoinTransactionParams, ICoinManager } from "./types";
 import initMoveByteCodeTemplate from "./utils/move-bytecode-template";
+import { getBytecode } from "./utils/template";
+import { isValidPriceApiResponse } from "./utils/type-guards";
 import {
-  InvalidCoinNameError,
-  InvalidCoinSymbolError,
   InvalidCoinDecimalsError,
-  InvalidCoinTotalSupplyError,
   InvalidCoinDescriptionError,
   InvalidCoinImageError,
+  InvalidCoinNameError,
+  InvalidCoinSymbolError,
+  InvalidCoinTotalSupplyError,
   InvalidSignerAddressError,
   NameEqualsToDescriptionError,
   SymbolEqualsToDescriptionError,
 } from "./utils/validation/invalid-param-errors";
 import {
-  validateCoinName,
-  validateCoinSymbol,
   validateCoinDecimals,
-  validateTotalSupply,
   validateCoinDescription,
   validateCoinImage,
+  validateCoinName,
+  validateCoinSymbol,
+  validateTotalSupply,
 } from "./utils/validation/validation";
 
 /**
@@ -230,5 +232,26 @@ export class CoinManagerSingleton implements ICoinManager {
         `[validateCreateCoinParams] Coin symbol ${symbol} and coin description ${description} are equal`,
       );
     }
+  }
+
+  /**
+   * Fetches a price for a given coin type.
+   * @param {string} coinType — A type of the coin the price will be fetched for.
+   * @return {Promise<number>} — The given coin price.
+   */
+  public static async getCoinPrice(coinType: string): Promise<number> {
+    const priceResponse = await fetch(
+      `${PRICE_API_URL}/api/assets?chainId=${PRICE_API_CHAIN_ID}&tokenAddress=${coinType}`,
+    );
+
+    const priceData = await priceResponse.json();
+
+    if (!isValidPriceApiResponse(priceData)) {
+      throw new Error(`[CoinManager.getCoinPrice] price data is not valid: ${JSON.stringify(priceData, null, 2)}`);
+    }
+
+    const price = priceData.data.price;
+
+    return price;
   }
 }
