@@ -286,3 +286,28 @@ export interface VestingDataInfo extends SuiObjectResponse {
     };
   };
 }
+
+export interface StakingPoolTokenPolicyCap extends SuiObjectResponse {
+  data: {
+    version: string;
+    objectId: string;
+    digest: string;
+    content: {
+      dataType: "moveObject";
+      type: string;
+      hasPublicTransfer: boolean;
+      fields: {
+        id: {
+          id: string;
+        };
+        policy_cap: {
+          fields: {
+            id: {
+              id: string;
+            };
+          };
+        };
+      };
+    };
+  };
+}
