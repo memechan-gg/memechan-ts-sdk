@@ -2,6 +2,7 @@
 import {
   NewArgs,
   NewDefaultArgs,
+  accountingLen,
   buyMeme,
   isReadyToLaunch,
   newDefault,
@@ -9,7 +10,6 @@ import {
   quoteBuyMeme,
   quoteSellMeme,
   sellMeme,
-  accountingLen,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 
 import { SuiClient } from "@mysten/sui.js/client";
@@ -17,18 +17,14 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { seedPools } from "@avernikoz/memechan-ts-interface/dist/memechan/index/functions";
 
-import {
-  GoLiveArgs,
-  GoLiveDefaultArgs,
-  goLive,
-  goLiveDefault,
-} from "@avernikoz/memechan-ts-interface/dist/memechan/go-live/functions";
+import { goLive, goLiveDefault } from "@avernikoz/memechan-ts-interface/dist/memechan/go-live/functions";
 import { bcs } from "@mysten/sui.js/bcs";
 import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
 import BigNumber from "bignumber.js";
 import { CoinManagerSingleton } from "../coin/CoinManager";
 import { CreateCoinTransactionParams } from "../coin/types";
 import { LONG_SUI_COIN_TYPE } from "../common/sui";
+import { getMergedToken } from "../common/tokens";
 import {
   BondingCurveCustomParams,
   CreateBondingCurvePoolParams,
@@ -55,7 +51,6 @@ import { isPoolObjectData } from "./utils/isPoolObjectData";
 import { isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
 import { normalizeInputCoinAmount } from "./utils/normalizeInputCoinAmount";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
-import { getMergedToken } from "../common/tokens";
 
 /**
  * @class BondingPoolSingleton
@@ -782,5 +777,23 @@ export class BondingPoolSingleton {
     const decoded = bcs.de("u64", new Uint8Array(rawAmountBytes));
 
     return decoded.toString();
+  }
+
+  public async getMemeCoinPrice(memeCoinType: string): Promise<{ priceInSui: string; priceInUsd: string }> {
+    const memePool = await this.getPoolByMeme({ memeCoin: { coinType: memeCoinType } });
+    const suiInputAmount = "1";
+
+    const memeAmount = await this.getSwapOutputAmountForSuiInput({
+      bondingCurvePoolObjectId: memePool.objectId,
+      inputAmount: suiInputAmount,
+      memeCoin: { coinType: memePool.memeCoinType },
+    });
+
+    const suiPrice = await CoinManagerSingleton.getCoinPrice(LONG_SUI_COIN_TYPE);
+
+    const memePriceInSui = new BigNumber(1).div(memeAmount).toFixed(SUI_DECIMALS);
+    const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
+
+    return { priceInSui: memePriceInSui, priceInUsd: memePriceInUsd };
   }
 }

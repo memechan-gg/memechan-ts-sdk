@@ -52,3 +52,12 @@ export type UploadFileResponse = {
   Timestamp: string;
   isDuplicate: boolean;
 };
+
+export type PriceApiResponse = {
+  data: {
+    chainid: string;
+    tokenAddress: string;
+    price: number;
+    fetchedFrom: string;
+  };
+};
