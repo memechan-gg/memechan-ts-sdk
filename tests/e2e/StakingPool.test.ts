@@ -25,7 +25,24 @@ describe("Staking Pool", () => {
     });
   });
 
-  test("Ensure that the parsing from registry doesn't generate errors", async () => {
-    await StakingPool.fromRegistry({ provider: new SuiClient({ url: getFullnodeUrl("mainnet") }) });
+  test("Ensure that the parsing from registry staking pools are valid", async () => {
+    const stakingPools = await StakingPool.fromRegistry({
+      provider: new SuiClient({ url: getFullnodeUrl("mainnet") }),
+    });
+
+    stakingPools.forEach((pool) =>
+      expect(pool.data).toEqual({
+        feeState: expect.any(FeeState),
+        vesting: expect.any(VestingConfig),
+        address: expect.any(String),
+        ammPool: expect.any(String),
+        poolAdmin: expect.any(String),
+        totalSupply: expect.any(String),
+        lpCoinType: expect.any(String),
+        memeCoinType: expect.any(String),
+        balanceLp: expect.any(String),
+        balanceMeme: expect.any(String),
+      }),
+    );
   });
 });
