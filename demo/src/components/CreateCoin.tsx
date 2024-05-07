@@ -1,4 +1,9 @@
-import { BondingPoolSingleton, CoinAPI, parseTransactionDataCoinAndTicketCreation } from "@avernikoz/memechan-ts-sdk";
+import {
+  BondingPoolSingleton,
+  CoinAPI,
+  parseTransactionDataCoinAndTicketCreation,
+  PoolAPI,
+} from "@avernikoz/memechan-ts-sdk";
 import { ConnectButton, useWallet } from "@suiet/wallet-kit";
 import { BE_URL } from "../constants";
 
@@ -45,13 +50,6 @@ export const CreateCoin: React.FC = () => {
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    await new CoinAPI(BE_URL).createCoin({
-      txDigest: digest,
-    });
-    console.log("Coin&Ticket creation success offchain");
-
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
     await wallet.signAndExecuteTransactionBlock({
       transactionBlock: createBondingCurvePoolTx.tx,
       requestType: "WaitForLocalExecution",
@@ -64,6 +62,21 @@ export const CreateCoin: React.FC = () => {
       },
     });
     console.log("Pool creation success");
+    const response = await new CoinAPI(BE_URL).createCoin({
+      txDigest: digest,
+    });
+
+    console.log("Coin&Ticket creation success offchain");
+    const { result: seedPools } = await new PoolAPI(BE_URL).getAllSeedPools();
+    console.log("Seed pools", seedPools);
+    console.log(
+      "seed pools coin types",
+      seedPools.map((p) => p.memeCoinType),
+    );
+    console.log(
+      "Seed pool for the coin",
+      seedPools.find((p) => p.memeCoinType === response.coin.type),
+    );
   };
 
   return (

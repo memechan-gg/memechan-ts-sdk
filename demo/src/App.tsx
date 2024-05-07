@@ -4,7 +4,7 @@ import "./App.css";
 import { FileUpload } from "./components/FileUpload";
 import { useEffect } from "react";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { Auth, CoinAPI } from "@avernikoz/memechan-ts-sdk";
+import { Auth, CoinAPI, PoolAPI } from "@avernikoz/memechan-ts-sdk";
 import { CreateCoin } from "./components/CreateCoin";
 import { BE_URL } from "./constants";
 
@@ -15,6 +15,7 @@ function App() {
     (async () => {
       await authenticate();
       await getCoins();
+      await getSeedPools();
     })();
   }, []);
 
@@ -40,6 +41,15 @@ function App() {
     console.log("coins list", coins);
     const coin = await api.getCoin("PRESALE", coins[0].type);
     console.log("coin details", coin);
+  };
+
+  const getSeedPools = async () => {
+    const { result: seedPools } = await new PoolAPI(BE_URL).getAllSeedPools();
+    console.log("Seed pools", seedPools);
+    console.log(
+      "seed pools coin types",
+      seedPools.map((p) => p.memeCoinType),
+    );
   };
   return (
     <>
