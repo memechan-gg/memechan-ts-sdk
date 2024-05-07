@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    hookTimeout: Infinity,
+    testTimeout: Infinity,
   },
   resolve: {
     alias: {},

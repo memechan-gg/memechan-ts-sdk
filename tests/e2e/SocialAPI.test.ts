@@ -2,16 +2,18 @@ import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { Auth, CoinAPI } from "../../src";
 import { SocialAPI } from "../../src/social/SocialAPI";
 import { Coin } from "../../src/coin/schemas/coin-schemas";
+import { isSorted } from "./helpers";
 
 const BE_URL = "https://14r6b4r6kf.execute-api.us-east-1.amazonaws.com/prod";
 
-describe("Social APIs", () => {
-  let keypair: Ed25519Keypair;
-  let coin: Coin;
+const socialAPI = new SocialAPI(BE_URL);
+
+describe("Threads fetching", () => {
+  let coin: Coin | undefined;
+  const keypair = new Ed25519Keypair();
+  let threadId: string | undefined;
 
   beforeAll(async () => {
-    keypair = new Ed25519Keypair();
-    console.log("Testing with wallet", keypair.getPublicKey().toSuiAddress());
     const authService = new Auth(BE_URL);
     const messageToSign = await authService.requestMessageToSign(keypair.getPublicKey().toSuiAddress());
     const { signature } = await keypair.signPersonalMessage(Buffer.from(messageToSign));
@@ -19,27 +21,144 @@ describe("Social APIs", () => {
       walletAddress: keypair.getPublicKey().toSuiAddress(),
       signedMessage: signature,
     });
-    console.log("Wallet authenticated");
-    const coinApi = new CoinAPI(BE_URL);
-    const { coin: createdCoin } = await coinApi.createCoin({
+    const coinApi = new CoinAPI();
+    const { coin: coinFetched } = await coinApi.createCoin({
       txDigest: "Bdkcg4Z2HuUTRkvG5mrCZRya8fxqwPzbHnY3cfD1tTYQ",
       socialLinks: {
         twitter: "mytwitter",
         discord: "mydiscord",
       },
     });
-    console.log("Created coin");
-    coin = createdCoin;
+    coin = coinFetched;
+    for (let i = 0; i < 10; i++) {
+      await socialAPI.createThread({
+        message: `Test message ${i}`,
+        coinType: coin.type,
+      });
+      const { result } = await socialAPI.getThreads({
+        sortBy: "creationTime",
+        direction: "desc",
+        coinType: coin!.type,
+      });
+      const nLikes = Math.floor(Math.random() * (5 - 0 + 1)) + 0;
+      for (let j = 0; j < nLikes; j++) {
+        await socialAPI.like({
+          coinType: coin.type,
+          threadId: result[0].id,
+        });
+      }
+      const nReplies = Math.floor(Math.random() * (5 - 0 + 1)) + 0;
+      for (let j = 0; j < nReplies; j++) {
+        await socialAPI.createThreadReply({
+          coinType: coin.type,
+          threadId: result[0].id,
+          message: `Reply ${j}`,
+        });
+        const reply = await socialAPI.getThreadReplies({
+          sortBy: "creationTime",
+          direction: "desc",
+          threadId: result[0].id,
+        });
+        const nLikes = Math.floor(Math.random() * (5 - 0 + 1)) + 0;
+        for (let l = 0; l < nLikes; l++) {
+          await socialAPI.like({
+            coinType: coin.type,
+            threadId: result[0].id,
+            replyId: reply.result[0].id,
+          });
+        }
+      }
+    }
   });
 
-  test("Social APIs flow", async () => {
-    const socialAPI = new SocialAPI(BE_URL);
-    await socialAPI.createThread({
-      message: "Test message",
-      coinType: coin.type,
+  test("check queryThreads retrieve successfully all threads, sorted by creationTime asc", async () => {
+    const { result } = await socialAPI.getThreads({
+      sortBy: "creationTime",
+      direction: "asc",
+      coinType: coin!.type,
     });
-    const { result } = await socialAPI.getThreads({ coinType: coin.type });
-    const thread = result.find((r) => r.creator === keypair.getPublicKey().toSuiAddress());
-    expect(thread).toBeTruthy();
+    expect(isSorted(result, "creationDate", "asc")).toBe(true);
+  });
+
+  test("check queryThreads retrieve successfully all threads, sorted by likeCount asc", async () => {
+    const { result } = await socialAPI.getThreads({
+      sortBy: "likeCount",
+      direction: "asc",
+      coinType: coin!.type,
+    });
+    expect(isSorted(result, "likeCounter", "asc")).toBe(true);
+  });
+
+  test("check queryThreads retrieve successfully all threads, sorted by replyCounter asc", async () => {
+    const { result } = await socialAPI.getThreads({
+      sortBy: "replyCount",
+      direction: "asc",
+      coinType: coin!.type,
+    });
+    expect(isSorted(result, "replyCounter", "asc")).toBe(true);
+  });
+
+  test("check queryThreads retrieve successfully all threads, sorted by creationTime desc", async () => {
+    const { result } = await socialAPI.getThreads({
+      sortBy: "creationTime",
+      direction: "desc",
+      coinType: coin!.type,
+    });
+    expect(isSorted(result, "creationDate", "desc")).toBe(true);
+  });
+
+  test("check queryThreads retrieve successfully all threads, sorted by likeCount desc", async () => {
+    const { result } = await socialAPI.getThreads({
+      sortBy: "likeCount",
+      direction: "desc",
+      coinType: coin!.type,
+    });
+    expect(isSorted(result, "likeCounter", "desc")).toBe(true);
+  });
+
+  test("check queryThreads retrieve successfully all threads, sorted by replyCounter desc", async () => {
+    const { result } = await socialAPI.getThreads({
+      sortBy: "replyCount",
+      direction: "desc",
+      coinType: coin!.type,
+    });
+    threadId = result[0].id;
+    expect(isSorted(result, "replyCounter", "desc")).toBe(true);
+  });
+
+  test("check queryThreadsReplies retrieve successfully all threads, sorted by creationTime desc", async () => {
+    const { result } = await socialAPI.getThreadReplies({
+      sortBy: "creationTime",
+      direction: "desc",
+      threadId: threadId!,
+    });
+    expect(isSorted(result, "creationDate", "desc")).toBe(true);
+  });
+
+  test("check queryThreadReplies retrieve successfully all threads, sorted by likeCount desc", async () => {
+    const { result } = await socialAPI.getThreadReplies({
+      sortBy: "likeCount",
+      direction: "desc",
+      threadId: threadId!,
+    });
+    expect(isSorted(result, "likeCounter", "desc")).toBe(true);
+  });
+
+  test("check queryThreadsReplies retrieve successfully all threads replies, sorted by creationTime asc", async () => {
+    const { result } = await socialAPI.getThreadReplies({
+      sortBy: "creationTime",
+      direction: "asc",
+      threadId: threadId!,
+    });
+    expect(isSorted(result, "creationDate", "asc")).toBe(true);
+  });
+
+  test("check queryThreadReplies retrieve successfully all threads replies, sorted by likeCount asc", async () => {
+    const { result } = await socialAPI.getThreadReplies({
+      sortBy: "likeCount",
+      direction: "asc",
+      threadId: threadId!,
+    });
+    expect(isSorted(result, "likeCounter", "asc")).toBe(true);
   });
 });
