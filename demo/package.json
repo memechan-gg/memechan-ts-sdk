@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@avernikoz/memechan-ts-sdk": "1.1.8",
+    "@avernikoz/memechan-ts-sdk": "../avernikoz-memechan-ts-sdk-v1.1.37.tgz",
     "@suiet/wallet-kit": "^0.2.24",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
