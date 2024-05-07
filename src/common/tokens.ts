@@ -1,10 +1,10 @@
-import BigNumber from "bignumber.js";
-import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactions";
 import { intoToken, join, split } from "@avernikoz/memechan-ts-interface/dist/memechan/staked-lp/functions";
-import { SUI_CLOCK_OBJECT_ID, SUI_TYPE_ARG } from "@mysten/sui.js/utils";
-import { getAllOwnedObjects } from "../bonding-pool/utils/getAllOwnedObjects";
 import { SuiClient } from "@mysten/sui.js/client";
+import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactions";
+import { SUI_CLOCK_OBJECT_ID, SUI_FRAMEWORK_ADDRESS } from "@mysten/sui.js/utils";
+import BigNumber from "bignumber.js";
 import { z } from "zod";
+import { getAllOwnedObjects } from "../bonding-pool/utils/getAllOwnedObjects";
 
 export type Token = {
   objectId: string;
@@ -123,7 +123,7 @@ export const getAllTokens = async ({
     provider,
     options: {
       owner: walletAddress,
-      filter: { StructType: `${SUI_TYPE_ARG}::sui::Token<${coinType}>` },
+      filter: { StructType: `${SUI_FRAMEWORK_ADDRESS}::sui::Token<${coinType}>` },
       options: {
         showContent: true,
         showType: true,
