@@ -1,6 +1,6 @@
 {
   "name": "@avernikoz/memechan-ts-sdk",
-  "version": "1.1.36",
+  "version": "1.1.37",
   "description": "Typescript SDK for Memechan.gg",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -38,7 +38,8 @@
     "@aws-crypto/sha256-browser": "^5.2.0",
     "@interest-protocol/clamm-sdk": "5.1.0-alpha",
     "@mysten/sui.js": "^0.51.2",
-    "aws-sigv4-fetch": "^3.1.0",
+    "@smithy/protocol-http": "^3.3.0",
+    "@smithy/signature-v4": "^2.3.0",
     "bignumber.js": "^9.1.2",
     "zod": "^3.23.0"
   },
