@@ -15,6 +15,6 @@ describe("Live CLMM", () => {
     const livePools = await LiveCLMM.fromRegistry({
       provider: new SuiClient({ url: getFullnodeUrl("mainnet") }),
     });
-    console.log("live pools", livePools);
+    console.log("live pools", livePools.length);
   });
 });

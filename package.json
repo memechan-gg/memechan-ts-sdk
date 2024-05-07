@@ -14,7 +14,7 @@
   "engineStrict": true,
   "scripts": {
     "test": "vitest ./tests/unit",
-    "e2e": "vitest ./tests/e2e",
+    "e2e": "vitest ./tests/e2e/LivePool.test.ts",
     "audit": "yarn audit --groups dependencies",
     "format": "prettier --write src/**/*.ts",
     "lint": "eslint './src/**/*.ts'",

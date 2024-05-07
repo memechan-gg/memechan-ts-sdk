@@ -16,6 +16,8 @@ function App() {
       await authenticate();
       await getCoins();
       await getSeedPools();
+      await getLivePools();
+      await getStakingPools();
     })();
   }, []);
 
@@ -51,6 +53,25 @@ function App() {
       seedPools.map((p) => p.memeCoinType),
     );
   };
+
+  const getLivePools = async () => {
+    const { result: livePools } = await new PoolAPI(BE_URL).getLivePools();
+    console.log("Live pools", livePools);
+    console.log(
+      "live pools coin types",
+      livePools.map((p) => p.coinType),
+    );
+  };
+
+  const getStakingPools = async () => {
+    const { result: stakingPools } = await new PoolAPI(BE_URL).getStakingPools();
+    console.log("Staking pools", stakingPools);
+    console.log(
+      "staking pools coin types",
+      stakingPools.map((p) => p.memeCoinType),
+    );
+  };
+
   return (
     <>
       <div>
