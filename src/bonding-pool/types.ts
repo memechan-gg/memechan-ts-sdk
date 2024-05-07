@@ -302,9 +302,7 @@ export interface StakingPoolTokenPolicyCap extends SuiObjectResponse {
         };
         policy_cap: {
           fields: {
-            id: {
-              id: string;
-            };
+            for: string;
           };
         };
       };
