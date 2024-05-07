@@ -15,11 +15,11 @@ import { BondingPoolSingleton } from "../bonding-pool/BondingPool";
 import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
 import { getAllObjects } from "../bonding-pool/utils/getAllObjects";
 import { isPoolObjectData } from "../bonding-pool/utils/isPoolObjectData";
-import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyCapObjectData";
+import { isStakingPoolTokenPolicyCap } from "../bonding-pool/utils/isStakingPoolTokenCap";
 import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
 import { isRegistryTableTypenameDynamicFields } from "../bonding-pool/utils/registryTableTypenameUtils";
 import { LONG_SUI_COIN_TYPE, SHORT_SUI_COIN_TYPE } from "../common/sui";
-import { getAllTokens, getMergedToken } from "../common/tokens";
+import { getMergedToken } from "../common/tokens";
 import { chunkedRequests } from "../utils/chunking";
 import { registrySchemaContent } from "../utils/schema";
 import { FeeState } from "./FeeState";
@@ -27,7 +27,6 @@ import { stakingPoolCreatedSchema, stakingPoolDescribeObjectResponse } from "./s
 import { StakingPoolUnstakeArgs } from "./types";
 import { UserWithdrawals } from "./UserWithdrawals";
 import { VestingConfig } from "./VestingConfig";
-import { isStakingPoolTokenPolicyCap } from "../bonding-pool/utils/isStakingPoolTokenCap";
 
 type StakingPoolData = {
   address: string;
@@ -206,19 +205,25 @@ export class StakingPool {
     const { inputAmount, signerAddress, transaction } = params;
     const tx = transaction ?? new TransactionBlock();
 
-    const tokenPolicyObjectId = await this.getTokenPolicy();
+    const tokenPolicyObjectId = await this.getStakingPoolTokenPolicyCap();
 
     const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, parseInt(StakingPool.TICKETCOIN_DECIMALS));
 
     const remainingAmountBN = new BigNumber(inputAmountWithDecimals.toString());
-    const ownedTokens = await getAllTokens({
-      walletAddress: signerAddress,
-      coinType: this.data.memeCoinType,
+    const { stakedLpObjectsByMemeCoinTypeMap } = await BondingPoolSingleton.getAllStakedLPObjectsByOwner({
+      owner: signerAddress,
       provider: this.params.provider,
     });
+
+    const ownedTokens = stakedLpObjectsByMemeCoinTypeMap[this.data.memeCoinType];
+
     const tokenObject = getMergedToken({
       remainingAmountBN,
-      availableTokens: ownedTokens,
+      availableTokens: ownedTokens.map((t) => ({
+        coinType: t.memeCoinType,
+        balance: t.balance,
+        objectId: t.objectId,
+      })),
       tokenPolicyObjectId,
       memeCoinType: this.data.memeCoinType,
       transaction: tx,
@@ -231,8 +236,7 @@ export class StakingPool {
       stakingPool: this.data.address,
     });
 
-    tx.transferObjects([memecoin], tx.pure(signerAddress));
-    tx.transferObjects([suiCoin], tx.pure(signerAddress));
+    tx.transferObjects([memecoin, suiCoin], tx.pure(signerAddress));
 
     return { tx };
   }
@@ -252,37 +256,13 @@ export class StakingPool {
       throw new Error(`[getStakingPoolTokenPolicyCap] Wrong shape of token policy cap for ${this.data.address}`);
     }
 
-    const tokenPolicyCapId = object.data.content.fields.policy_cap.fields.id.id;
+    const tokenPolicyCapId = object.data.content.fields.policy_cap.fields.for;
 
     if (!tokenPolicyCapId) {
       throw new Error(`[getStakingPoolTokenPolicyCap] No found token policy cap for ${this.data.address}`);
     }
 
     return tokenPolicyCapId;
-  }
-
-  /**
-   * Retrieves the token policy ID associated with the staking pool.
-   * This method queries a provider for a token policy cap object, validates the response,
-   * and extracts the token policy object ID from it.
-   * @throws {Error} If no token policy cap data is found.
-   * @return {Promise<string>} The token policy object ID.
-   */
-  public async getTokenPolicy() {
-    const tokenPolicyCap = await this.getStakingPoolTokenPolicyCap();
-
-    const tokenPolicyCapObjectData = await this.params.provider.getObject({
-      id: tokenPolicyCap,
-      options: { showContent: true, showOwner: true, showType: true },
-    });
-
-    if (!isTokenPolicyCapObjectData(tokenPolicyCapObjectData)) {
-      throw new Error(`[getTokenPolicyByPoolId] No token policy cap found for the pool ${this.data.address}`);
-    }
-
-    const tokenPolicyObjectId = tokenPolicyCapObjectData.data?.content.fields.value.fields.for;
-
-    return tokenPolicyObjectId;
   }
 
   /**

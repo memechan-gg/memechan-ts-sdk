@@ -1,8 +1,21 @@
 /* eslint-disable require-jsdoc */
+import { CLAMM, InterestPool } from "@interest-protocol/clamm-sdk";
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { SUI_DECIMALS } from "@mysten/sui.js/utils";
-import { CLAMM, InterestPool } from "@interest-protocol/clamm-sdk";
+import BigNumber from "bignumber.js";
+import { BondingPoolSingleton } from "../bonding-pool/BondingPool";
+import { deductSlippage } from "../bonding-pool/utils/deductSlippage";
+import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
+import { getAllObjects } from "../bonding-pool/utils/getAllObjects";
+import { isPoolObjectData } from "../bonding-pool/utils/isPoolObjectData";
+import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
+import { isRegistryTableTypenameDynamicFields } from "../bonding-pool/utils/registryTableTypenameUtils";
+import { CoinManagerSingleton } from "../coin/CoinManager";
+import { LONG_SUI_COIN_TYPE } from "../common/sui";
+import { chunkedRequests } from "../utils/chunking";
+import { registrySchemaContent } from "../utils/schema";
+import { interestPoolCreatedSchema } from "./schemas";
 import {
   AddLiquidityArgs,
   QuoteAddLiquidityArgs,
@@ -13,18 +26,6 @@ import {
 } from "./types";
 import { getCoins } from "./utils/getCoins";
 import { mergeCoins } from "./utils/mergeCoins";
-import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
-import { LONG_SUI_COIN_TYPE } from "../common/sui";
-import { deductSlippage } from "../bonding-pool/utils/deductSlippage";
-import BigNumber from "bignumber.js";
-import { interestPoolCreatedSchema } from "./schemas";
-import { BondingPoolSingleton } from "../bonding-pool/BondingPool";
-import { registrySchemaContent } from "../utils/schema";
-import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
-import { isRegistryTableTypenameDynamicFields } from "../bonding-pool/utils/registryTableTypenameUtils";
-import { getAllObjects } from "../bonding-pool/utils/getAllObjects";
-import { isPoolObjectData } from "../bonding-pool/utils/isPoolObjectData";
-import { chunkedRequests } from "../utils/chunking";
 
 export type LiveCLMMData = {
   poolId?: string;
@@ -216,7 +217,7 @@ export class LiveCLMM {
 
     const minOutputBigInt = BigInt(minOutputNormalized);
 
-    const coinOut = await this.clamm.swap({
+    const { coinOut, txb } = await this.clamm.swap({
       coinIn,
       pool,
       txb: tx,
@@ -225,9 +226,9 @@ export class LiveCLMM {
       minAmount: minOutputBigInt,
     });
 
-    tx.transferObjects(coinOut.coinOut, signerAddress);
+    txb.transferObjects([coinOut], txb.pure(signerAddress));
 
-    return coinOut.txb;
+    return txb;
   }
 
   public async getLpCoinType(): Promise<string> {
@@ -281,14 +282,16 @@ export class LiveCLMM {
       ? normalizeInputCoinAmount(inputAmount, SUI_DECIMALS)
       : normalizeInputCoinAmount(inputAmount, parseInt(LiveCLMM.MEMECOIN_DECIMALS));
 
-    const coinOut = await this.clamm.quoteSwap({
+    const { amount } = await this.clamm.quoteSwap({
       amount: splitAmount,
       pool,
       coinInType: SuiToMeme ? LONG_SUI_COIN_TYPE : memeCoin.coinType,
       coinOutType: SuiToMeme ? memeCoin.coinType : LONG_SUI_COIN_TYPE,
     });
 
-    const outputAmount = new BigNumber(coinOut.toString()).div(10 ** parseInt(LiveCLMM.MEMECOIN_DECIMALS));
+    const outputAmount = new BigNumber(amount.toString()).div(
+      10 ** parseInt(SuiToMeme ? LiveCLMM.MEMECOIN_DECIMALS : SUI_DECIMALS.toString()),
+    );
     const outputAmountRespectingSlippage = deductSlippage(outputAmount, slippagePercentage);
     return outputAmountRespectingSlippage.toString();
   }
@@ -365,5 +368,23 @@ export class LiveCLMM {
     const livePools = await LiveCLMM.fromObjectIds({ objectIds: poolIds, provider });
 
     return livePools;
+  }
+
+  public async getMemeCoinPrice(memeCoinType: string): Promise<{ priceInSui: string; priceInUsd: string }> {
+    const suiInputAmount = "1";
+
+    const memeAmount = await this.quoteSwap({
+      inputAmount: suiInputAmount,
+      SuiToMeme: true,
+      memeCoin: { coinType: memeCoinType },
+      slippagePercentage: 0.01,
+    });
+
+    const suiPrice = await CoinManagerSingleton.getCoinPrice(LONG_SUI_COIN_TYPE);
+
+    const memePriceInSui = new BigNumber(1).div(memeAmount).toString();
+    const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
+
+    return { priceInSui: memePriceInSui, priceInUsd: memePriceInUsd };
   }
 }

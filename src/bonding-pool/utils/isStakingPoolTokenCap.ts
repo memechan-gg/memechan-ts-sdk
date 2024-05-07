@@ -44,11 +44,8 @@ export function isStakingPoolTokenPolicyCap(objectData: SuiObjectResponse): obje
     "fields" in objectData.data.content.fields.policy_cap &&
     objectData.data.content.fields.policy_cap.fields &&
     typeof objectData.data.content.fields.policy_cap.fields === "object" &&
-    "id" in objectData.data.content.fields.policy_cap.fields &&
-    objectData.data.content.fields.policy_cap.fields.id &&
-    typeof objectData.data.content.fields.policy_cap.fields.id === "object" &&
-    "id" in objectData.data.content.fields.policy_cap.fields.id &&
-    objectData.data.content.fields.policy_cap.fields.id.id &&
-    typeof objectData.data.content.fields.policy_cap.fields.id.id === "string"
+    "for" in objectData.data.content.fields.policy_cap.fields &&
+    objectData.data.content.fields.policy_cap.fields.for &&
+    typeof objectData.data.content.fields.policy_cap.fields.for === "string"
   );
 }
