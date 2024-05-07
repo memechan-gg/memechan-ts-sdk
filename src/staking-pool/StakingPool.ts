@@ -1,6 +1,8 @@
 import {
+  availableAmountToUnstake,
   collectFees,
   CollectFeesArgs,
+  getFees,
   unstake,
   withdrawFees,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/staking-pool/functions";
@@ -13,11 +15,11 @@ import { BondingPoolSingleton } from "../bonding-pool/BondingPool";
 import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
 import { getAllObjects } from "../bonding-pool/utils/getAllObjects";
 import { isPoolObjectData } from "../bonding-pool/utils/isPoolObjectData";
-import { isTokenPolicyCapObjectData } from "../bonding-pool/utils/isTokenPolicyCapObjectData";
+import { isStakingPoolTokenPolicyCap } from "../bonding-pool/utils/isStakingPoolTokenCap";
 import { normalizeInputCoinAmount } from "../bonding-pool/utils/normalizeInputCoinAmount";
 import { isRegistryTableTypenameDynamicFields } from "../bonding-pool/utils/registryTableTypenameUtils";
 import { LONG_SUI_COIN_TYPE, SHORT_SUI_COIN_TYPE } from "../common/sui";
-import { getAllTokens, getMergedToken } from "../common/tokens";
+import { getMergedToken } from "../common/tokens";
 import { chunkedRequests } from "../utils/chunking";
 import { registrySchemaContent } from "../utils/schema";
 import { FeeState } from "./FeeState";
@@ -48,7 +50,7 @@ type StakingPoolParams = {
  * Class representing a staking pool.
  */
 export class StakingPool {
-  public static SIMULATION_ACCOUNT_ADDRESS = "0xac5bceec1b789ff840d7d4e6ce4ce61c90d190a7f8c4f4ddf0bff6ee2413c33c";
+  public static SIMULATION_ACCOUNT_ADDRESS = BondingPoolSingleton.SIMULATION_ACCOUNT_ADDRESS;
 
   public static TICKETCOIN_DECIMALS = BondingPoolSingleton.TICKET_COIN_DECIMALS;
   public static MEMECOIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
@@ -97,13 +99,22 @@ export class StakingPool {
   // eslint-disable-next-line require-jsdoc
   public async getAvailableFeesToWithdraw({
     transaction,
+    owner,
   }: {
     transaction?: TransactionBlock;
+    owner: string;
   }): Promise<{ availableFees: { memeAmount: string; suiAmount: string } }> {
     const tx = transaction ?? new TransactionBlock();
 
+    // Please note, mutation of `tx` happening below
+    getFees(
+      tx,
+      [LONG_SUI_COIN_TYPE, this.params.data.memeCoinType, this.params.data.lpCoinType],
+      this.params.data.address,
+    );
+
     const res = await this.params.provider.devInspectTransactionBlock({
-      sender: StakingPool.SIMULATION_ACCOUNT_ADDRESS,
+      sender: owner,
       transactionBlock: tx,
     });
 
@@ -136,12 +147,49 @@ export class StakingPool {
   }
 
   // eslint-disable-next-line require-jsdoc
-  public async getAvailableAmountToClaim({
+  public async getAvailableAmountToUnstake({
     transaction,
+    owner,
   }: {
     transaction?: TransactionBlock;
-  }): Promise<{ availableFees: { memeAmount: string; suiAmount: string } }> {
-    return { availableFees: { memeAmount: "0", suiAmount: "0" } };
+    owner: string;
+  }): Promise<{ availableMemeAmountToUnstake: string }> {
+    const tx = transaction ?? new TransactionBlock();
+
+    console.debug("this.params.data.address: ", this.params.data.address);
+
+    // Please note, mutation of `tx` happening below
+    availableAmountToUnstake(tx, [LONG_SUI_COIN_TYPE, this.params.data.memeCoinType, this.params.data.lpCoinType], {
+      stakingPool: this.params.data.address,
+      clock: SUI_CLOCK_OBJECT_ID,
+    });
+
+    const res = await this.params.provider.devInspectTransactionBlock({
+      sender: owner,
+      transactionBlock: tx,
+    });
+
+    console.debug("res:", res);
+
+    if (!res.results) {
+      throw new Error("[getAvailableAmountToUnstake] No results found for simulation");
+    }
+
+    const returnValues = res.results[0].returnValues;
+    if (!returnValues) {
+      throw new Error("[getAvailableAmountToUnstake] Return values are undefined");
+    }
+
+    const memeRawAmountBytes = returnValues[0][0];
+
+    // Meme
+    const decodedMeme = bcs.de("u64", new Uint8Array(memeRawAmountBytes));
+    const outputRawMeme = decodedMeme;
+    const outputAmountMeme = new BigNumber(outputRawMeme).div(10 ** +StakingPool.MEMECOIN_DECIMALS);
+
+    const availableMemeAmountToUnstake = outputAmountMeme.toString();
+
+    return { availableMemeAmountToUnstake };
   }
 
   // TODO: 1. add the same sing for available tickets to unclaim during the period of live phase
@@ -150,40 +198,45 @@ export class StakingPool {
 
   /**
    * Unstakes assets from the staking pool.
-   * @param {TransactionBlock} tx - The transaction block
    * @param {StakingPoolUnstakeArgs} params - The parameters required for unstaking.
    * @return {Promise<{tx: TransactionBlock}>} The transaction block object with the results of the unstake operation.
    */
-  public async unstake(tx: TransactionBlock, params: StakingPoolUnstakeArgs) {
-    const { inputAmount, signerAddress } = params;
+  public async getUnstakeTransaction(params: StakingPoolUnstakeArgs) {
+    const { inputAmount, signerAddress, transaction } = params;
+    const tx = transaction ?? new TransactionBlock();
 
-    const tokenPolicyObjectId = await this.getTokenPolicy();
+    const tokenPolicyObjectId = await this.getStakingPoolTokenPolicyCap();
 
     const inputAmountWithDecimals = normalizeInputCoinAmount(inputAmount, parseInt(StakingPool.TICKETCOIN_DECIMALS));
 
     const remainingAmountBN = new BigNumber(inputAmountWithDecimals.toString());
-    const ownedTokens = await getAllTokens({
-      walletAddress: signerAddress,
-      coinType: this.data.memeCoinType,
+    const { stakedLpObjectsByMemeCoinTypeMap } = await BondingPoolSingleton.getAllStakedLPObjectsByOwner({
+      owner: signerAddress,
       provider: this.params.provider,
     });
+
+    const ownedTokens = stakedLpObjectsByMemeCoinTypeMap[this.data.memeCoinType];
+
     const tokenObject = getMergedToken({
       remainingAmountBN,
-      availableTokens: ownedTokens,
+      availableTokens: ownedTokens.map((t) => ({
+        coinType: t.memeCoinType,
+        balance: t.balance,
+        objectId: t.objectId,
+      })),
       tokenPolicyObjectId,
       memeCoinType: this.data.memeCoinType,
       transaction: tx,
     });
 
-    const [memecoin, lpcoin] = unstake(tx, [LONG_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
+    const [memecoin, suiCoin] = unstake(tx, [LONG_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
       clock: SUI_CLOCK_OBJECT_ID,
       coinX: tokenObject,
       policy: tokenPolicyObjectId,
       stakingPool: this.data.address,
     });
 
-    tx.transferObjects([memecoin], tx.pure(signerAddress));
-    tx.transferObjects([lpcoin], tx.pure(signerAddress));
+    tx.transferObjects([memecoin, suiCoin], tx.pure(signerAddress));
 
     return { tx };
   }
@@ -195,53 +248,21 @@ export class StakingPool {
    * @throws Will throw an error if no token policy cap object is found or if
    * there are multiple with no clear resolution.
    */
-  public async getTokenPolicyCap() {
-    const poolDynamicFields = await getAllDynamicFields({
-      parentObjectId: this.data.address,
-      provider: this.params.provider,
-    });
-    const tokenPolicyCapList = poolDynamicFields.filter((el) => el.objectType.includes("0x2::token::TokenPolicyCap"));
+  public async getStakingPoolTokenPolicyCap() {
+    const object = await this.params.provider.getObject({ id: this.data.address, options: { showContent: true } });
+    console.debug("object:", JSON.stringify(object, null, 2));
 
-    if (tokenPolicyCapList.length === 0) {
-      throw new Error(`[getTokenPolicyCapByPoolId] No token policy cap found for the pool ${this.data.address}`);
+    if (!isStakingPoolTokenPolicyCap(object)) {
+      throw new Error(`[getStakingPoolTokenPolicyCap] Wrong shape of token policy cap for ${this.data.address}`);
     }
 
-    if (tokenPolicyCapList.length > 1) {
-      console.warn(
-        `[getTokenPolicyCapByPoolId] Warning: multiple tokenPolicyCaps found for pool ${this.data.address},
-        ignoring the rest except first`,
-        tokenPolicyCapList,
-      );
+    const tokenPolicyCapId = object.data.content.fields.policy_cap.fields.for;
+
+    if (!tokenPolicyCapId) {
+      throw new Error(`[getStakingPoolTokenPolicyCap] No found token policy cap for ${this.data.address}`);
     }
 
-    const [tokenPolicyCapObject] = tokenPolicyCapList;
-    const tokenPolicyCapObjectId = tokenPolicyCapObject.objectId;
-
-    return tokenPolicyCapObjectId;
-  }
-
-  /**
-   * Retrieves the token policy ID associated with the staking pool.
-   * This method queries a provider for a token policy cap object, validates the response,
-   * and extracts the token policy object ID from it.
-   * @throws {Error} If no token policy cap data is found.
-   * @return {Promise<string>} The token policy object ID.
-   */
-  public async getTokenPolicy() {
-    const tokenPolicyCap = await this.getTokenPolicyCap();
-
-    const tokenPolicyCapObjectData = await this.params.provider.getObject({
-      id: tokenPolicyCap,
-      options: { showContent: true, showOwner: true, showType: true },
-    });
-
-    if (!isTokenPolicyCapObjectData(tokenPolicyCapObjectData)) {
-      throw new Error(`[getTokenPolicyByPoolId] No token policy cap found for the pool ${this.data.address}`);
-    }
-
-    const tokenPolicyObjectId = tokenPolicyCapObjectData.data?.content.fields.value.fields.for;
-
-    return tokenPolicyObjectId;
+    return tokenPolicyCapId;
   }
 
   /**

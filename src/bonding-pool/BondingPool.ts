@@ -698,6 +698,7 @@ export class BondingPoolSingleton {
     const tx = params.transaction ?? new TransactionBlock();
 
     const txResult = goLiveDefault(tx, [params.memeCoinType, params.lpCoinType], {
+      registry: params.registry,
       adminCap: params.adminCap,
       seedPool: params.seedPool,
       suiMeta: params.suiMetadataObject,
@@ -705,7 +706,6 @@ export class BondingPoolSingleton {
       lpMeta: params.lpMeta,
       clock: SUI_CLOCK_OBJECT_ID,
       treasuryCap: params.lpCoinTreasureCapId,
-      registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
     });
 
     return { tx, txResult };
@@ -715,6 +715,7 @@ export class BondingPoolSingleton {
     const tx = params.transaction ?? new TransactionBlock();
 
     const txResult = goLive(tx, [params.memeCoinType, params.lpCoinType], {
+      registry: params.registry,
       adminCap: params.adminCap,
       seedPool: params.seedPool,
       suiMeta: params.suiMetadataObject,
@@ -724,7 +725,6 @@ export class BondingPoolSingleton {
       treasuryCap: params.lpCoinTreasureCapId,
       cliffDelta: params.cliffDelta,
       endVestingDelta: params.endVestingDelta,
-      registry: BondingPoolSingleton.REGISTRY_OBJECT_ID,
     });
 
     return { tx, txResult };
@@ -797,6 +797,7 @@ export class BondingPoolSingleton {
   // TODO: Candidate to move to the BE
   public async getUniqHoldersOfStakedLp({
     accountingTableAddress,
+    transaction,
   }: {
     transaction?: TransactionBlock;
     accountingTableAddress: string;
