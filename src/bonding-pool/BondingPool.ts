@@ -237,9 +237,9 @@ export class BondingPoolSingleton {
     return coinTx;
   }
 
-  public async getAllStakedLPObjectsByOwner({ owner }: { owner: string }) {
+  public static async getAllStakedLPObjectsByOwner({ owner, provider }: { owner: string; provider: SuiClient }) {
     const stakedLpObjects = await getAllOwnedObjects({
-      provider: this.provider,
+      provider: provider,
       options: {
         owner: owner,
         // TODO: (?) Might require update to support multiple packages for STAKED_LP_OBJECT_TYPE
@@ -285,7 +285,10 @@ export class BondingPoolSingleton {
   }
 
   public async getAvailableStakedLpByOwner({ owner }: { owner: string }) {
-    const allStakedLpsByOwner = await this.getAllStakedLPObjectsByOwner({ owner });
+    const allStakedLpsByOwner = await BondingPoolSingleton.getAllStakedLPObjectsByOwner({
+      owner,
+      provider: this.provider,
+    });
     const currentTimestampMs = Date.now();
     const availableStakedLps = allStakedLpsByOwner.stakedLpObjectList.filter(
       (el) => currentTimestampMs > el.untilTimestamp,
