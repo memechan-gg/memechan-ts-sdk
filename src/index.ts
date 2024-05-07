@@ -22,6 +22,7 @@ export * from "./coin/PoolApi";
 export * from "./coin/schemas/pools-schema";
 
 export * from "./live/LiveCLMM";
+export * from "./live/LivePool";
 export * from "./live/types";
 export * from "./live/utils/getCoins";
 export * from "./live/utils/mergeCoins";

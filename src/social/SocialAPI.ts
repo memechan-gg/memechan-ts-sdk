@@ -22,7 +22,6 @@ export class SocialAPI {
 
   getThreads(params: QueryThreadsParams): Promise<ThreadsResult> {
     const queryParams = new URLSearchParams(queryThreadsParams.parse(params) as Record<string, string>);
-    console.warn("query params", queryParams);
     return jsonFetch(`${this.url}/threads?${queryParams}`, {
       method: "GET",
     });

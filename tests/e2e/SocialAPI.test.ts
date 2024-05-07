@@ -32,13 +32,14 @@ describe("Social APIs", () => {
     coin = createdCoin;
   });
 
-  test("Create Thread", async () => {
+  test("Social APIs flow", async () => {
     const socialAPI = new SocialAPI(BE_URL);
     await socialAPI.createThread({
       message: "Test message",
       coinType: coin.type,
     });
     const { result } = await socialAPI.getThreads({ coinType: coin.type });
-    expect(result.find((r) => r.creator === keypair.getPublicKey().toSuiAddress())).toBeTruthy();
+    const thread = result.find((r) => r.creator === keypair.getPublicKey().toSuiAddress());
+    expect(thread).toBeTruthy();
   });
 });
