@@ -50,6 +50,19 @@
     bignumber.js "^9.1.2"
     zod "^3.23.0"
 
+"@avernikoz/memechan-ts-sdk@../avernikoz-memechan-ts-sdk-v1.1.38.tgz":
+  version "1.1.38"
+  resolved "../avernikoz-memechan-ts-sdk-v1.1.38.tgz#57d1b50c83112ba174c5d1acd6d2d33f53326649"
+  dependencies:
+    "@avernikoz/memechan-ts-interface" "^1.0.27"
+    "@aws-crypto/sha256-browser" "^5.2.0"
+    "@interest-protocol/clamm-sdk" "5.1.0-alpha"
+    "@mysten/sui.js" "^0.51.2"
+    "@smithy/protocol-http" "^3.3.0"
+    "@smithy/signature-v4" "^2.3.0"
+    bignumber.js "^9.1.2"
+    zod "^3.23.0"
+
 "@aws-crypto/sha256-browser@^5.2.0":
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/@aws-crypto/sha256-browser/-/sha256-browser-5.2.0.tgz#153895ef1dba6f9fce38af550e0ef58988eb649e"

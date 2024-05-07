@@ -62,13 +62,21 @@ export const CreateCoin: React.FC = () => {
       },
     });
     console.log("Pool creation success");
-    await new CoinAPI(BE_URL).createCoin({
+    const response = await new CoinAPI(BE_URL).createCoin({
       txDigest: digest,
     });
 
     console.log("Coin&Ticket creation success offchain");
-    const seedPools = await new PoolAPI(BE_URL).getAllSeedPools();
+    const { result: seedPools } = await new PoolAPI(BE_URL).getAllSeedPools();
     console.log("Seed pools", seedPools);
+    console.log(
+      "seed pools coin types",
+      seedPools.map((p) => p.memeCoinType),
+    );
+    console.log(
+      "Seed pool for the coin",
+      seedPools.find((p) => p.memeCoinType === response.coin.type),
+    );
   };
 
   return (
