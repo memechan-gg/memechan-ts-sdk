@@ -370,6 +370,8 @@ export class LiveCLMM {
     return livePools;
   }
 
+  public static fromCoinTypes(coinTypes: string[]) {}
+
   public async getMemeCoinPrice(memeCoinType: string): Promise<{ priceInSui: string; priceInUsd: string }> {
     const suiInputAmount = "1";
 

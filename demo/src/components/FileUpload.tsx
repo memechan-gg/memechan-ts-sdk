@@ -19,7 +19,7 @@ export const FileUpload: React.FC = () => {
     if (file) {
       console.log("Uploading file:", file.name);
       const response = await api.uploadFile(file);
-      const { IpfsHash } = await response.json();
+      const { IpfsHash } = response;
       console.log("File uploaded", IpfsHash);
       setUploadedFileCid(IpfsHash);
     }

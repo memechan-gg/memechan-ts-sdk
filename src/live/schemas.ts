@@ -16,3 +16,23 @@ export const interestPoolCreatedSchema = (packageId: string) =>
     version: z.string().regex(/^\d+$/),
     digest: z.string(),
   });
+
+export const livePoolFields = z.object({
+  coins: z.object({
+    fields: z.object({
+      contents: z.array(
+        z.object({
+          fields: z.object({
+            name: z.string(),
+          }),
+        }),
+      ),
+    }),
+  }),
+  pool_admin_address: z.string(),
+});
+
+export const livePoolDescribeObjectResponse = z.object({
+  dataType: z.literal("moveObject"),
+  fields: livePoolFields,
+});
