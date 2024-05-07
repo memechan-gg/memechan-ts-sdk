@@ -4,7 +4,7 @@ import "./App.css";
 import { FileUpload } from "./components/FileUpload";
 import { useEffect } from "react";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { Auth, CoinAPI } from "@avernikoz/memechan-ts-sdk";
+import { Auth, CoinAPI, PoolAPI } from "@avernikoz/memechan-ts-sdk";
 import { CreateCoin } from "./components/CreateCoin";
 import { BE_URL } from "./constants";
 
@@ -15,6 +15,9 @@ function App() {
     (async () => {
       await authenticate();
       await getCoins();
+      await getSeedPools();
+      await getLivePools();
+      await getStakingPools();
     })();
   }, []);
 
@@ -41,6 +44,34 @@ function App() {
     const coin = await api.getCoin("PRESALE", coins[0].type);
     console.log("coin details", coin);
   };
+
+  const getSeedPools = async () => {
+    const { result: seedPools } = await new PoolAPI(BE_URL).getAllSeedPools();
+    console.log("Seed pools", seedPools);
+    console.log(
+      "seed pools coin types",
+      seedPools.map((p) => p.memeCoinType),
+    );
+  };
+
+  const getLivePools = async () => {
+    const { result: livePools } = await new PoolAPI(BE_URL).getLivePools();
+    console.log("Live pools", livePools);
+    console.log(
+      "live pools coin types",
+      livePools.map((p) => p.coinType),
+    );
+  };
+
+  const getStakingPools = async () => {
+    const { result: stakingPools } = await new PoolAPI(BE_URL).getStakingPools();
+    console.log("Staking pools", stakingPools);
+    console.log(
+      "staking pools coin types",
+      stakingPools.map((p) => p.memeCoinType),
+    );
+  };
+
   return (
     <>
       <div>

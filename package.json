@@ -1,6 +1,6 @@
 {
   "name": "@avernikoz/memechan-ts-sdk",
-  "version": "1.1.37",
+  "version": "1.1.38",
   "description": "Typescript SDK for Memechan.gg",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +14,7 @@
   "engineStrict": true,
   "scripts": {
     "test": "vitest ./tests/unit",
-    "e2e": "vitest ./tests/e2e",
+    "e2e": "vitest ./tests/e2e/LivePool.test.ts",
     "audit": "yarn audit --groups dependencies",
     "format": "prettier --write src/**/*.ts",
     "lint": "eslint './src/**/*.ts'",
@@ -38,7 +38,8 @@
     "@aws-crypto/sha256-browser": "^5.2.0",
     "@interest-protocol/clamm-sdk": "5.1.0-alpha",
     "@mysten/sui.js": "^0.51.2",
-    "aws-sigv4-fetch": "^3.1.0",
+    "@smithy/protocol-http": "^3.3.0",
+    "@smithy/signature-v4": "^2.3.0",
     "bignumber.js": "^9.1.2",
     "zod": "^3.23.0"
   },

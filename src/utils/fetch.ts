@@ -3,7 +3,7 @@ import { IAMCredentials } from "../auth/types";
 import { BE_REGION } from "../constants";
 import { HttpRequest } from "@smithy/protocol-http";
 import { SignatureV4 } from "@smithy/signature-v4";
-import { createSignedFetcher } from "aws-sigv4-fetch";
+import { createSignedFetcher } from "./sigv4";
 
 export const jsonFetch = async (
   input: string | URL | globalThis.Request,
