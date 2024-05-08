@@ -26,6 +26,7 @@ import {
 } from "./types";
 import { getCoins } from "./utils/getCoins";
 import { mergeCoins } from "./utils/mergeCoins";
+import { PoolAPI } from "../coin/PoolApi";
 
 export type LiveCLMMData = {
   poolId?: string;
@@ -53,6 +54,7 @@ export class LiveCLMM {
 
   public clamm: CLAMM;
   private _pool: InterestPool | undefined;
+  private _from_backend: boolean = false;
   public data: LiveCLMMData;
 
   /**
@@ -75,7 +77,10 @@ export class LiveCLMM {
 
   public async getPool(): Promise<InterestPool> {
     if (this._pool === undefined) {
-      if (this.data.poolId) {
+      if (this._from_backend && this.data.memeCoin) {
+        const pool = await new PoolAPI().getLivePoolByCoinType(this.data.memeCoin.coinType);
+        this._pool = await this.clamm.getPool(pool.poolObjectId);
+      } else if (this.data.poolId) {
         this._pool = await this.clamm.getPool(this.data.poolId);
       } else if (this.data.memeCoin) {
         const pools = await this.clamm.getPools({
@@ -101,6 +106,13 @@ export class LiveCLMM {
     console.log(LiveCLMM.CLMM_ADDRESS, txResult.objectChanges);
     const createdLivePool = schema.parse(txResult.objectChanges?.find((oc) => schema.safeParse(oc).success));
     return new LiveCLMM({ data: { poolId: createdLivePool.objectId }, provider });
+  }
+
+  static fromBackend({ coinType, provider }: { coinType: string; provider: SuiClient }) {
+    const clamm = new LiveCLMM({ data: { memeCoin: { coinType } }, provider });
+    clamm._from_backend = true;
+
+    return clamm;
   }
 
   public async addLiquidity(params: AddLiquidityArgs) {
