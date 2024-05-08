@@ -1,5 +1,5 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
-import { PoolAPI, StakingPool } from "../../src";
+import { StakingPool } from "../../src";
 import { FeeState } from "../../src/staking-pool/FeeState";
 import { VestingConfig } from "../../src/staking-pool/VestingConfig";
 
