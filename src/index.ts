@@ -26,3 +26,6 @@ export * from "./live/LivePool";
 export * from "./live/types";
 export * from "./live/utils/getCoins";
 export * from "./live/utils/mergeCoins";
+
+export * from "./social/SocialAPI";
+export * from "./social/schemas";
