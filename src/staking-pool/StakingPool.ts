@@ -1,14 +1,13 @@
 import {
   availableAmountToUnstake,
   collectFees,
-  CollectFeesArgs,
   getFees,
   unstake,
   withdrawFees,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/staking-pool/functions";
 import { bcs } from "@mysten/sui.js/bcs";
 import { SuiClient, SuiObjectResponse } from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { TransactionBlock, TransactionResult } from "@mysten/sui.js/transactions";
 import { SUI_CLOCK_OBJECT_ID, SUI_DECIMALS } from "@mysten/sui.js/utils";
 import BigNumber from "bignumber.js";
 import { BondingPoolSingleton } from "../bonding-pool/BondingPool";
@@ -24,7 +23,13 @@ import { chunkedRequests } from "../utils/chunking";
 import { registrySchemaContent } from "../utils/schema";
 import { FeeState } from "./FeeState";
 import { stakingPoolCreatedSchema, stakingPoolDescribeObjectResponse } from "./schemas";
-import { StakingPoolUnstakeArgs } from "./types";
+import {
+  GetCollectFeesAndUnstakeTransactionArgs,
+  GetCollectFeesAndWithdrawTransactionArgs,
+  GetStakingPoolCollectFeesArgs,
+  GetWithdrawFeesArgs,
+  StakingPoolUnstakeArgs,
+} from "./types";
 import { UserWithdrawals } from "./UserWithdrawals";
 import { VestingConfig } from "./VestingConfig";
 
@@ -35,7 +40,6 @@ type StakingPoolData = {
   totalSupply: string;
   ammPool: string;
   balanceLp: string;
-  balanceMeme: string;
   feeState: FeeState;
   poolAdmin: string;
   vesting: VestingConfig;
@@ -66,34 +70,42 @@ export class StakingPool {
 
   /**
    * Collects fees from the staking pool.
-   * @param {TransactionBlock} tx - The transaction block to collect fees.
-   * @param {Omit<CollectFeesArgs, "clock" | "staking_pool">} params - Parameters for the collectFees function,
+   * @param {GetStakingPoolCollectFeesArgs} params - Parameters for the collectFees function,
    * omitting the clock and staking pool properties which are set internally.
-   * @return {TransactionResult} The result of the collectFees function call
+   * @return {{tx: TransactionResult, txResult: TransactionResult}} The result of the collectFees function call
    */
-  public collectFees(tx: TransactionBlock, params: Omit<CollectFeesArgs, "clock" | "staking_pool">) {
-    return collectFees(tx, [SHORT_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
+  public collectFees(params: GetStakingPoolCollectFeesArgs): { tx: TransactionBlock; txResult: TransactionResult } {
+    const tx = params.transaction ?? new TransactionBlock();
+
+    const txResult = collectFees(tx, [SHORT_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType], {
       stakingPool: this.data.address,
-      pool: params.pool,
+      pool: params.clmmPool,
       clock: SUI_CLOCK_OBJECT_ID,
     });
+
+    return { tx, txResult };
   }
 
   /**
    * Withdraws fees from the staking pool.
-   * @param {TransactionBlock} tx - The transaction block to withdraw fees.
-   * @param {string} signerAddress - the wallet address that you are using to withdraw the fees
-   * @return {TransactionResult} The result of the withdrawFees function call
+   * @param {GetWithdrawFeesArgs} params - params for withdraw fees from staking
+   * @return {{tx: TransactionResult, txResult: TransactionResult}} The result of the withdrawFees function call
    */
-  public withdrawFees(tx: TransactionBlock, signerAddress: string) {
-    const [memecoin, lpcoin] = withdrawFees(
+  public withdrawFees(params: GetWithdrawFeesArgs): { tx: TransactionBlock; txResult: TransactionResult } {
+    const tx = params.transaction ?? new TransactionBlock();
+
+    const txResult = withdrawFees(
       tx,
       [SHORT_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType],
       this.data.address,
     );
-    tx.transferObjects([memecoin], tx.pure(signerAddress));
-    tx.transferObjects([lpcoin], tx.pure(signerAddress));
-    return tx;
+
+    const [memeCoin, suiCoin] = txResult;
+
+    tx.transferObjects([memeCoin], tx.pure(params.signerAddress));
+    tx.transferObjects([suiCoin], tx.pure(params.signerAddress));
+
+    return { tx, txResult };
   }
 
   // eslint-disable-next-line require-jsdoc
@@ -156,8 +168,6 @@ export class StakingPool {
   }): Promise<{ availableMemeAmountToUnstake: string }> {
     const tx = transaction ?? new TransactionBlock();
 
-    console.debug("this.params.data.address: ", this.params.data.address);
-
     // Please note, mutation of `tx` happening below
     availableAmountToUnstake(tx, [LONG_SUI_COIN_TYPE, this.params.data.memeCoinType, this.params.data.lpCoinType], {
       stakingPool: this.params.data.address,
@@ -168,8 +178,6 @@ export class StakingPool {
       sender: owner,
       transactionBlock: tx,
     });
-
-    console.debug("res:", res);
 
     if (!res.results) {
       throw new Error("[getAvailableAmountToUnstake] No results found for simulation");
@@ -241,6 +249,43 @@ export class StakingPool {
     return { tx };
   }
 
+  // eslint-disable-next-line require-jsdoc
+  public async getCollectFeesAndUnstakeTransaction(params: GetCollectFeesAndUnstakeTransactionArgs) {
+    const tx = params.transaction ?? new TransactionBlock();
+
+    const { tx: collectFeesTx } = this.collectFees({
+      clmmPool: params.clmmPool,
+      stakingPool: this.data.address,
+      transaction: tx,
+    });
+
+    const { tx: unstakeStakedLpAndCollectFeesTx } = await this.getUnstakeTransaction({
+      signerAddress: params.signerAddress,
+      transaction: collectFeesTx,
+      inputAmount: params.inputAmount,
+    });
+
+    return { tx: unstakeStakedLpAndCollectFeesTx };
+  }
+
+  // eslint-disable-next-line require-jsdoc
+  public async getCollectFeesAndWithdrawFeesTransaction(params: GetCollectFeesAndWithdrawTransactionArgs) {
+    const tx = params.transaction ?? new TransactionBlock();
+
+    const { tx: collectFeesTx } = this.collectFees({
+      clmmPool: params.clmmPool,
+      stakingPool: this.data.address,
+      transaction: tx,
+    });
+
+    const { tx: withdrawFeesAndCollectFeesTx } = this.withdrawFees({
+      signerAddress: params.signerAddress,
+      transaction: collectFeesTx,
+    });
+
+    return { tx: withdrawFeesAndCollectFeesTx };
+  }
+
   /**
    * Retrieves the Token Policy Cap Object ID by the pool ID.
    * @param {{ poolId: string }} param0 - Object containing the pool ID.
@@ -250,7 +295,7 @@ export class StakingPool {
    */
   public async getStakingPoolTokenPolicyCap() {
     const object = await this.params.provider.getObject({ id: this.data.address, options: { showContent: true } });
-    console.debug("object:", JSON.stringify(object, null, 2));
+    // console.debug("object:", JSON.stringify(object, null, 2));
 
     if (!isStakingPoolTokenPolicyCap(object)) {
       throw new Error(`[getStakingPoolTokenPolicyCap] Wrong shape of token policy cap for ${this.data.address}`);
@@ -320,7 +365,6 @@ export class StakingPool {
         lpCoinType,
         memeCoinType,
         balanceLp: stakingPoolResponse.balance_lp,
-        balanceMeme: stakingPoolResponse.balance_meme,
       },
       provider,
     });

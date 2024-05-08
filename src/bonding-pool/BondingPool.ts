@@ -67,10 +67,10 @@ export class BondingPoolSingleton {
 
   public static SUI_METADATA_OBJECT_ID = "0x9258181f5ceac8dbffb7030890243caed69a9599d2886d957a9cb7656af3bdb3";
 
-  public static PACKAGE_OBJECT_ID = "0xe857abf98342c16cbb963d2f78628a7451b6efaa609866a0ba042ca3fa8e351a";
-  public static UPGRADE_CAP_OBJECT_ID = "0xf3603014c55d6dd76402fe03dc7972fc57c75d106c9ad0c053c1335b937fe5ca";
-  public static REGISTRY_OBJECT_ID = "0x620fb6b36e4087c8dcd645f0935e596199ae844a8de9bd3d932206aa41d0e6fa";
-  public static ADMIN_OBJECT_ID = "0x0e85bd573a55d9d6200004386ea38f60ebaddac254cb312807362351e93996d9";
+  public static PACKAGE_OBJECT_ID = "0xec1a29760528791c0968ef8fd168b9f052b82e1c8ba686affbb0fdcaf8293756";
+  public static UPGRADE_CAP_OBJECT_ID = "0xe68cb3e4e1dca8d868a79f1ffd4f02d8f6c5e0c4fd8ac2ea7dac73d3428174f8";
+  public static REGISTRY_OBJECT_ID = "0x67809663f00498e9dbe5110291aebc33cd9b1ed5bcf84d9481cf9083c44e50b5";
+  public static ADMIN_OBJECT_ID = "0xfc8b8e033efa96b2923f00344a9ae68c58a5c7357e917e52ef1ee4f21423a7b8";
   // TODO: Move that to StakingPool
   public static STAKING_MODULE_NAME = "staked_lp";
   public static STAKING_LP_STRUCT_TYPE = "StakedLP";

@@ -3,7 +3,7 @@ import { StakingPool } from "../../src";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 
-// yarn tsx examples/staking-pool/withdraw-from-pool.ts
+// yarn tsx examples/staking-pool/withdraw-fees-from-pool.ts
 export const withdrawFromPool = async () => {
   const stakingPool = await StakingPool.fromGoLiveDefaultTx({
     txDigest: "9nC4RG4ma6mLf9GciXSn2fHi4SPuKrGsieGyqvAc6EY3",
