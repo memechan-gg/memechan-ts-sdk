@@ -9,10 +9,10 @@ import {
   createThreadRequestBody,
   incrementLikeCounterRequestBody,
   IncrementLikeCounterRequestBody,
-  queryThreadRepliesParams,
-  QueryThreadRepliesParams,
-  queryThreadsParams,
-  QueryThreadsParams,
+  QueryThreadsReplyRequestParams,
+  queryThreadsReplyRequestParamsSchema,
+  QueryThreadsRequestParams,
+  queryThreadsRequestParamsSchema,
   ThreadRepliesResult,
   ThreadsResult,
 } from "./schemas";
@@ -20,15 +20,17 @@ import {
 export class SocialAPI {
   constructor(private url = BE_URL) {}
 
-  getThreads(params: QueryThreadsParams): Promise<ThreadsResult> {
-    const queryParams = new URLSearchParams(queryThreadsParams.parse(params) as Record<string, string>);
+  getThreads(params: QueryThreadsRequestParams): Promise<ThreadsResult> {
+    const queryParams = new URLSearchParams(queryThreadsRequestParamsSchema.parse(params) as Record<string, string>);
     return jsonFetch(`${this.url}/threads?${queryParams}`, {
       method: "GET",
     });
   }
 
-  getThreadReplies(params: QueryThreadRepliesParams): Promise<ThreadRepliesResult> {
-    const queryParams = new URLSearchParams(queryThreadRepliesParams.parse(params) as Record<string, string>);
+  getThreadReplies(params: QueryThreadsReplyRequestParams): Promise<ThreadRepliesResult> {
+    const queryParams = new URLSearchParams(
+      queryThreadsReplyRequestParamsSchema.parse(params) as Record<string, string>,
+    );
     return jsonFetch(`${this.url}/replies?${queryParams}`, {
       method: "GET",
     });

@@ -1,30 +1,15 @@
-import { z, ZodRawShape } from "zod";
+import { z } from "zod";
+import { paginatedResultSchema } from "../coin/schemas/coin-schemas";
 
 export const createThreadRequestBody = z.object({
   message: z.string(),
   coinType: z.string(),
 });
 
-export const paginatedResultSchema = <T extends ZodRawShape>(result: z.ZodObject<T>) =>
-  z.object({
-    paginationToken: z.string().nullish(),
-    result: z.array(result),
-  });
-
 export const createThreadReplyRequestBody = z.object({
   message: z.string(),
   coinType: z.string(),
   threadId: z.string(),
-});
-
-export const queryThreadsParams = z.object({
-  coinType: z.string(),
-  paginationToken: z.string().nullish(),
-});
-
-export const queryThreadRepliesParams = z.object({
-  threadId: z.string(),
-  paginationToken: z.string().nullish(),
 });
 
 export const incrementLikeCounterRequestBody = z.object({
@@ -51,15 +36,32 @@ export const threadReplyMessageSchema = baseMessageSchema.extend({
   type: z.literal("REPLY"),
 });
 
+export const threadsSortableColumns = z.literal("creationTime").or(z.literal("replyCount")).or(z.literal("likeCount"));
+export const threadsReplySortableColumns = z.literal("creationTime").or(z.literal("likeCount"));
+
 const threadsResult = paginatedResultSchema(threadMessageSchema);
 const threadRepliesResult = paginatedResultSchema(threadReplyMessageSchema);
 
+export const queryThreadsRequestParamsSchema = z.object({
+  sortBy: threadsSortableColumns,
+  coinType: z.string(),
+  direction: z.literal("asc").or(z.literal("desc")),
+  paginationToken: z.string().nullish(),
+});
+
+export const queryThreadsReplyRequestParamsSchema = z.object({
+  sortBy: threadsReplySortableColumns,
+  threadId: z.string(),
+  direction: z.literal("asc").or(z.literal("desc")),
+  paginationToken: z.string().nullish(),
+});
+
+export type ThreadsResult = z.infer<typeof threadsResult>;
+export type ThreadRepliesResult = z.infer<typeof threadRepliesResult>;
+export type QueryThreadsRequestParams = z.infer<typeof queryThreadsRequestParamsSchema>;
+export type QueryThreadsReplyRequestParams = z.infer<typeof queryThreadsReplyRequestParamsSchema>;
 export type ThreadReplyMessage = z.infer<typeof threadReplyMessageSchema>;
 export type ThreadMessage = z.infer<typeof threadMessageSchema>;
 export type CreateThreadRequestBody = z.infer<typeof createThreadRequestBody>;
 export type CreateThreadReplyBody = z.infer<typeof createThreadReplyRequestBody>;
 export type IncrementLikeCounterRequestBody = z.infer<typeof incrementLikeCounterRequestBody>;
-export type ThreadsResult = z.infer<typeof threadsResult>;
-export type ThreadRepliesResult = z.infer<typeof threadRepliesResult>;
-export type QueryThreadsParams = z.infer<typeof queryThreadsParams>;
-export type QueryThreadRepliesParams = z.infer<typeof queryThreadRepliesParams>;
