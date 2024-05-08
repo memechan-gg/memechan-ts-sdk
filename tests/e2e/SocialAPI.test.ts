@@ -42,6 +42,10 @@ describe("Threads fetching", () => {
       });
       const nLikes = Math.floor(Math.random() * (5 - 0 + 1)) + 0;
       for (let j = 0; j < nLikes; j++) {
+        const alreadyLiked = await socialAPI.getLike({
+          threadId: result[0].id,
+        });
+        expect(alreadyLiked).toBe(j > 0);
         await socialAPI.like({
           coinType: coin.type,
           threadId: result[0].id,
