@@ -7,6 +7,8 @@ import {
   createThreadReplyRequestBody,
   CreateThreadRequestBody,
   createThreadRequestBody,
+  getLikeCounterRequestBody,
+  GetLikeCounterRequestBody,
   incrementLikeCounterRequestBody,
   IncrementLikeCounterRequestBody,
   QueryThreadsReplyRequestParams,
@@ -42,6 +44,15 @@ export class SocialAPI {
       method: "POST",
       body: createThreadRequestBody.parse(params),
     });
+  }
+
+  async getLike(params: GetLikeCounterRequestBody): Promise<boolean> {
+    if (!Auth.currentSession) throw new Error("You don't have any active session, please run the Auth.refreshSession");
+    const queryParams = new URLSearchParams(getLikeCounterRequestBody.parse(params) as Record<string, string>);
+    const { alreadyLiked } = await signedJsonFetch(`${this.url}/social/like?${queryParams}`, Auth.currentSession, {
+      method: "GET",
+    });
+    return alreadyLiked;
   }
 
   createThreadReply(params: CreateThreadReplyBody): Promise<void> {

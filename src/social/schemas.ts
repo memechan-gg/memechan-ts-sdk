@@ -56,6 +56,15 @@ export const queryThreadsReplyRequestParamsSchema = z.object({
   paginationToken: z.string().nullish(),
 });
 
+export const getLikeCounterRequestBody = z.object({
+  threadId: z.string(),
+  replyId: z.string().nullish(),
+});
+
+export const getLikeCounterResponseBody = z.object({
+  alreadyLiked: z.boolean(),
+});
+
 export type ThreadsResult = z.infer<typeof threadsResult>;
 export type ThreadRepliesResult = z.infer<typeof threadRepliesResult>;
 export type QueryThreadsRequestParams = z.infer<typeof queryThreadsRequestParamsSchema>;
@@ -65,3 +74,4 @@ export type ThreadMessage = z.infer<typeof threadMessageSchema>;
 export type CreateThreadRequestBody = z.infer<typeof createThreadRequestBody>;
 export type CreateThreadReplyBody = z.infer<typeof createThreadReplyRequestBody>;
 export type IncrementLikeCounterRequestBody = z.infer<typeof incrementLikeCounterRequestBody>;
+export type GetLikeCounterRequestBody = z.infer<typeof getLikeCounterRequestBody>;
