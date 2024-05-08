@@ -86,13 +86,13 @@ export class StakingPool {
    * @return {TransactionResult} The result of the withdrawFees function call
    */
   public withdrawFees(tx: TransactionBlock, signerAddress: string) {
-    const [memecoin, lpcoin] = withdrawFees(
+    const [memecoin, suicoin] = withdrawFees(
       tx,
       [SHORT_SUI_COIN_TYPE, this.data.memeCoinType, this.data.lpCoinType],
       this.data.address,
     );
     tx.transferObjects([memecoin], tx.pure(signerAddress));
-    tx.transferObjects([lpcoin], tx.pure(signerAddress));
+    tx.transferObjects([suicoin], tx.pure(signerAddress));
     return tx;
   }
 
@@ -155,8 +155,6 @@ export class StakingPool {
     owner: string;
   }): Promise<{ availableMemeAmountToUnstake: string }> {
     const tx = transaction ?? new TransactionBlock();
-
-    console.debug("this.params.data.address: ", this.params.data.address);
 
     // Please note, mutation of `tx` happening below
     availableAmountToUnstake(tx, [LONG_SUI_COIN_TYPE, this.params.data.memeCoinType, this.params.data.lpCoinType], {
@@ -250,7 +248,7 @@ export class StakingPool {
    */
   public async getStakingPoolTokenPolicyCap() {
     const object = await this.params.provider.getObject({ id: this.data.address, options: { showContent: true } });
-    console.debug("object:", JSON.stringify(object, null, 2));
+    // console.debug("object:", JSON.stringify(object, null, 2));
 
     if (!isStakingPoolTokenPolicyCap(object)) {
       throw new Error(`[getStakingPoolTokenPolicyCap] Wrong shape of token policy cap for ${this.data.address}`);
