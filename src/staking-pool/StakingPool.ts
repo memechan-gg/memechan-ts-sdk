@@ -265,7 +265,7 @@ export class StakingPool {
       transaction: collectFeesTx,
     });
 
-    return withdrawFeesAndCollectFeesTx;
+    return { tx: withdrawFeesAndCollectFeesTx };
   }
 
   /**
