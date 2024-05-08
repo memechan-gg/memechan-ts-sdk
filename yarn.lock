@@ -21,10 +21,10 @@
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
-"@avernikoz/memechan-ts-interface@^1.0.28":
-  version "1.0.28"
-  resolved "https://registry.npmjs.org/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.28.tgz#40593cb8c98b009ff44128bfbafcd3ac1f573241"
-  integrity sha512-IqEfLqtTY0CJ+CEXo9um7x0va4BtGSWI/ranKyp9dxs9fFiBR/DF0f1XcADa/WkLFWsVP63Q5Hp5Q/7kIUHlYQ==
+"@avernikoz/memechan-ts-interface@^1.0.29":
+  version "1.0.29"
+  resolved "https://registry.npmjs.org/@avernikoz/memechan-ts-interface/-/memechan-ts-interface-1.0.29.tgz#404be559a86a5587e2b61d7b980ec4120bbed699"
+  integrity sha512-IEOvtHJmk9piiC7RpguXyzI2F6RC8Da5wwDiaVduAA1kn6jvK80jp0UYg+eRNwmmliCwUUg68Nx8y0TPIyP5pw==
   dependencies:
     "@mysten/bcs" "0.11.1"
     "@mysten/sui.js" "0.51.2"
@@ -3389,6 +3389,7 @@ std-env@^3.5.0:
   integrity sha512-JPbdCEQLj1w5GilpiHAx3qJvFndqybBysA3qUOnznweH4QbNYUsW/ea8QzSrnh0vNsezMMw5bcVool8lM0gwzg==
 
 "string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0:
+  name string-width-cjs
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
