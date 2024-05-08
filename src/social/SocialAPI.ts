@@ -72,7 +72,7 @@ export class SocialAPI {
 
   unlike(params: IncrementLikeCounterRequestBody): Promise<void> {
     if (!Auth.currentSession) throw new Error("You don't have any active session, please run the Auth.refreshSession");
-    return signedJsonFetch(`${this.url}/social/unlike`, Auth.currentSession, {
+    return signedJsonFetch(`${this.url}/social/like`, Auth.currentSession, {
       method: "DELETE",
       body: incrementLikeCounterRequestBody.parse(params),
     });
