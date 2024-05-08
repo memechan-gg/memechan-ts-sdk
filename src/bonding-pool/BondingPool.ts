@@ -85,13 +85,13 @@ export class BondingPoolSingleton {
   public static MEMECOIN_MINT_AMOUNT = "0";
   public static MEMECOIN_FIXED_SUPPLY = false;
 
-  // contract consts
+  // contract consts               8_3333_333_333_333
   public static DEFAULT_MAX_M_LP = 200_000_000_000_000;
   public static DEFAULT_MAX_M = 900_000_000_000_000;
 
   public static MEMECOIN_MINT_AMOUNT_FROM_CONTRACT = new BigNumber(BondingPoolSingleton.DEFAULT_MAX_M_LP)
     .plus(BondingPoolSingleton.DEFAULT_MAX_M)
-    .div(BondingPoolSingleton.MEMECOIN_DECIMALS)
+    .div(10 ** +BondingPoolSingleton.MEMECOIN_DECIMALS)
     .toString();
 
   public static TICKET_COIN_DECIMALS = BondingPoolSingleton.MEMECOIN_DECIMALS;
