@@ -52,6 +52,15 @@ describe("Threads fetching", () => {
           threadId: result[0].id,
         });
       }
+      await socialAPI.unlike({
+        coinType: coin.type,
+        threadId: result[0].id,
+      });
+      const alreadyLiked = await socialAPI.getLike({
+        threadId: result[0].id,
+        creator: keypair.getPublicKey().toSuiAddress(),
+      });
+      expect(alreadyLiked).toBe(false);
       const nReplies = Math.floor(Math.random() * (5 - 0 + 1)) + 0;
       for (let j = 0; j < nReplies; j++) {
         await socialAPI.createThreadReply({
