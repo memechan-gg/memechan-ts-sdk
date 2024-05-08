@@ -44,6 +44,7 @@ describe("Threads fetching", () => {
       for (let j = 0; j < nLikes; j++) {
         const alreadyLiked = await socialAPI.getLike({
           threadId: result[0].id,
+          creator: keypair.getPublicKey().toSuiAddress(),
         });
         expect(alreadyLiked).toBe(j > 0);
         await socialAPI.like({

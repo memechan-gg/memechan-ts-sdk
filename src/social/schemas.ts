@@ -57,6 +57,7 @@ export const queryThreadsReplyRequestParamsSchema = z.object({
 });
 
 export const getLikeCounterRequestBody = z.object({
+  creator: z.string(),
   threadId: z.string(),
   replyId: z.string().nullish(),
 });
