@@ -7,10 +7,6 @@ export type StakingPoolUnstakeArgs = {
   signerAddress: string;
 } & { transaction?: TransactionBlock };
 
-export type StakingPoolWithdrawArgs = {
-  signerAddress: string;
-};
-
 export type StakingPoolAddFeesArgs = {
   memeCoinInput: string;
   suiCoinInput: string;
@@ -28,3 +24,5 @@ export type GetCollectFeesAndUnstakeTransactionArgs = StakingPoolUnstakeArgs & G
 export type GetWithdrawFeesArgs = { signerAddress: string } & {
   transaction?: TransactionBlock;
 };
+
+export type GetCollectFeesAndWithdrawTransactionArgs = GetWithdrawFeesArgs & GetStakingPoolCollectFeesArgs;

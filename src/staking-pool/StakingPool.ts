@@ -25,6 +25,7 @@ import { FeeState } from "./FeeState";
 import { stakingPoolCreatedSchema, stakingPoolDescribeObjectResponse } from "./schemas";
 import {
   GetCollectFeesAndUnstakeTransactionArgs,
+  GetCollectFeesAndWithdrawTransactionArgs,
   GetStakingPoolCollectFeesArgs,
   GetWithdrawFeesArgs,
   StakingPoolUnstakeArgs,
@@ -178,8 +179,6 @@ export class StakingPool {
       transactionBlock: tx,
     });
 
-    console.debug("res:", res);
-
     if (!res.results) {
       throw new Error("[getAvailableAmountToUnstake] No results found for simulation");
     }
@@ -252,6 +251,25 @@ export class StakingPool {
 
   // eslint-disable-next-line require-jsdoc
   public async getCollectFeesAndUnstakeTransaction(params: GetCollectFeesAndUnstakeTransactionArgs) {
+    const tx = params.transaction ?? new TransactionBlock();
+
+    const { tx: collectFeesTx } = this.collectFees({
+      clmmPool: params.clmmPool,
+      stakingPool: this.data.address,
+      transaction: tx,
+    });
+
+    const { tx: unstakeStakedLpAndCollectFeesTx } = await this.getUnstakeTransaction({
+      signerAddress: params.signerAddress,
+      transaction: collectFeesTx,
+      inputAmount: params.inputAmount,
+    });
+
+    return { tx: unstakeStakedLpAndCollectFeesTx };
+  }
+
+  // eslint-disable-next-line require-jsdoc
+  public async getCollectFeesAndWithdrawFeesTransaction(params: GetCollectFeesAndWithdrawTransactionArgs) {
     const tx = params.transaction ?? new TransactionBlock();
 
     const { tx: collectFeesTx } = this.collectFees({
