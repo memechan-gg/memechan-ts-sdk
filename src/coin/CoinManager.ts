@@ -242,15 +242,6 @@ export class CoinManagerSingleton implements ICoinManager {
   public static async getCoinPrice(coinType: string): Promise<number> {
     const priceResponse = await fetch(
       `${PRICE_API_URL}/api/assets?chainId=${PRICE_API_CHAIN_ID}&tokenAddress=${coinType}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      },
     );
 
     const priceData = await priceResponse.json();
