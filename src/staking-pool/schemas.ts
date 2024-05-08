@@ -44,7 +44,6 @@ export const feeState = z.object({
 export const stakingPoolFields = z.object({
   amm_pool: z.string(),
   balance_lp: z.string(),
-  balance_meme: z.string(),
   fee_state: feeState,
   meme_cap: z.object({
     fields: z.object({
