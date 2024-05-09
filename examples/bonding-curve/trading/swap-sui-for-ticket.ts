@@ -8,12 +8,12 @@ export const swapSuiForTicketExample = async () => {
   // get all pools
   const { pools, poolsByMemeCoinTypeMap } = await bondingCurveInstance.getAllPools();
 
+  const memecoinCointype =
+    "0x232bcf980b826ab7bba1629c807b756e7fc507d0e84f009bfdd31caffa175365::meme_08_05_2024_06::MEME_08_05_2024_06";
+
   // get random pool
-  const pool =
-    poolsByMemeCoinTypeMap[
-      "0xb09db619ab3cd89355c259660ef4c686b416cd6319332ef41be4dcfd5f4bfe4d::meme_07_05_2024_01::MEME_07_05_2024_01"
-    ];
-  const inputAmount = "0.05";
+  const pool = poolsByMemeCoinTypeMap[memecoinCointype];
+  const inputAmount = "1.2";
   //   const inputAmount = "30000";
   if (!pool) {
     throw new Error("Pool doesn't exists");

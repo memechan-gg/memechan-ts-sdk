@@ -6,12 +6,14 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 // yarn tsx examples/staking-pool/unstake-from-pool.ts
 export const unstakeFromPool = async () => {
   const stakingPool = await StakingPool.fromGoLiveDefaultTx({
-    txDigest: "12aZ8vaZFS4eJULP7hbeEdzRfQuAaEUrPbt75F1oz2tY",
+    txDigest: "4v8DoaJze4s2dpNKS9cLyKQafTS4tQNpKVMwg4uneRbf",
     provider,
   });
 
   // Input amount that user wants to unstake from the staking pool, ticket coin
   const { availableMemeAmountToUnstake } = await stakingPool.getAvailableAmountToUnstake({ owner: user });
+  console.debug("availableMemeAmountToUnstake: ", availableMemeAmountToUnstake);
+
   const tx = new TransactionBlock();
   const unstakeFromStakingPoolTx = await stakingPool.getUnstakeTransaction({
     transaction: tx,
@@ -32,6 +34,8 @@ export const unstakeFromPool = async () => {
   //     showInput: true,
   //   },
   // });
+
+  console.debug("tx.serialize: ", JSON.stringify(JSON.parse(tx.serialize()), null, 2));
 
   const res = await provider.devInspectTransactionBlock({
     transactionBlock: tx,

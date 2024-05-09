@@ -67,9 +67,9 @@ export const createCustomBondingCurveAndCoins = async (params: CreateCoinTransac
 };
 
 createCustomBondingCurveAndCoins({
-  description: "07 May 2024 first",
-  name: "meme0705202401",
+  description: "08 May 2024 six",
+  name: "meme0805202406",
   signerAddress: user,
-  symbol: "MEME_07_05_2024_01",
+  symbol: "MEME_08_05_2024_06",
   url: "",
 });
