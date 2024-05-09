@@ -115,7 +115,9 @@ export class StakingPool {
   }: {
     transaction?: TransactionBlock;
     owner: string;
-  }): Promise<{ availableFees: { memeAmount: string; suiAmount: string } }> {
+  }): Promise<{
+    availableFees: { memeAmount: string; suiAmount: string; outputRawMeme: string; outputRawSui: string };
+  }> {
     const tx = transaction ?? new TransactionBlock();
 
     // Please note, mutation of `tx` happening below
@@ -155,7 +157,14 @@ export class StakingPool {
     const outputRawSui = decodedSui;
     const outputAmountSui = new BigNumber(outputRawSui).div(10 ** SUI_DECIMALS);
 
-    return { availableFees: { memeAmount: outputAmountMeme.toString(), suiAmount: outputAmountSui.toString() } };
+    return {
+      availableFees: {
+        memeAmount: outputAmountMeme.toString(),
+        outputRawMeme: outputRawMeme as string,
+        suiAmount: outputAmountSui.toString(),
+        outputRawSui: outputRawSui as string,
+      },
+    };
   }
 
   // eslint-disable-next-line require-jsdoc
