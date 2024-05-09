@@ -8,20 +8,27 @@ export const swapTicketForSuiExample = async () => {
   // get all pools
   const { pools, poolsByMemeCoinTypeMap } = await bondingCurveInstance.getAllPools();
 
+  const memecoinCointype =
+    "0xd57bf62c5f214ca3f68ddf0abbb645f222e21c322156e2f32538707826a52388::meme_08_05_2024_02::MEME_08_05_2024_02";
+
   // get random pool
-  const pool =
-    poolsByMemeCoinTypeMap[
-      "0xbbd380a1ac2e03b7b56f429c1abd660a2db16ef019fc6366c1b43dc6b5450979::meme_04_05_2024_01::MEME_04_05_2024_01"
-    ];
+  const pool = poolsByMemeCoinTypeMap[memecoinCointype];
 
   if (!pool) {
     throw new Error("Pool doesn't exists");
   }
 
   // const inputTicketAmount = "848476175.625";
-  const inputTicketAmount = "1";
+  const inputTicketAmount = "257505502.5";
 
   console.debug("pool: ", pool);
+
+  const { stakedLpObjectsByMemeCoinTypeMap } = await BondingPoolSingleton.getAllStakedLPObjectsByOwner({
+    owner: user,
+    provider,
+  });
+  const ticketsByMemecoin = stakedLpObjectsByMemeCoinTypeMap[memecoinCointype];
+  console.debug("allStakedLpObjects: ", ticketsByMemecoin);
 
   const outputAmount = await bondingCurveInstance.getSwapOutputAmountForTicketInput({
     bondingCurvePoolObjectId: pool.objectId,

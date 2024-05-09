@@ -12,11 +12,11 @@ export const initSecondaryMarketExample = async ({ transaction }: { transaction?
   // get all pools
   const { pools, poolsByMemeCoinTypeMap } = await bondingCurveInstance.getAllPools();
 
+  const memecoinCointype =
+    "0x232bcf980b826ab7bba1629c807b756e7fc507d0e84f009bfdd31caffa175365::meme_08_05_2024_06::MEME_08_05_2024_06";
+
   // get random pool
-  const pool =
-    poolsByMemeCoinTypeMap[
-      "0xd7436c4c051caf789cc80901a22a97bb59c44fbd0f7f55e2470ac3dec375e8b0::meme_06_05_2024_02::MEME_06_05_2024_02"
-    ];
+  const pool = poolsByMemeCoinTypeMap[memecoinCointype];
 
   if (!pool) {
     throw new Error("Pool doesn't exists");

@@ -6,12 +6,11 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 // yarn tsx examples/staking-pool/withdraw-fees-from-pool.ts
 export const withdrawFromPool = async () => {
   const stakingPool = await StakingPool.fromGoLiveDefaultTx({
-    txDigest: "9nC4RG4ma6mLf9GciXSn2fHi4SPuKrGsieGyqvAc6EY3",
+    txDigest: "4v8DoaJze4s2dpNKS9cLyKQafTS4tQNpKVMwg4uneRbf",
     provider: new SuiClient({ url: getFullnodeUrl("mainnet") }),
   });
 
-  const tx = new TransactionBlock();
-  stakingPool.withdrawFees(tx, user);
+  const { tx } = stakingPool.withdrawFees({ signerAddress: user });
 
   console.debug("withdrawFromStakingPoolTx: ", JSON.stringify(JSON.parse(tx.serialize()), null, 2));
 
