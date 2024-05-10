@@ -4,6 +4,7 @@ import { SuiClient } from "@mysten/sui.js/client";
 import { getAllDynamicFields } from "../bonding-pool/utils/getAllDynamicFields";
 import { vestingDataContentObject, vestingDataDynamicFieldSchema } from "./schemas";
 import { BondingPoolSingleton } from "../bonding-pool/BondingPool";
+import { chunkedRequests } from "../utils/chunking";
 
 type VestingTable = Record<string, { notional: string; released: string }>;
 
@@ -35,16 +36,26 @@ export class VestingConfig {
     });
     const schema = vestingDataDynamicFieldSchema(BondingPoolSingleton.PACKAGE_OBJECT_ID);
     const vestingDataDfs = dfs.filter((df) => schema.safeParse(df).success).map((df) => schema.parse(df));
-    const vestingData = await Promise.all(
-      vestingDataDfs.map(async (df) => {
-        const object = await params.provider.getObject({ id: df.objectId, options: { showContent: true } });
-        const parsed = vestingDataContentObject(BondingPoolSingleton.PACKAGE_OBJECT_ID).parse(object.data?.content);
-        return {
-          walletAddress: parsed.fields.name,
-          ...parsed.fields.value.fields,
-        };
-      }),
+    const objects = await chunkedRequests(
+      vestingDataDfs.map((df) => df.objectId),
+      (ids) =>
+        params.provider.multiGetObjects({
+          ids,
+          options: {
+            showContent: true,
+            showType: true,
+          },
+        }),
     );
+
+    const vestingData = objects.map((object) => {
+      const parsed = vestingDataContentObject(BondingPoolSingleton.PACKAGE_OBJECT_ID).parse(object.data?.content);
+      return {
+        walletAddress: parsed.fields.name,
+        ...parsed.fields.value.fields,
+      };
+    });
+
     const table = vestingData.reduce((acc, item) => {
       acc[item.walletAddress] = item;
       return acc;
