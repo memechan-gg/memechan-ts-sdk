@@ -833,19 +833,22 @@ export class BondingPoolSingleton {
 
   public async getMemeCoinPrice(memeCoinType: string): Promise<{ priceInSui: string; priceInUsd: string }> {
     const memePool = await this.getPoolByMeme({ memeCoin: { coinType: memeCoinType } });
-    const suiInputAmount = "1";
 
-    const memeAmount = await this.getSwapOutputAmountForSuiInput({
-      bondingCurvePoolObjectId: memePool.objectId,
-      inputAmount: suiInputAmount,
-      memeCoin: { coinType: memePool.memeCoinType },
-    });
+    const poolDetails = await this.getPoolDetailedInfo({ poolId: memePool.objectId });
 
-    const suiPrice = await CoinManagerSingleton.getCoinPrice(LONG_SUI_COIN_TYPE);
+    const memePoolBalance = poolDetails.data.content.fields.balance_m;
+    const suiPoolBalance = poolDetails.data.content.fields.balance_s;
 
-    const memePriceInSui = new BigNumber(1).div(memeAmount).toFixed(SUI_DECIMALS);
+    const suiBalanceInPoolConverted = new BigNumber(suiPoolBalance).div(10 ** SUI_DECIMALS);
+    const soldMemeAmountConverted = new BigNumber(BondingPoolSingleton.DEFAULT_MAX_M)
+      .minus(memePoolBalance)
+      .div(10 ** +BondingPoolSingleton.MEMECOIN_DECIMALS);
+
+    const memePriceInSui = suiBalanceInPoolConverted.div(soldMemeAmountConverted);
+
+    const suiPrice = await CoinManagerSingleton.getCoinPrice(LONG_SUI_COIN_TYPE); // 1.08
     const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
 
-    return { priceInSui: memePriceInSui, priceInUsd: memePriceInUsd };
+    return { priceInSui: memePriceInSui.toString(), priceInUsd: memePriceInUsd };
   }
 }
