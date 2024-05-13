@@ -966,6 +966,10 @@ export class BondingPoolSingleton {
       .minus(memePoolBalance)
       .div(10 ** +BondingPoolSingleton.MEMECOIN_DECIMALS);
 
+    if (soldMemeAmountConverted.eq(0)) {
+      return { priceInSui: "0", priceInUsd: "0" };
+    }
+
     const memePriceInSui = suiBalanceInPoolConverted.div(soldMemeAmountConverted);
 
     const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
