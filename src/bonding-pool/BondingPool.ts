@@ -966,6 +966,7 @@ export class BondingPoolSingleton {
       .minus(memePoolBalance)
       .div(10 ** +BondingPoolSingleton.MEMECOIN_DECIMALS);
 
+    // In case no meme coins were sold, return 0-prices
     if (soldMemeAmountConverted.eq(0)) {
       return { priceInSui: "0", priceInUsd: "0" };
     }
