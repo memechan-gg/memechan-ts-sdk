@@ -929,4 +929,26 @@ export class BondingPoolSingleton {
 
     return marketCap.toString();
   }
+
+  public static getMemeCoinPriceFromPoolDetails({
+    poolDetails,
+    suiPrice,
+  }: {
+    poolDetails: DetailedPoolInfo;
+    suiPrice: number;
+  }) {
+    const memePoolBalance = poolDetails.data.content.fields.balance_m;
+    const suiPoolBalance = poolDetails.data.content.fields.balance_s;
+
+    const suiBalanceInPoolConverted = new BigNumber(suiPoolBalance).div(10 ** SUI_DECIMALS);
+    const soldMemeAmountConverted = new BigNumber(BondingPoolSingleton.DEFAULT_MAX_M)
+      .minus(memePoolBalance)
+      .div(10 ** +BondingPoolSingleton.MEMECOIN_DECIMALS);
+
+    const memePriceInSui = suiBalanceInPoolConverted.div(soldMemeAmountConverted);
+
+    const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
+
+    return { priceInSui: memePriceInSui.toString(), priceInUsd: memePriceInUsd };
+  }
 }
