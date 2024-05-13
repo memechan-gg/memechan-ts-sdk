@@ -313,7 +313,7 @@ export interface StakingPoolTokenPolicyCap extends SuiObjectResponse {
 export type PoolWithDetailedInfoType = ExtractedRegistryKeyData & {
   objectId: string;
   typename: string;
-  detailedPoolInfo?: DetailedPoolInfo;
+  detailedPoolInfo: DetailedPoolInfo;
 };
 
 export type GetAllPoolsMapByMemeCoinType = {
