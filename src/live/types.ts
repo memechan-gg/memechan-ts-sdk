@@ -52,3 +52,5 @@ export type QuoteSwapArgs = {
   };
   slippagePercentage: number;
 };
+
+export type GetMemeCoinPriceOutput = { priceInSui: string; priceInUsd: string };

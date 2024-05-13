@@ -54,6 +54,7 @@ import { isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
 import { isVestingDataInfoList } from "./utils/isVestingData";
 import { normalizeInputCoinAmount } from "./utils/normalizeInputCoinAmount";
 import { isRegistryTableTypenameDynamicFields } from "./utils/registryTableTypenameUtils";
+import { GetMemeCoinPriceOutput } from "../live/types";
 
 /**
  * @class BondingPoolSingleton
@@ -831,7 +832,13 @@ export class BondingPoolSingleton {
     return objectDataList;
   }
 
-  public async getMemeCoinPrice(memeCoinType: string): Promise<{ priceInSui: string; priceInUsd: string }> {
+  /**
+   * Gets the price of a meme coin in SUI and USD for the bonding curve pool.
+   * @param {string} memeCoinType - The type of meme coin.
+   * @return {Promise<GetMemeCoinPriceOutput>} The price of the meme coin in SUI and USD.
+   * @deprecated This method is deprecated. Please use getMemeCoinPrice2 instead.
+   */
+  public async getMemeCoinPrice(memeCoinType: string): Promise<GetMemeCoinPriceOutput> {
     const memePool = await this.getPoolByMeme({ memeCoin: { coinType: memeCoinType } });
 
     const poolDetails = await this.getPoolDetailedInfo({ poolId: memePool.objectId });
@@ -847,6 +854,39 @@ export class BondingPoolSingleton {
     const memePriceInSui = suiBalanceInPoolConverted.div(soldMemeAmountConverted);
 
     const suiPrice = await CoinManagerSingleton.getCoinPrice(LONG_SUI_COIN_TYPE); // 1.08
+    const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
+
+    return { priceInSui: memePriceInSui.toString(), priceInUsd: memePriceInUsd };
+  }
+
+  /**
+   * Gets the price of a meme coin in SUI and USD for the bonding curve pool.
+   * @param {Object} options - The options object.
+   * @param {string} options.memeCoinType - The type of meme coin.
+   * @param {number} options.suiPrice - The price of SUI.
+   * @return {Promise<GetMemeCoinPriceOutput>} The price of the meme coin in SUI and USD.
+   */
+  public async getMemeCoinPrice2({
+    memeCoinType,
+    suiPrice,
+  }: {
+    memeCoinType: string;
+    suiPrice: number;
+  }): Promise<GetMemeCoinPriceOutput> {
+    const memePool = await this.getPoolByMeme({ memeCoin: { coinType: memeCoinType } });
+
+    const poolDetails = await this.getPoolDetailedInfo({ poolId: memePool.objectId });
+
+    const memePoolBalance = poolDetails.data.content.fields.balance_m;
+    const suiPoolBalance = poolDetails.data.content.fields.balance_s;
+
+    const suiBalanceInPoolConverted = new BigNumber(suiPoolBalance).div(10 ** SUI_DECIMALS);
+    const soldMemeAmountConverted = new BigNumber(BondingPoolSingleton.DEFAULT_MAX_M)
+      .minus(memePoolBalance)
+      .div(10 ** +BondingPoolSingleton.MEMECOIN_DECIMALS);
+
+    const memePriceInSui = suiBalanceInPoolConverted.div(soldMemeAmountConverted);
+
     const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
 
     return { priceInSui: memePriceInSui.toString(), priceInUsd: memePriceInUsd };

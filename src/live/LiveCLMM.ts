@@ -18,6 +18,7 @@ import { registrySchemaContent } from "../utils/schema";
 import { interestPoolCreatedSchema } from "./schemas";
 import {
   AddLiquidityArgs,
+  GetMemeCoinPriceOutput,
   QuoteAddLiquidityArgs,
   QuoteRemoveLiquidityArgs,
   QuoteSwapArgs,
@@ -383,8 +384,13 @@ export class LiveCLMM {
   }
 
   public static fromCoinTypes(coinTypes: string[]) {}
-
-  public async getMemeCoinPrice(memeCoinType: string): Promise<{ priceInSui: string; priceInUsd: string }> {
+  /**
+   * Gets the price of a meme coin in SUI and USD for the live clmm pool.
+   * @param {string} memeCoinType - The type of meme coin.
+   * @return {Promise<GetMemeCoinPriceOutput>} The price of the meme coin in SUI and USD.
+   * @deprecated This method is deprecated. Please use getMemeCoinPrice2 instead.
+   */
+  public async getMemeCoinPrice(memeCoinType: string): Promise<GetMemeCoinPriceOutput> {
     const suiInputAmount = "1";
 
     const memeAmount = await this.quoteSwap({
@@ -395,6 +401,35 @@ export class LiveCLMM {
     });
 
     const suiPrice = await CoinManagerSingleton.getCoinPrice(LONG_SUI_COIN_TYPE);
+
+    const memePriceInSui = new BigNumber(1).div(memeAmount).toString();
+    const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
+
+    return { priceInSui: memePriceInSui, priceInUsd: memePriceInUsd };
+  }
+
+  /**
+   * Gets the price of a meme coin in SUI and USD for the live clmm pool.
+   * @param {Object} options - The options object.
+   * @param {string} options.memeCoinType - The type of meme coin.
+   * @param {number} options.suiPrice - The price of SUI.
+   * @return {Promise<GetMemeCoinPriceOutput>} The price of the meme coin in SUI and USD.
+   */
+  public async getMemeCoinPrice2({
+    memeCoinType,
+    suiPrice,
+  }: {
+    memeCoinType: string;
+    suiPrice: number;
+  }): Promise<GetMemeCoinPriceOutput> {
+    const suiInputAmount = "1";
+
+    const memeAmount = await this.quoteSwap({
+      inputAmount: suiInputAmount,
+      SuiToMeme: true,
+      memeCoin: { coinType: memeCoinType },
+      slippagePercentage: 0.01,
+    });
 
     const memePriceInSui = new BigNumber(1).div(memeAmount).toString();
     const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
