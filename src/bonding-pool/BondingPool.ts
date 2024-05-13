@@ -564,6 +564,7 @@ export class BondingPoolSingleton {
     return poolObject;
   }
 
+  // TODO: We might want to make the filtering of the pools that doesn't exists to be an optional
   public async getAllPools({ transaction }: { transaction?: TransactionBlock } = {}) {
     const registryTableId = await this.getRegistryTableAddress({ transaction });
 
