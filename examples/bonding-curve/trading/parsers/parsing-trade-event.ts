@@ -72,7 +72,7 @@ export const parsingTradeEvent = async () => {
       },
     });
   }
-  console.log("TRADES", trades);
+  console.log("TRADES", JSON.stringify(trades, null, 2));
 };
 
 parsingTradeEvent();
