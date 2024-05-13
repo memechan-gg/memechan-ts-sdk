@@ -10,6 +10,7 @@ import {
   quoteBuyMeme,
   quoteSellMeme,
   sellMeme,
+  takeFees,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 
 import { SuiClient } from "@mysten/sui.js/client";
@@ -632,6 +633,17 @@ export class BondingPoolSingleton {
     return { poolIds, pools, poolsByMemeCoinTypeMap, poolsByPoolId };
   }
 
+  /**
+   * Retrieves all pools with detailed information.
+   *
+   * @param {Object} options - Options for the query.
+   * @param {TransactionBlock} [options.transaction] - Optional transaction block for database transactions.
+   * @return {Promise<Array<Pool>>} - A Promise that resolves to an array of pools with detailed information.
+   * @warns {string} This method retrieves pools with detailed information only.
+   * This includes bonding curve pools that have not yet had the 'go_live' method triggered,
+   * such as bonding curve pools that are still in the pre-sale phase.
+   * Be aware, that once pre-sale phase is finished, bonding pool object got destroyed (deleted) on-chain.
+   */
   public async getAllPoolsWithDetailedInfo({ transaction }: { transaction?: TransactionBlock } = {}) {
     const { pools, poolIds } = await this.getAllPoolsCommon();
 
@@ -659,28 +671,30 @@ export class BondingPoolSingleton {
       {},
     );
 
-    const poolsByMemeCoinTypeMap = pools.reduce((acc: GetAllPoolsMapByMemeCoinType, el) => {
+    const filtredPools = pools.filter((el) => detailedInfoPoolsMapById[el.objectId]);
+
+    const poolsByMemeCoinTypeMap = filtredPools.reduce((acc: GetAllPoolsMapByMemeCoinType, el) => {
       const detailedPoolInfo = detailedInfoPoolsMapById[el.objectId];
 
-      acc[el.memeCoinType] = { ...el, ...(detailedPoolInfo ? { detailedPoolInfo } : {}) };
+      acc[el.memeCoinType] = { ...el, detailedPoolInfo };
 
       return acc;
     }, {});
 
-    const poolsByPoolId = pools.reduce((acc: GetAllPoolsMapByPoolObjectIdType, el) => {
+    const poolsByPoolId = filtredPools.reduce((acc: GetAllPoolsMapByPoolObjectIdType, el) => {
       const detailedPoolInfo = detailedInfoPoolsMapById[el.objectId];
 
-      acc[el.objectId] = { ...el, ...(detailedPoolInfo ? { detailedPoolInfo } : {}) };
+      acc[el.objectId] = { ...el, detailedPoolInfo };
 
       return acc;
     }, {});
 
-    const poolsWithDetailedInfo = pools.map((el) => {
+    const poolsWithDetailedInfo = filtredPools.map((el) => {
       const detailedPoolInfo = detailedInfoPoolsMapById[el.objectId];
 
       return {
         ...el,
-        ...(detailedPoolInfo ? { detailedPoolInfo } : {}),
+        detailedPoolInfo,
       };
     });
 
@@ -976,5 +990,30 @@ export class BondingPoolSingleton {
     const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
 
     return { priceInSui: memePriceInSui.toString(), priceInUsd: memePriceInUsd };
+  }
+
+  public async getTakeFeesTransactionFromAllPools({
+    transaction,
+    owner,
+  }: {
+    transaction?: TransactionBlock;
+    owner: string;
+  }) {
+    const tx = transaction ?? new TransactionBlock();
+    const allPoolsWithInfo = await this.getAllPoolsWithDetailedInfo();
+
+    allPoolsWithInfo.pools.forEach((el) => {
+      if (!el.detailedPoolInfo) {
+        throw new Error("[getTakeFeesTransactionFromAllPools] Detailed pool info is not available");
+      }
+
+      const [memeToken, suiCoin] = takeFees(tx, [LONG_SUI_COIN_TYPE, el.memeCoinType], {
+        pool: el.objectId,
+        policy: el.detailedPoolInfo.data.content.fields.policy_cap.fields.for,
+        admin: BondingPoolSingleton.ADMIN_OBJECT_ID,
+      });
+    });
+
+    return tx;
   }
 }
