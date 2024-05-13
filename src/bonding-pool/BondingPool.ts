@@ -613,7 +613,9 @@ export class BondingPoolSingleton {
     });
 
     // Filter out pools that deleted because they are already live
-    const filtredPoolsObjectDataList = poolsObjectDataList.filter((el) => el.error?.code !== "notExists");
+    const filtredPoolsObjectDataList = poolsObjectDataList.filter(
+      (el) => el.error?.code !== "notExists" && el.error?.code !== "deleted",
+    );
 
     if (!isPoolDetailedInfoList(filtredPoolsObjectDataList)) {
       throw new Error("Pools shape doesn't match detailed info list shape");
