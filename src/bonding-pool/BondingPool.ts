@@ -564,8 +564,7 @@ export class BondingPoolSingleton {
     return poolObject;
   }
 
-  // TODO: We might want to make the filtering of the pools that doesn't exists to be an optional
-  public async getAllPools({ transaction }: { transaction?: TransactionBlock } = {}) {
+  public async getAllPoolsCommon({ transaction }: { transaction?: TransactionBlock } = {}) {
     const registryTableId = await this.getRegistryTableAddress({ transaction });
 
     const tableDynamicFields = await getAllDynamicFields({
@@ -605,6 +604,36 @@ export class BondingPoolSingleton {
     }));
 
     const poolIds = pools.map((el) => el.objectId);
+
+    return { pools, poolIds };
+  }
+
+  public async getAllPools({ transaction }: { transaction?: TransactionBlock } = {}) {
+    const { pools, poolIds } = await this.getAllPoolsCommon();
+
+    const poolsByMemeCoinTypeMap = pools.reduce(
+      (acc: { [memeCoinType: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
+        acc[el.memeCoinType] = { ...el };
+
+        return acc;
+      },
+      {},
+    );
+
+    const poolsByPoolId = pools.reduce(
+      (acc: { [objectId: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
+        acc[el.objectId] = { ...el };
+
+        return acc;
+      },
+      {},
+    );
+
+    return { poolIds, pools, poolsByMemeCoinTypeMap, poolsByPoolId };
+  }
+
+  public async getAllPoolsWithDetailedInfo({ transaction }: { transaction?: TransactionBlock } = {}) {
+    const { pools, poolIds } = await this.getAllPoolsCommon();
 
     const poolsObjectDataList = await getAllObjects({
       objectIds: poolIds,
