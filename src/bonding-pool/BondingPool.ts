@@ -891,4 +891,12 @@ export class BondingPoolSingleton {
 
     return { priceInSui: memePriceInSui.toString(), priceInUsd: memePriceInUsd };
   }
+
+  public static getMemeMarketCap({ memeCoinPriceInUSD }: { memeCoinPriceInUSD: string }) {
+    const marketCap = new BigNumber(BondingPoolSingleton.MEMECOIN_MINT_AMOUNT_FROM_CONTRACT).multipliedBy(
+      new BigNumber(memeCoinPriceInUSD),
+    );
+
+    return marketCap.toString();
+  }
 }
