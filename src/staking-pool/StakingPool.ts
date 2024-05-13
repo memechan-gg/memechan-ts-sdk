@@ -35,7 +35,6 @@ type StakingPoolData = {
   totalSupply: string;
   ammPool: string;
   balanceLp: string;
-  balanceMeme: string;
   feeState: FeeState;
   poolAdmin: string;
   vesting: VestingConfig;
@@ -320,7 +319,6 @@ export class StakingPool {
         lpCoinType,
         memeCoinType,
         balanceLp: stakingPoolResponse.balance_lp,
-        balanceMeme: stakingPoolResponse.balance_meme,
       },
       provider,
     });

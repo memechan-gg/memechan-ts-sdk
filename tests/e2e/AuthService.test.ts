@@ -1,7 +1,6 @@
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { Auth } from "../../src";
-
-const BE_URL = "https://14r6b4r6kf.execute-api.us-east-1.amazonaws.com/prod";
+import { BE_URL } from "./helpers";
 
 describe("AuthService", () => {
   test("check that the authentication flow is working properly", async () => {

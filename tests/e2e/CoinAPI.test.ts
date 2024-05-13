@@ -1,10 +1,8 @@
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { Auth, CoinAPI } from "../../src";
 import { Coin, coinSchema } from "../../src/coin/schemas/coin-schemas";
-import { isSorted } from "./helpers";
+import { BE_URL, isSorted } from "./helpers";
 // eslint-disable-next-line max-len
-
-const BE_URL = undefined; // "https://14r6b4r6kf.execute-api.us-east-1.amazonaws.com/prod";
 
 describe("CoinService authenticated operations", () => {
   let keypair: Ed25519Keypair;

@@ -6,7 +6,6 @@ describe("Live pool", () => {
     const livePools = await LivePool.fromRegistry({
       provider: new SuiClient({ url: getFullnodeUrl("mainnet") }),
     });
-    console.log("live pools", livePools);
     livePools.forEach((pool) =>
       expect(pool.data).toEqual({
         address: expect.any(String),

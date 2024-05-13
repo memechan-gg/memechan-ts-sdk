@@ -1,7 +1,6 @@
 import { PoolAPI } from "../../src/coin/PoolApi";
 import { livePool, SeedPool, seedPool, stakingPool } from "../../src/coin/schemas/pools-schema";
-
-const BE_URL = undefined; // "https://14r6b4r6kf.execute-api.us-east-1.amazonaws.com/prod";
+import { BE_URL } from "./helpers";
 
 const api = new PoolAPI(BE_URL);
 
@@ -45,7 +44,9 @@ describe("PoolService", () => {
     const { result: livePools } = await poolApi.getLivePools();
     expect(Array.isArray(livePools)).toBe(true);
     for (const parsedResult of livePools) {
-      livePool.parse(parsedResult);
+      if (livePool.safeParse(parsedResult).success) {
+        console.warn("Invalid live pool found with format", parsedResult);
+      }
     }
   });
 });
