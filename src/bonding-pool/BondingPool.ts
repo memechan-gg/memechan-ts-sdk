@@ -31,6 +31,7 @@ import {
   CreateCoinTransactionParamsWithoutCertainProps,
   DetailedPoolInfo,
   ExtractedRegistryKeyData,
+  GetAllPoolsMapType,
   GetBondingCurveCustomParams,
   InitSecondaryMarketCustomParams,
   InitSecondaryMarketParams,
@@ -48,7 +49,7 @@ import { extractRegistryKeyData } from "./utils/extractRegistryKeyData";
 import { getAllDynamicFields } from "./utils/getAllDynamicFields";
 import { getAllObjects } from "./utils/getAllObjects";
 import { getAllOwnedObjects } from "./utils/getAllOwnedObjects";
-import { isPoolDetailedInfo } from "./utils/isPoolDetailedInfo";
+import { isPoolDetailedInfo, isPoolDetailedInfoList } from "./utils/isPoolDetailedInfo";
 import { isPoolObjectData } from "./utils/isPoolObjectData";
 import { isStakedLpObjectDataList } from "./utils/isStakedLpObjectData";
 import { isVestingDataInfoList } from "./utils/isVestingData";
@@ -588,7 +589,7 @@ export class BondingPoolSingleton {
     const objectDataList = await getAllObjects({
       objectIds: tableTypenameObjectIds,
       provider: this.provider,
-      options: { showContent: true, showDisplay: true },
+      options: { showContent: true, showDisplay: true, showType: true },
     });
 
     if (!isPoolObjectData(objectDataList)) {
@@ -604,25 +605,54 @@ export class BondingPoolSingleton {
 
     const poolIds = pools.map((el) => el.objectId);
 
-    const poolsByMemeCoinTypeMap = pools.reduce(
-      (acc: { [memeCoinType: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
-        acc[el.memeCoinType] = { ...el };
+    const poolsObjectDataList = await getAllObjects({
+      objectIds: poolIds,
+      provider: this.provider,
+      options: { showContent: true, showType: true, showOwner: true },
+    });
+
+    // Filter out pools that deleted because they are already live
+    const filtredPoolsObjectDataList = poolsObjectDataList.filter((el) => el.error?.code !== "notExists");
+
+    if (!isPoolDetailedInfoList(filtredPoolsObjectDataList)) {
+      throw new Error("Pools shape doesn't match detailed info list shape");
+    }
+
+    const detailedInfoPoolsMapById = filtredPoolsObjectDataList.reduce(
+      (acc: { [poolObjectId: string]: DetailedPoolInfo }, el) => {
+        acc[el.data.objectId] = { ...el };
 
         return acc;
       },
       {},
     );
 
-    const poolsByPoolId = pools.reduce(
-      (acc: { [objectId: string]: ExtractedRegistryKeyData & { objectId: string; typename: string } }, el) => {
-        acc[el.objectId] = { ...el };
+    const poolsByMemeCoinTypeMap = pools.reduce((acc: GetAllPoolsMapType, el) => {
+      const detailedPoolInfo = detailedInfoPoolsMapById[el.objectId];
 
-        return acc;
-      },
-      {},
-    );
+      acc[el.memeCoinType] = { ...el, ...(detailedPoolInfo ? { detailedPoolInfo } : {}) };
 
-    return { poolIds, pools, poolsByMemeCoinTypeMap, poolsByPoolId };
+      return acc;
+    }, {});
+
+    const poolsByPoolId = pools.reduce((acc: GetAllPoolsMapType, el) => {
+      const detailedPoolInfo = detailedInfoPoolsMapById[el.objectId];
+
+      acc[el.objectId] = { ...el, ...(detailedPoolInfo ? { detailedPoolInfo } : {}) };
+
+      return acc;
+    }, {});
+
+    const poolsWithDetailedInfo = pools.map((el) => {
+      const detailedPoolInfo = detailedInfoPoolsMapById[el.objectId];
+
+      return {
+        ...el,
+        ...(detailedPoolInfo ? { detailedPoolInfo } : {}),
+      };
+    });
+
+    return { poolIds, pools: poolsWithDetailedInfo, poolsByMemeCoinTypeMap, poolsByPoolId };
   }
 
   public async getPoolByMeme({ memeCoin }: { memeCoin: { coinType: string } }) {
