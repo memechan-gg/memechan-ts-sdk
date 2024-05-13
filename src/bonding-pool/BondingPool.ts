@@ -907,20 +907,9 @@ export class BondingPoolSingleton {
     const memePool = await this.getPoolByMeme({ memeCoin: { coinType: memeCoinType } });
 
     const poolDetails = await this.getPoolDetailedInfo({ poolId: memePool.objectId });
+    const { priceInSui, priceInUsd } = BondingPoolSingleton.getMemeCoinPriceFromPoolDetails({ poolDetails, suiPrice });
 
-    const memePoolBalance = poolDetails.data.content.fields.balance_m;
-    const suiPoolBalance = poolDetails.data.content.fields.balance_s;
-
-    const suiBalanceInPoolConverted = new BigNumber(suiPoolBalance).div(10 ** SUI_DECIMALS);
-    const soldMemeAmountConverted = new BigNumber(BondingPoolSingleton.DEFAULT_MAX_M)
-      .minus(memePoolBalance)
-      .div(10 ** +BondingPoolSingleton.MEMECOIN_DECIMALS);
-
-    const memePriceInSui = suiBalanceInPoolConverted.div(soldMemeAmountConverted);
-
-    const memePriceInUsd = new BigNumber(memePriceInSui).multipliedBy(suiPrice).toString();
-
-    return { priceInSui: memePriceInSui.toString(), priceInUsd: memePriceInUsd };
+    return { priceInSui, priceInUsd };
   }
 
   public static getMemeMarketCap({ memeCoinPriceInUSD }: { memeCoinPriceInUSD: string }) {
