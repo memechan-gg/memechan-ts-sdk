@@ -31,7 +31,8 @@ import {
   CreateCoinTransactionParamsWithoutCertainProps,
   DetailedPoolInfo,
   ExtractedRegistryKeyData,
-  GetAllPoolsMapType,
+  GetAllPoolsMapByMemeCoinType,
+  GetAllPoolsMapByPoolObjectIdType,
   GetBondingCurveCustomParams,
   InitSecondaryMarketCustomParams,
   InitSecondaryMarketParams,
@@ -627,7 +628,7 @@ export class BondingPoolSingleton {
       {},
     );
 
-    const poolsByMemeCoinTypeMap = pools.reduce((acc: GetAllPoolsMapType, el) => {
+    const poolsByMemeCoinTypeMap = pools.reduce((acc: GetAllPoolsMapByMemeCoinType, el) => {
       const detailedPoolInfo = detailedInfoPoolsMapById[el.objectId];
 
       acc[el.memeCoinType] = { ...el, ...(detailedPoolInfo ? { detailedPoolInfo } : {}) };
@@ -635,7 +636,7 @@ export class BondingPoolSingleton {
       return acc;
     }, {});
 
-    const poolsByPoolId = pools.reduce((acc: GetAllPoolsMapType, el) => {
+    const poolsByPoolId = pools.reduce((acc: GetAllPoolsMapByPoolObjectIdType, el) => {
       const detailedPoolInfo = detailedInfoPoolsMapById[el.objectId];
 
       acc[el.objectId] = { ...el, ...(detailedPoolInfo ? { detailedPoolInfo } : {}) };
