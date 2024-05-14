@@ -2,9 +2,7 @@ import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { Auth, CoinAPI } from "../../src";
 import { SocialAPI } from "../../src/social/SocialAPI";
 import { Coin } from "../../src/coin/schemas/coin-schemas";
-import { isSorted } from "./helpers";
-
-const BE_URL = "https://14r6b4r6kf.execute-api.us-east-1.amazonaws.com/prod";
+import { BE_URL, isSorted } from "./helpers";
 
 const socialAPI = new SocialAPI(BE_URL);
 
@@ -23,13 +21,14 @@ describe("Threads fetching", () => {
     });
     const coinApi = new CoinAPI();
     const { coin: coinFetched } = await coinApi.createCoin({
-      txDigest: "Bdkcg4Z2HuUTRkvG5mrCZRya8fxqwPzbHnY3cfD1tTYQ",
+      txDigest: "At7GG8M3X73XkA6hqaVoYynge92hm7h1cYTsz3JAhP3G",
       socialLinks: {
         twitter: "mytwitter",
         discord: "mydiscord",
       },
     });
     coin = coinFetched;
+    console.log("COIN TYPE", coin?.type);
     for (let i = 0; i < 10; i++) {
       await socialAPI.createThread({
         message: `Test message ${i}`,

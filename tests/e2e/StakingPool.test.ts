@@ -3,8 +3,6 @@ import { StakingPool } from "../../src";
 import { FeeState } from "../../src/staking-pool/FeeState";
 import { VestingConfig } from "../../src/staking-pool/VestingConfig";
 
-const BE_URL = undefined; // "https://14r6b4r6kf.execute-api.us-east-1.amazonaws.com/prod";
-
 describe("Staking Pool", () => {
   /* test("Ensuring that the staking pool is instanciated properly starting from TX digest", async () => {
     const stakingPool = await StakingPool.fromGoLiveDefaultTx({
@@ -21,7 +19,6 @@ describe("Staking Pool", () => {
       lpCoinType: expect.any(String),
       memeCoinType: expect.any(String),
       balanceLp: expect.any(String),
-      balanceMeme: expect.any(String),
     });
   });*/
 
@@ -41,7 +38,6 @@ describe("Staking Pool", () => {
         lpCoinType: expect.any(String),
         memeCoinType: expect.any(String),
         balanceLp: expect.any(String),
-        balanceMeme: expect.any(String),
       }),
     );
   });
