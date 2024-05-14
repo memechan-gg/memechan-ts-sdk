@@ -11,6 +11,7 @@ import {
   quoteSellMeme,
   sellMeme,
   takeFees,
+  transfer,
 } from "@avernikoz/memechan-ts-interface/dist/memechan/seed-pool/functions";
 
 import { SuiClient } from "@mysten/sui.js/client";
@@ -992,6 +993,37 @@ export class BondingPoolSingleton {
     return { priceInSui: memePriceInSui.toString(), priceInUsd: memePriceInUsd };
   }
 
+  public async getTakeFeesTransactionFromPool({
+    transaction,
+    owner,
+    poolId,
+  }: {
+    transaction?: TransactionBlock;
+    owner: string;
+    poolId: string;
+  }) {
+    const tx = transaction ?? new TransactionBlock();
+    const allPoolsWithInfo = await this.getAllPoolsWithDetailedInfo();
+    const pool = allPoolsWithInfo.poolsByPoolId[poolId];
+
+    const [memeCoinStakedLp, suiCoin] = takeFees(tx, [LONG_SUI_COIN_TYPE, pool.memeCoinType], {
+      pool: pool.objectId,
+      policy: pool.detailedPoolInfo.data.content.fields.policy_cap.fields.for,
+      admin: BondingPoolSingleton.ADMIN_OBJECT_ID,
+    });
+
+    transfer(tx, [LONG_SUI_COIN_TYPE, pool.memeCoinType], {
+      pool: pool.objectId,
+      policy: pool.detailedPoolInfo.data.content.fields.policy_cap.fields.for,
+      recipient: owner,
+      token: memeCoinStakedLp,
+    });
+
+    tx.transferObjects([suiCoin], owner);
+
+    return tx;
+  }
+
   public async getTakeFeesTransactionFromAllPools({
     transaction,
     owner,
@@ -1002,16 +1034,25 @@ export class BondingPoolSingleton {
     const tx = transaction ?? new TransactionBlock();
     const allPoolsWithInfo = await this.getAllPoolsWithDetailedInfo();
 
-    allPoolsWithInfo.pools.forEach((el) => {
-      if (!el.detailedPoolInfo) {
+    allPoolsWithInfo.pools.forEach((pool) => {
+      if (!pool.detailedPoolInfo) {
         throw new Error("[getTakeFeesTransactionFromAllPools] Detailed pool info is not available");
       }
 
-      const [memeToken, suiCoin] = takeFees(tx, [LONG_SUI_COIN_TYPE, el.memeCoinType], {
-        pool: el.objectId,
-        policy: el.detailedPoolInfo.data.content.fields.policy_cap.fields.for,
+      const [memeCoinStakedLp, suiCoin] = takeFees(tx, [LONG_SUI_COIN_TYPE, pool.memeCoinType], {
+        pool: pool.objectId,
+        policy: pool.detailedPoolInfo.data.content.fields.policy_cap.fields.for,
         admin: BondingPoolSingleton.ADMIN_OBJECT_ID,
       });
+
+      transfer(tx, [LONG_SUI_COIN_TYPE, pool.memeCoinType], {
+        pool: pool.objectId,
+        policy: pool.detailedPoolInfo.data.content.fields.policy_cap.fields.for,
+        recipient: owner,
+        token: memeCoinStakedLp,
+      });
+
+      tx.transferObjects([suiCoin], owner);
     });
 
     return tx;
