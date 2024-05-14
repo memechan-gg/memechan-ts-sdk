@@ -22,9 +22,7 @@ export type ExtractedRegistryKeyData = {
 };
 
 // yarn tsx examples/bonding-curve/trading/parsers/parsing-trade-event.ts
-
 const provider = new SuiClient({ url: getFullnodeUrl("mainnet") });
-// const provider = new SuiClient({ url: "https://sui-rpc.publicnode.com" });
 const buyActionFunctionName = "buy_meme";
 const sellActionFunctionName = "sell_meme";
 const coinType = "0x4c023b94ba2e42e5ce1400191d0228216359f4de894150b813b1f514d2668426::rinwif::RINWIF";
@@ -287,7 +285,9 @@ export const parsingTradeEvent = async () => {
     const seedPool = seedPools[parsedJson.pool_address];
     const coinType = seedPool.memeCoinType;
     const coinMetadata = await provider.getCoinMetadata({ coinType });
-    if (!coinMetadata) continue;
+    if (!coinMetadata) {
+      throw new Error(`No coinMetadata found for such event id txDigest ${event.id.txDigest} and coinType ${coinType}`);
+    }
 
     const transactionBlockData = await provider.getTransactionBlock({
       digest: event.id.txDigest,
