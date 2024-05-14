@@ -8,9 +8,10 @@ import {
   SuiObjectResponse,
 } from "@mysten/sui.js/client";
 import { Trade, TradeEventParsedJson } from "./types";
-import { normalizeSuiAddress, SUI_TYPE_ARG } from "@mysten/sui.js/utils";
+import { normalizeSuiAddress, SUI_DECIMALS, SUI_TYPE_ARG } from "@mysten/sui.js/utils";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { bcs } from "@mysten/sui.js/bcs";
+import BigNumber from "bignumber.js";
 
 export type ExtractedRegistryKeyData = {
   boundingCurvePackageId: string;
@@ -20,12 +21,15 @@ export type ExtractedRegistryKeyData = {
   memeCoinType: string;
 };
 
+// yarn tsx examples/bonding-curve/trading/parsers/parsing-trade-event.ts
+
 const provider = new SuiClient({ url: getFullnodeUrl("mainnet") });
+// const provider = new SuiClient({ url: "https://sui-rpc.publicnode.com" });
 const buyActionFunctionName = "buy_meme";
 const sellActionFunctionName = "sell_meme";
-const coinType = "0x9102bc69d1435288ba4bec1e5df506dafbcb2f6355f2cef9479c4a22bd2268da::test_token_4am::TEST_TOKEN_4AM";
-const PACKAGE_ID = "0xe857abf98342c16cbb963d2f78628a7451b6efaa609866a0ba042ca3fa8e351a";
-const REGISTRY_OBJECT_ID = "0x620fb6b36e4087c8dcd645f0935e596199ae844a8de9bd3d932206aa41d0e6fa";
+const coinType = "0x4c023b94ba2e42e5ce1400191d0228216359f4de894150b813b1f514d2668426::rinwif::RINWIF";
+const PACKAGE_ID = "0xc48ce784327427802e1f38145c65b4e5e0a74c53187fca4b9ca0d4ca47da68b1";
+const REGISTRY_OBJECT_ID = "0x7ee8efddc3355a458dc19e2e32d3dc5a196a87b8019301264491197e2aa15b86";
 const SIMULATION_ACCOUNT_ADDRESS = "0xac5bceec1b789ff840d7d4e6ce4ce61c90d190a7f8c4f4ddf0bff6ee2413c33c";
 
 export const extractRegistryKeyData = (typename: string): ExtractedRegistryKeyData => {
@@ -239,7 +243,6 @@ const getAllSeedPools = async () => {
   if (!isPoolObjectData(objectDataList)) {
     throw new Error("Wrong shape of seed pools of bonding curve pools");
   }
-  // TODO: Might be good to get detailed info for all pools data here as well
 
   const pools = objectDataList.map((el) => ({
     objectId: el.data.content.fields.value,
@@ -270,13 +273,13 @@ const getAllSeedPools = async () => {
   return { poolIds, pools, poolsByMemeCoinTypeMap, poolsByPoolId };
 };
 
-// yarn tsx examples/bonding-curve/trading/parsers/parsing-trade-event.ts
 export const parsingTradeEvent = async () => {
   const { data } = await provider.queryEvents({
     query: {
       MoveEventType: `${PACKAGE_ID}::events::Swap<0x2::sui::SUI, ${coinType}, ${PACKAGE_ID}::seed_pool::SwapAmount>`,
     },
   });
+
   const trades: Trade[] = [];
   const { poolsByPoolId: seedPools } = await getAllSeedPools();
   for (const event of data) {
@@ -285,18 +288,33 @@ export const parsingTradeEvent = async () => {
     const coinType = seedPool.memeCoinType;
     const coinMetadata = await provider.getCoinMetadata({ coinType });
     if (!coinMetadata) continue;
-    const { transaction } = await provider.getTransactionBlock({
+
+    const transactionBlockData = await provider.getTransactionBlock({
       digest: event.id.txDigest,
       options: {
         showInput: true,
+        showBalanceChanges: true,
       },
     });
+
+    const { transaction } = transactionBlockData;
+
+    if (!transaction) {
+      throw new Error(`No transaction found for such event id txDigest ${event.id.txDigest}`);
+    }
+
+    const timestamp = event.timestampMs || transactionBlockData.timestampMs;
+
+    if (!timestamp) {
+      throw new Error(`No timestamp found for such transaction ${event.id.txDigest}`);
+    }
+
     let action = undefined;
-    if (transaction?.data.transaction.kind === "ProgrammableTransaction") {
-      const buyAction = transaction?.data.transaction.transactions.find(
+    if (transaction.data.transaction.kind === "ProgrammableTransaction") {
+      const buyAction = transaction.data.transaction.transactions.find(
         (t) => "MoveCall" in t && t.MoveCall.function === buyActionFunctionName,
       );
-      const sellAction = transaction?.data.transaction.transactions.find(
+      const sellAction = transaction.data.transaction.transactions.find(
         (t) => "MoveCall" in t && t.MoveCall.function === sellActionFunctionName,
       );
       if (buyAction) {
@@ -308,25 +326,30 @@ export const parsingTradeEvent = async () => {
     }
 
     const memeCoin = {
-      decimals: coinMetadata.decimals,
       symbol: coinMetadata.symbol,
       coinType,
+      decimals: coinMetadata.decimals,
       tradeAmount: parsedJson.swap_amount.amount_out,
+      parsedTradeAmount: new BigNumber(parsedJson.swap_amount.amount_out).div(10 ** coinMetadata.decimals).toString(),
     };
 
     const sui = {
-      tradeAmount: parsedJson.swap_amount.amount_in,
-      decimals: 9,
       symbol: "SUI",
       coinType: SUI_TYPE_ARG,
+      decimals: SUI_DECIMALS,
+      tradeAmount: parsedJson.swap_amount.amount_in,
+      parsedTradeAmount: new BigNumber(parsedJson.swap_amount.amount_in).div(10 ** SUI_DECIMALS).toString(),
     };
     if (action === undefined) continue;
     trades.push({
+      id: event.id.txDigest,
+      txId: event.id.txDigest,
       fromAmount: parsedJson.swap_amount.amount_in,
       toAmount: parsedJson.swap_amount.amount_out,
       signer: event.sender,
-      id: parsedJson.pool_address,
-      timestamp: event.timestampMs ? new Date(parseInt(event.timestampMs)) : new Date(),
+      poolId: parsedJson.pool_address,
+      timestampMs: timestamp,
+      date: new Date(parseInt(timestamp)),
       pair: {
         fromToken: action === "BUY" ? sui : memeCoin,
         toToken: action === "BUY" ? memeCoin : sui,

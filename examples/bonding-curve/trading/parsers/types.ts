@@ -18,10 +18,13 @@ export interface TradeEventParsedJson {
 
 export interface Trade {
   id: string;
+  poolId: string;
   fromAmount: string;
   toAmount: string;
   signer: string;
-  timestamp: Date;
+  timestampMs: string;
+  date: Date;
+  txId: string;
   pair: {
     fromToken: TokenPairItem;
     toToken: TokenPairItem;
