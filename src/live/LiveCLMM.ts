@@ -28,6 +28,7 @@ import {
 import { getCoins } from "./utils/getCoins";
 import { mergeCoins } from "./utils/mergeCoins";
 import { PoolAPI } from "../coin/PoolApi";
+import { BE_URL } from "../constants";
 
 export type LiveCLMMData = {
   poolId?: string;
@@ -288,8 +289,8 @@ export class LiveCLMM {
   }
 
   public async quoteSwap(params: QuoteSwapArgs & { BE_URL?: string }) {
-    const { memeCoin, inputAmount, SuiToMeme, slippagePercentage } = params;
-    const pool = await this.getPool();
+    const { memeCoin, inputAmount, SuiToMeme, slippagePercentage, BE_URL } = params;
+    const pool = await this.getPool({ BE_URL });
 
     const splitAmount = SuiToMeme
       ? normalizeInputCoinAmount(inputAmount, SUI_DECIMALS)
@@ -418,10 +419,11 @@ export class LiveCLMM {
   public async getMemeCoinPrice2({
     memeCoinType,
     suiPrice,
+    BE_URL,
   }: {
     memeCoinType: string;
     suiPrice: number;
-  }): Promise<GetMemeCoinPriceOutput> {
+  } & { BE_URL?: string }): Promise<GetMemeCoinPriceOutput> {
     const suiInputAmount = "1";
 
     const memeAmount = await this.quoteSwap({
@@ -429,6 +431,7 @@ export class LiveCLMM {
       SuiToMeme: true,
       memeCoin: { coinType: memeCoinType },
       slippagePercentage: 0.01,
+      BE_URL,
     });
 
     const memePriceInSui = new BigNumber(1).div(memeAmount).toString();
