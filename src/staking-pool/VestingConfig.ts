@@ -34,7 +34,7 @@ export class VestingConfig {
       parentObjectId: params.id,
       provider: params.provider,
     });
-    const schema = vestingDataDynamicFieldSchema(BondingPoolSingleton.PACKAGE_OBJECT_ID);
+    const schema = vestingDataDynamicFieldSchema(BondingPoolSingleton.PACKAGE_OBJECT_ID_READ);
     const vestingDataDfs = dfs.filter((df) => schema.safeParse(df).success).map((df) => schema.parse(df));
     const objects = await chunkedRequests(
       vestingDataDfs.map((df) => df.objectId),
@@ -49,7 +49,7 @@ export class VestingConfig {
     );
 
     const vestingData = objects.map((object) => {
-      const parsed = vestingDataContentObject(BondingPoolSingleton.PACKAGE_OBJECT_ID).parse(object.data?.content);
+      const parsed = vestingDataContentObject(BondingPoolSingleton.PACKAGE_OBJECT_ID_READ).parse(object.data?.content);
       return {
         walletAddress: parsed.fields.name,
         ...parsed.fields.value.fields,
