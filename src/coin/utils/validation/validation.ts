@@ -1,5 +1,11 @@
 import BigNumber from "bignumber.js";
 
+export const CREATE_COIN_VALIDATION_REGEXP = {
+  COIN_NAME: /^[a-zA-Z0-9\s]+$/,
+  COIN_SYMBOL: /^[a-zA-Z0-9_]+$/,
+  TOTAL_SUPPLY: /^\d+$/,
+};
+
 /**
  * Validates the coin name to be a non-empty string.
  *
@@ -7,8 +13,9 @@ import BigNumber from "bignumber.js";
  * @return {boolean} - Returns true if the coin name is valid, otherwise false.
  */
 export function validateCoinName(coinName: string): boolean {
-  const regex = /^[a-zA-Z0-9\s]+$/;
-  return typeof coinName === "string" && coinName.trim() !== "" && regex.test(coinName);
+  return (
+    typeof coinName === "string" && coinName.trim() !== "" && CREATE_COIN_VALIDATION_REGEXP.COIN_NAME.test(coinName)
+  );
 }
 
 /**
@@ -18,8 +25,8 @@ export function validateCoinName(coinName: string): boolean {
  * @return {boolean} - Returns true if the coin symbol is valid, otherwise false.
  */
 export function validateCoinSymbol(coinSymbol: string): boolean {
-  const regex = /^[a-zA-Z_]+$/;
-  const isCoinSymbolIsValid = typeof coinSymbol === "string" && regex.test(coinSymbol);
+  const isCoinSymbolIsValid =
+    typeof coinSymbol === "string" && CREATE_COIN_VALIDATION_REGEXP.COIN_SYMBOL.test(coinSymbol);
 
   return isCoinSymbolIsValid;
 }
