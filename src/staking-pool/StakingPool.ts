@@ -415,7 +415,7 @@ export class StakingPool {
    */
   static async fromGoLiveDefaultTx({ txDigest, provider }: { txDigest: string; provider: SuiClient }) {
     const txResult = await provider.getTransactionBlock({ digest: txDigest, options: { showObjectChanges: true } });
-    const schema = stakingPoolCreatedSchema(BondingPoolSingleton.PACKAGE_OBJECT_ID);
+    const schema = stakingPoolCreatedSchema(BondingPoolSingleton.PACKAGE_OBJECT_ID_READ);
     const createdStakedPool = schema.parse(txResult.objectChanges?.find((oc) => schema.safeParse(oc).success));
     const [stakingPool] = await StakingPool.fromObjectIds({ objectIds: [createdStakedPool.objectId], provider });
     return stakingPool;
