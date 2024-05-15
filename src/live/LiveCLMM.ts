@@ -76,10 +76,10 @@ export class LiveCLMM {
     });
   }
 
-  public async getPool(): Promise<InterestPool> {
+  public async getPool({ BE_URL }: { BE_URL?: string } = {}): Promise<InterestPool> {
     if (this._pool === undefined) {
       if (this._from_backend && this.data.memeCoin) {
-        const pool = await new PoolAPI().getLivePoolByCoinType(this.data.memeCoin.coinType);
+        const pool = await new PoolAPI(BE_URL).getLivePoolByCoinType(this.data.memeCoin.coinType);
         this._pool = await this.clamm.getPool(pool.poolObjectId);
       } else if (this.data.poolId) {
         this._pool = await this.clamm.getPool(this.data.poolId);
@@ -116,7 +116,7 @@ export class LiveCLMM {
     return clamm;
   }
 
-  public async addLiquidity(params: AddLiquidityArgs) {
+  public async addLiquidity(params: AddLiquidityArgs & { BE_URL?: string }) {
     const tx = new TransactionBlock();
     const { signerAddress, memeCoin, memeCoinInput, suiCoinInput, minOutputAmount, slippagePercentage = 0 } = params;
     const pool = await this.getPool();
@@ -155,10 +155,10 @@ export class LiveCLMM {
     return coinsOut.txb;
   }
 
-  public async removeLiquidity(params: RemoveLiquidityArgs) {
+  public async removeLiquidity(params: RemoveLiquidityArgs & { BE_URL?: string }) {
     const tx = new TransactionBlock();
-    const { signerAddress, lpCoinInput, lpCoin, minAmounts, slippagePercentage = 0 } = params;
-    const pool = await this.getPool();
+    const { signerAddress, lpCoinInput, lpCoin, minAmounts, slippagePercentage = 0, BE_URL } = params;
+    const pool = await this.getPool({ BE_URL });
 
     const lpCoins = await getCoins({
       address: signerAddress,
@@ -199,10 +199,10 @@ export class LiveCLMM {
     return coinsOut.txb;
   }
 
-  public async swap(params: SwapArgs) {
+  public async swap(params: SwapArgs & { BE_URL?: string }) {
     const tx = new TransactionBlock();
-    const { signerAddress, memeCoin, inputAmount, SuiToMeme, minOutputAmount, slippagePercentage = 0 } = params;
-    const pool = await this.getPool();
+    const { signerAddress, memeCoin, inputAmount, SuiToMeme, minOutputAmount, slippagePercentage = 0, BE_URL } = params;
+    const pool = await this.getPool({ BE_URL });
 
     const splitAmount = SuiToMeme
       ? normalizeInputCoinAmount(inputAmount, SUI_DECIMALS)
@@ -244,13 +244,13 @@ export class LiveCLMM {
     return txb;
   }
 
-  public async getLpCoinType(): Promise<string> {
-    return (await this.getPool()).lpCoinType;
+  public async getLpCoinType({ BE_URL }: { BE_URL?: string } = {}): Promise<string> {
+    return (await this.getPool({ BE_URL })).lpCoinType;
   }
 
-  public async quoteAddLiquidity(params: QuoteAddLiquidityArgs) {
-    const { memeCoinInput, suiCoinInput, slippagePercentage } = params;
-    const pool = await this.getPool();
+  public async quoteAddLiquidity(params: QuoteAddLiquidityArgs & { BE_URL?: string }) {
+    const { memeCoinInput, suiCoinInput, slippagePercentage, BE_URL } = params;
+    const pool = await this.getPool({ BE_URL });
 
     const suiCoinSplitAmount = normalizeInputCoinAmount(suiCoinInput, SUI_DECIMALS);
     const memeCoinSplitAmount = normalizeInputCoinAmount(memeCoinInput, parseInt(LiveCLMM.MEMECOIN_DECIMALS));
@@ -265,9 +265,9 @@ export class LiveCLMM {
     return outputAmountRespectingSlippage.toString();
   }
 
-  public async quoteRemoveLiquidity(params: QuoteRemoveLiquidityArgs) {
-    const { lpCoinInput, slippagePercentage } = params;
-    const pool = await this.getPool();
+  public async quoteRemoveLiquidity(params: QuoteRemoveLiquidityArgs & { BE_URL?: string }) {
+    const { lpCoinInput, slippagePercentage, BE_URL } = params;
+    const pool = await this.getPool({ BE_URL });
 
     const lpCoinSplitAmount = normalizeInputCoinAmount(lpCoinInput, SUI_DECIMALS);
 
@@ -287,7 +287,7 @@ export class LiveCLMM {
     return outputAmountsRespectingSlippage.map((outputAmount) => outputAmount.toString());
   }
 
-  public async quoteSwap(params: QuoteSwapArgs) {
+  public async quoteSwap(params: QuoteSwapArgs & { BE_URL?: string }) {
     const { memeCoin, inputAmount, SuiToMeme, slippagePercentage } = params;
     const pool = await this.getPool();
 
