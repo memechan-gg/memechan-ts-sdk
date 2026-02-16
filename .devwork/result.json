@@ -1,0 +1,10 @@
+{
+  "success": false,
+  "tasks_total": 3,
+  "tasks_completed": 12,
+  "tasks_failed": 1,
+  "planning_ms": 91410,
+  "execution_ms": 213158,
+  "total_ms": 304690,
+  "error": "Sandbox incorrectly blocks harmless `ls` command as destructive write to /dev/\n\nPartial progress:\n12 of 40 tasks completed successfully before failure.\nCompleted:\n  - Bash\n  - Bash\n  - Bash\n  - Bash\n  - Bash\n  - Bash\n  - Bash\n  - Bash\n  - Bash\n  - Bash\n  - Bash\n  - Bash\nFailed at: Sandbox incorrectly blocks harmless `ls` command as destructive write to /dev/"
+}

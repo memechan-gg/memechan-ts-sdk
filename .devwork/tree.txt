@@ -1,0 +1,172 @@
+# Directory snapshot before SpecKit execution
+# 1771269676995686765
+
+/tmp/claudev-pr-96616
+├── demo
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── public
+│   │   └── vite.svg
+│   ├── README.md
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── components
+│   │   │   ├── CreateCoin.tsx
+│   │   │   └── FileUpload.tsx
+│   │   ├── constants.ts
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   ├── vite.config.ts
+│   └── yarn.lock
+├── examples
+│   ├── admin
+│   │   ├── init-secondary-market.ts
+│   │   └── init-secondary-market-with-custom-params.ts
+│   ├── bonding-curve
+│   │   ├── create
+│   │   │   └── create-coins-and-create-custom-params-bonding-curve.ts
+│   │   ├── extract-registry-key-data.ts
+│   │   ├── get-all-pools.ts
+│   │   ├── get-meme-price.ts
+│   │   ├── get-pool-detailed-info.ts
+│   │   ├── get-token-policy-by-pool-id.ts
+│   │   ├── holders
+│   │   │   ├── get-uniq-holders-of-staked-lp-count.ts
+│   │   │   └── get-uniq-holders-of-staked-lp.ts
+│   │   ├── is-memecoin-ready-to-live-phase.ts
+│   │   ├── mint-amount.ts
+│   │   └── trading
+│   │       ├── get-swap-output-amount-for-sui-input.ts
+│   │       ├── get-swap-output-amount-for-ticket-input.ts
+│   │       ├── swap-sui-for-ticket.ts
+│   │       └── swap-ticket-for-sui.ts
+│   ├── common.ts
+│   ├── create-coin
+│   │   ├── create-coin-and-ticket.ts
+│   │   └── create-coin.ts
+│   ├── live
+│   │   ├── get-live-pools-from-registry.ts
+│   │   ├── get-meme-price.ts
+│   │   └── swap.ts
+│   ├── staking-pool
+│   │   ├── collect-fees-and-unstake-from-staking-pool.ts
+│   │   ├── collect-fees-and-withdraw-fees.ts
+│   │   ├── collect-fees-intervally.ts
+│   │   ├── collect-fees.ts
+│   │   ├── get-all-staked-lp-objects-by-owner.ts
+│   │   ├── get-available-amount-to-unstake.ts
+│   │   ├── get-available-fees-to-withdraw.ts
+│   │   ├── get-available-staked-lp-objects-by-owner.ts
+│   │   ├── unstake-from-pool.ts
+│   │   └── withdraw-fees-from-pool.ts
+│   └── utils
+│       ├── hexStringToUint8Array.ts
+│       ├── normalizeMnemonic.ts
+│       └── sleep.ts
+├── package.json
+├── pnpm-lock.yaml
+├── README.md
+├── src
+│   ├── auth
+│   │   ├── Auth.ts
+│   │   └── types.ts
+│   ├── bonding-pool
+│   │   ├── BondingPool.ts
+│   │   ├── types.ts
+│   │   └── utils
+│   │       ├── deductSlippage.ts
+│   │       ├── extractCoinType.ts
+│   │       ├── extractRegistryKeyData.ts
+│   │       ├── getAllDynamicFields.ts
+│   │       ├── getAllObjects.ts
+│   │       ├── getAllOwnedObjects.ts
+│   │       ├── getTicketDataFromCoinParams.ts
+│   │       ├── isPoolDetailedInfo.ts
+│   │       ├── isPoolObjectData.ts
+│   │       ├── isStakedLpObjectData.ts
+│   │       ├── isStakingPoolTokenCap.ts
+│   │       ├── isTokenPolicyCapObjectData.ts
+│   │       ├── isVestingData.ts
+│   │       ├── normalizeInputCoinAmount.ts
+│   │       ├── parseTransactionDataCoinAndTicketCreation.ts
+│   │       ├── parseTransactionDataLpCoinCreation.ts
+│   │       ├── registryTableTypenameUtils.ts
+│   │       └── validateExtractedCoinDataFromTransaction.ts
+│   ├── coin
+│   │   ├── CoinAPI.ts
+│   │   ├── CoinManager.ts
+│   │   ├── PoolApi.ts
+│   │   ├── schemas
+│   │   │   ├── coin-schemas.ts
+│   │   │   └── pools-schema.ts
+│   │   ├── types.ts
+│   │   └── utils
+│   │       ├── create-token.types.ts
+│   │       ├── move-bytecode-template.js
+│   │       ├── template.ts
+│   │       ├── type-guards.ts
+│   │       └── validation
+│   │           ├── invalid-param-errors.ts
+│   │           └── validation.ts
+│   ├── common
+│   │   ├── sui.ts
+│   │   └── tokens.ts
+│   ├── constants.ts
+│   ├── index.ts
+│   ├── live
+│   │   ├── LiveCLMM.ts
+│   │   ├── LivePool.ts
+│   │   ├── schemas.ts
+│   │   ├── types.ts
+│   │   └── utils
+│   │       ├── getCoins.ts
+│   │       └── mergeCoins.ts
+│   ├── social
+│   │   ├── schemas.ts
+│   │   └── SocialAPI.ts
+│   ├── staking-pool
+│   │   ├── FeeState.ts
+│   │   ├── schemas.ts
+│   │   ├── StakingPool.ts
+│   │   ├── types.ts
+│   │   ├── UserWithdrawals.ts
+│   │   ├── utils
+│   │   │   ├── getCoins.ts
+│   │   │   └── mergeCoins.ts
+│   │   └── VestingConfig.ts
+│   └── utils
+│       ├── chunking.ts
+│       ├── fetch.ts
+│       ├── get-fetch.ts
+│       ├── get-headers.ts
+│       ├── getQueriedTransactions.ts
+│       ├── removeDecimalPart.ts
+│       ├── schema.ts
+│       ├── sigv4.ts
+│       └── splitBy.ts
+├── tests
+│   ├── e2e
+│   │   ├── AuthService.test.ts
+│   │   ├── CoinAPI.test.ts
+│   │   ├── helpers.ts
+│   │   ├── LiveCLMM.test.ts
+│   │   ├── LivePool.test.ts
+│   │   ├── PoolService.test.ts
+│   │   ├── SocialAPI.test.ts
+│   │   └── StakingPool.test.ts
+│   └── unit
+│       └── AuthService.test.ts
+├── tsconfig.json
+├── tsconfig.production.json
+├── tsup.config.json
+├── vitest.config.ts
+└── yarn.lock
+
+34 directories, 133 files
